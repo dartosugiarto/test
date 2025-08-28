@@ -23,7 +23,7 @@
 
   <aside class="sidebar" id="sidebarNav">
     <div class="sidebar-header">
-      <img src="logo.png" alt="PlayPal.ID Logo" class="sidebar-logo">
+      <img src="logo.svg" alt="PlayPal.ID Logo" class="sidebar-logo">
       <span class="sidebar-title">PlayPal.ID</span>
     </div>
     <nav class="sidebar-nav">
@@ -67,26 +67,26 @@
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <div class="page-container" id="pageContainer">
-    <header class="main-header">
-        <div class="header-content wrap">
-            <div class="promo-select-wrapper">
-                <div class="promo-static">
-                    Promo Spesial Segera Hadir!
-                </div>
-            </div>
-            <div class="header-actions">
-                <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Ganti tema">
-                    <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                    <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                </button>
-                <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
-                    <span></span><span></span><span></span>
-                </button>
-            </div>
-        </div>
-    </header>
-    
     <main class="wrap">
+      <header class="main-header">
+          <div class="header-content">
+              <div class="promo-select-wrapper">
+                  <div class="promo-static">
+                      Promo Spesial Segera Hadir!
+                  </div>
+              </div>
+              <div class="header-actions">
+                  <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Ganti tema">
+                      <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                      <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                  </button>
+                  <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
+                      <span></span><span></span><span></span>
+                  </button>
+              </div>
+          </div>
+      </header>
+
       <section id="viewHome" class="view-section active" aria-label="Home">
         <header class="page-title-header">
           <h1>Promo Hari Ini</h1>
@@ -99,10 +99,10 @@
               <input id="homeSearchInput" class="search-input" type="search" placeholder="Cari promo..." aria-label="Cari">
             </div>
           </div>
-          <div id="homeCountInfo" class="count-info" data-rail></div>
+          <div id="homeCountInfo" data-rail></div>
         </div>
         <section id="homeListContainer" class="list-container" aria-live="polite" data-rail></section>
-        <section id="homeErrorContainer" class="err" style="display:none" data-rail></section>
+        <div id="homeErrorContainer" class="err" style="display:none" data-rail></div>
       </section>
 
       <section id="viewLayanan" class="view-section" aria-label="Layanan">
@@ -111,13 +111,15 @@
           <p class="page-subtitle">Jelajahi berbagai layanan digital yang kami tawarkan.</p>
         </header>
         <div class="head-block" data-rail>
-          <div class="topbar-grid">
-            <div class="custom-select-wrapper" id="layananCustomSelectWrapper">
-              <button class="custom-select-btn" id="layananCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                <span id="layananCustomSelectValue">Pilih Kategori</span>
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
-              </button>
-              <div class="custom-select-options" id="layananCustomSelectOptions" role="listbox"></div>
+          <div class="topbar" data-rail>
+            <div class="topbar-grid">
+              <div class="custom-select-wrapper" id="layananCustomSelectWrapper">
+                <button class="custom-select-btn" id="layananCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <span id="layananCustomSelectValue">Pilih Kategori</span>
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                </button>
+                <div class="custom-select-options" id="layananCustomSelectOptions" role="listbox"></div>
+              </div>
             </div>
           </div>
           <div class="search-row" data-rail>
@@ -126,10 +128,10 @@
               <input id="layananSearchInput" class="search-input" type="search" placeholder="Cari item..." aria-label="Cari">
             </div>
           </div>
-          <div id="layananCountInfo" class="count-info" data-rail></div>
+          <div id="layananCountInfo" data-rail></div>
         </div>
         <section id="layananListContainer" class="list-container" aria-live="polite" data-rail></section>
-        <section id="layananErrorContainer" class="err" style="display:none" data-rail></section>
+        <div id="layananErrorContainer" class="err" style="display:none" data-rail></div>
       </section>
 
       <section id="viewPreorder" class="view-section" aria-label="Pre-Order">
@@ -138,7 +140,7 @@
           <p class="page-subtitle">Cek status pesanan Anda di sini.</p>
         </header>
         <div class="head-block" data-rail>
-          <div class="topbar-grid">
+          <div class="topbar-grid" style="grid-template-columns: 1fr;">
               <div class="custom-select-wrapper" id="preorderCustomSelectWrapper">
                 <button class="custom-select-btn" id="preorderCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                   <span id="preorderCustomSelectValue">Starlight Member</span>
@@ -183,7 +185,7 @@
           <p class="page-subtitle">Temukan akun game impian Anda dengan penawaran terbaik.</p>
         </header>
         <div class="head-block" data-rail>
-            <div class="topbar-grid">
+            <div class="topbar-grid" style="grid-template-columns: 1fr;">
                 <div class="custom-select-wrapper" id="accountCustomSelectWrapper">
                   <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                     <span id="accountCustomSelectValue">Memuat akun...</span>
@@ -232,17 +234,17 @@
             <p>Pilih akun dari daftar di atas untuk melihat detail.</p>
           </div>
         </div>
-        <section id="accountError" class="err" style="display:none" data-rail></section>
+        <div id="accountError" class="err" style="display:none" data-rail></div>
       </section>
 
       <section id="viewPerpustakaan" class="view-section" aria-label="Perpustakaan">
         <header class="page-title-header"><h1>Perpustakaan</h1></header>
-        <div class="empty">Halaman ini sedang dalam pengembangan.</div>
+        <div class="empty"><div class="empty-content"><p>Halaman ini sedang dalam pengembangan.</p></div></div>
       </section>
 
       <section id="viewFilm" class="view-section" aria-label="Film">
         <header class="page-title-header"><h1>Film</h1></header>
-        <div class="empty">Halaman ini sedang dalam pengembangan.</div>
+        <div class="empty"><div class="empty-content"><p>Halaman ini sedang dalam pengembangan.</p></div></div>
       </section>
       
     </main>
@@ -288,8 +290,8 @@
         </div>
         <div id="paymentOptionsContainer" class="payment-options"></div>
         <div class="price-details">
-          <p><span>Fee:</span> <span id="modalFee"></span></p>
-          <p><strong><span>Total:</span> <span id="modalTotal"></span></strong></p>
+          <p>Fee: <span id="modalFee"></span></p>
+          <p><strong>Total: <span id="modalTotal"></span></strong></p>
         </div>
       </div>
       <div class="modal-footer">
