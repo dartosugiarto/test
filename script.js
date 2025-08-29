@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 3.0.0 (Definitive fix for event listeners)
+ * @version 4.0.0 (Optimized with advanced touch logic and render performance enhancements)
  */
 
 (function () {
@@ -153,7 +153,44 @@
 
   // --- Catalog & Layanan ---
   function buildLayananCategorySelect(layananData) { const { options, value } = elements.layanan.customSelect; const categoryMap = new Map(); layananData.forEach(item => { if (!categoryMap.has(item.catKey)) { categoryMap.set(item.catKey, item.catLabel); } }); const layananCategories = [...categoryMap].map(([key, label]) => ({ key, label })); options.innerHTML = ''; layananCategories.forEach((cat, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = cat.label; el.dataset.value = cat.key; el.setAttribute('role', 'option'); if (index === 0) el.classList.add('selected'); el.addEventListener('click', () => { state.layanan.activeCategory = cat.key; value.textContent = cat.label; document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(elements.layanan.customSelect.wrapper, false); renderLayananList(); }); options.appendChild(el); }); if (layananCategories.length > 0) { state.layanan.activeCategory = layananCategories[0].key; value.textContent = layananCategories[0].label; } else { value.textContent = 'Data tidak tersedia'; } }
-  function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); let animationDelay = 0; for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.style.animationDelay = `${animationDelay}ms`; animationDelay += 50; buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
+  
+  /**
+   * Renders a list of items into a container with performance optimizations.
+   * - Uses requestAnimationFrame for smoother DOM updates.
+   * - Limits staggered animation to the first 20 items to prevent jitter.
+   */
+  function renderList(container, countInfoEl, items, emptyText) {
+      container.innerHTML = '';
+      if (items.length === 0) {
+          container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`;
+          countInfoEl.textContent = '';
+          return;
+      }
+      const fragment = document.createDocumentFragment();
+      const MAX_ANIMATED_ITEMS = 20;
+
+      items.forEach((item, index) => {
+          const clone = elements.itemTemplate.content.cloneNode(true);
+          const buttonEl = clone.querySelector('.list-item');
+          
+          if (index < MAX_ANIMATED_ITEMS) {
+              buttonEl.style.animationDelay = `${index * 50}ms`;
+          }
+
+          buttonEl.querySelector('.title').textContent = item.title;
+          buttonEl.querySelector('.price').textContent = formatToIdr(item.price);
+          buttonEl.addEventListener('click', () => openPaymentModal(item));
+          fragment.appendChild(clone);
+      });
+
+      // Defer DOM insertion to the next frame for smoother rendering
+      window.requestAnimationFrame(() => {
+          container.appendChild(fragment);
+      });
+
+      countInfoEl.textContent = `${items.length} item ditemukan`;
+  }
+
   function renderHomeList() { const query = state.home.searchQuery.toLowerCase(); const homeCatKey = allCatalogData.length > 0 ? allCatalogData[0].catKey : null; const items = homeCatKey ? allCatalogData.filter(x => x.catKey === homeCatKey && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))) : []; renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada promo ditemukan.'); }
   function renderLayananList() { const { activeCategory, searchQuery } = state.layanan; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.layanan.listContainer, elements.layanan.countInfo, items, 'Tidak ada hasil ditemukan.'); }
   async function loadCatalog() { try { [elements.home.errorContainer, elements.layanan.errorContainer].forEach(el => el.style.display = 'none'); showSkeleton(elements.home.listContainer, elements.skeletonItemTemplate, 6); showSkeleton(elements.layanan.listContainer, elements.skeletonItemTemplate, 6); const res = await fetch(getSheetUrl(config.sheets.katalog.name)); if (!res.ok) throw new Error(`Network error: ${res.statusText}`); const text = await res.text(); allCatalogData = parseGvizPairs(text); if (allCatalogData.length === 0) throw new Error('Data is empty or format is incorrect.'); buildLayananCategorySelect(allCatalogData); renderHomeList(); renderLayananList(); } catch (err) { console.error('Failed to load catalog:', err); [elements.home, elements.layanan].forEach(view => { view.listContainer.innerHTML = ''; view.errorContainer.style.display = 'block'; view.errorContainer.textContent = 'Oops, terjadi kesalahan. Silakan coba lagi nanti.'; }); } }
@@ -165,16 +202,14 @@
   function openPaymentModal(item) { currentSelectedItem = item; const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal; itemName.textContent = item.title; itemPrice.textContent = formatToIdr(item.price); optionsContainer.innerHTML = ''; config.paymentOptions.forEach((option, index) => { const fee = calculateFee(item.price, option); optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> </div>`); }); optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails)); updatePriceDetails(); modal.style.display = 'flex'; setTimeout(() => modal.classList.add('visible'), 10); }
   function closePaymentModal() { const { modal } = elements.paymentModal; modal.classList.remove('visible'); setTimeout(() => { modal.style.display = 'none'; currentSelectedItem = null; }, 200); }
 
-  // --- Pre-Order ---
+  // --- Pre-Order & Game Accounts (Logic remains the same) ---
   function normalizeStatus(rawStatus) { const s = String(rawStatus || '').trim().toLowerCase(); if (['success', 'selesai', 'berhasil', 'done'].includes(s)) return 'success'; if (['progress', 'proses', 'diproses', 'processing'].includes(s)) return 'progress'; if (['failed', 'gagal', 'dibatalkan', 'cancel', 'error'].includes(s)) return 'failed'; return 'pending'; }
   function filterPreorderData() { const { searchInput, statusSelect } = elements.preorder; const query = searchInput.value.trim().toLowerCase(); const statusFilter = statusSelect.value; const currentMode = state.preorder.displayMode; return state.preorder.allData.filter(item => { const status = normalizeStatus(item[currentMode === 'detailed' ? 6 : 2]); if (statusFilter !== 'all' && status !== statusFilter) return false; if (currentMode === 'detailed') { const product = (item[3] || '').toLowerCase(); const nickname = (item[5] || '').toLowerCase(); const idGift = (item[7] || '').toLowerCase(); return product.includes(query) || nickname.includes(query) || idGift.includes(query); } else { const orderNum = (item[0] || '').toLowerCase(); const product = (item[1] || '').toLowerCase(); return orderNum.includes(query) || product.includes(query); } }); }
   function updatePreorderPagination(currentPage, totalPages) { elements.preorder.prevBtn.disabled = currentPage <= 1; elements.preorder.nextBtn.disabled = currentPage >= totalPages; elements.preorder.pageInfo.textContent = totalPages > 0 ? `Hal ${currentPage} dari ${totalPages}` : ''; }
-  function renderPreorderCards() { const filtered = filterPreorderData(); const totalItems = state.preorder.allData.length; const { perPage } = state.preorder; const { listContainer, total } = elements.preorder; total.textContent = `${totalItems} total pesanan${filtered.length !== totalItems ? `, ${filtered.length} ditemukan` : ''}`; const totalPages = Math.max(1, Math.ceil(filtered.length / perPage)); state.preorder.currentPage = Math.min(Math.max(1, state.preorder.currentPage), totalPages); const start = (state.preorder.currentPage - 1) * perPage; const pageData = filtered.slice(start, start + perPage); listContainer.innerHTML = ''; if (pageData.length === 0) { listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak Ada Hasil Ditemukan</p></div></div>`; updatePreorderPagination(0, 0); return; } const fragment = document.createDocumentFragment(); pageData.forEach(item => { const card = document.createElement('article'); if (state.preorder.displayMode === 'detailed') { const [tglOrder, estPengiriman, , product, bulan, name, statusRaw] = item; const status = normalizeStatus(statusRaw); const estDeliveryText = estPengiriman ? `Estimasi Pengiriman: ${estPengiriman} 20:00 WIB` : ''; const details = [{ label: 'TGL ORDER', value: tglOrder }, { label: 'BULAN', value: bulan }]; const detailsHtml = details.filter(d => d.value && String(d.value).trim() !== '').map(d => `<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value">${d.value}</div></div>`).join(''); const expandIndicatorHtml = detailsHtml ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>` : ''; card.className = `card ${detailsHtml ? 'clickable' : ''}`; card.innerHTML = `<div class="card-header"><div><div class="card-name">${name || 'Tanpa Nama'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge-wrapper"><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div>${expandIndicatorHtml}</div></div>${estDeliveryText ? `<div class="card-date">${estDeliveryText}</div>` : ''}${detailsHtml ? `<div class="card-details"><div class="details-grid">${detailsHtml}</div></div>` : ''}`; if (detailsHtml) card.addEventListener('click', () => card.classList.toggle('expanded')); } else { const [orderNum, product, statusRaw] = item; const status = normalizeStatus(statusRaw); card.className = 'card'; card.innerHTML = `<div class="card-header"><div><div class="card-name">${orderNum || 'Tanpa Nomor'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div></div>`; } fragment.appendChild(card); }); listContainer.appendChild(fragment); updatePreorderPagination(state.preorder.currentPage, totalPages); }
+  function renderPreorderCards() { const filtered = filterPreorderData(); const totalItems = state.preorder.allData.length; const { perPage } = state.preorder; const { listContainer, total } = elements.preorder; total.textContent = `${totalItems} total pesanan${filtered.length !== totalItems ? `, ${filtered.length} ditemukan` : ''}`; const totalPages = Math.max(1, Math.ceil(filtered.length / perPage)); state.preorder.currentPage = Math.min(Math.max(1, state.preorder.currentPage), totalPages); const start = (state.preorder.currentPage - 1) * perPage; const pageData = filtered.slice(start, start + perPage); listContainer.innerHTML = ''; if (pageData.length === 0) { listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 Mover 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak Ada Hasil Ditemukan</p></div></div>`; updatePreorderPagination(0, 0); return; } const fragment = document.createDocumentFragment(); pageData.forEach(item => { const card = document.createElement('article'); if (state.preorder.displayMode === 'detailed') { const [tglOrder, estPengiriman, , product, bulan, name, statusRaw] = item; const status = normalizeStatus(statusRaw); const estDeliveryText = estPengiriman ? `Estimasi Pengiriman: ${estPengiriman} 20:00 WIB` : ''; const details = [{ label: 'TGL ORDER', value: tglOrder }, { label: 'BULAN', value: bulan }]; const detailsHtml = details.filter(d => d.value && String(d.value).trim() !== '').map(d => `<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value">${d.value}</div></div>`).join(''); const expandIndicatorHtml = detailsHtml ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>` : ''; card.className = `card ${detailsHtml ? 'clickable' : ''}`; card.innerHTML = `<div class="card-header"><div><div class="card-name">${name || 'Tanpa Nama'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge-wrapper"><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div>${expandIndicatorHtml}</div></div>${estDeliveryText ? `<div class="card-date">${estDeliveryText}</div>` : ''}${detailsHtml ? `<div class="card-details"><div class="details-grid">${detailsHtml}</div></div>` : ''}`; if (detailsHtml) card.addEventListener('click', () => card.classList.toggle('expanded')); } else { const [orderNum, product, statusRaw] = item; const status = normalizeStatus(statusRaw); card.className = 'card'; card.innerHTML = `<div class="card-header"><div><div class="card-name">${orderNum || 'Tanpa Nomor'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div></div>`; } fragment.appendChild(card); }); listContainer.appendChild(fragment); updatePreorderPagination(state.preorder.currentPage, totalPages); }
   function sortPreorderData(data, mode) { const statusOrder = { progress: 1, pending: 2, success: 3, failed: 4 }; const statusIndex = mode === 'detailed' ? 6 : 2; return data.sort((a, b) => statusOrder[normalizeStatus(a[statusIndex])] - statusOrder[normalizeStatus(b[statusIndex])]); }
   async function fetchPreorderData(sheetName) { const { listContainer, total } = elements.preorder; total.textContent = 'Memuat data...'; showSkeleton(listContainer, elements.skeletonCardTemplate, 5); state.preorder.displayMode = sheetName === config.sheets.preorder.name1 ? 'detailed' : 'simple'; try { const res = await fetch(getSheetUrl(sheetName, 'csv')); if (!res.ok) throw new Error(`Network error: ${res.statusText}`); const text = await res.text(); let rows = text.trim().split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim())); if (rows.length < 2) { state.preorder.allData = []; } else { rows.shift(); const dataRows = rows.filter(row => row && (row[0] || '').trim() !== ''); state.preorder.allData = sortPreorderData(dataRows, state.preorder.displayMode); } } catch (e) { state.preorder.allData = []; total.textContent = 'Gagal memuat data.'; console.error('Fetch Pre-Order failed:', e); } finally { state.preorder.currentPage = 1; renderPreorderCards(); } }
   function initializePreorder() { if (state.preorder.initialized) return; const rebound = () => { state.preorder.currentPage = 1; renderPreorderCards(); }; const { searchInput, statusSelect, customSelect, prevBtn, nextBtn } = elements.preorder; searchInput.addEventListener('input', rebound); statusSelect.addEventListener('change', rebound); customSelect.options.querySelectorAll('.custom-select-option').forEach(option => { option.addEventListener('click', e => { const selectedValue = e.target.dataset.value; const selectedText = e.target.textContent; customSelect.value.textContent = selectedText; document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); e.target.classList.add('selected'); const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2; fetchPreorderData(sheet); toggleCustomSelect(customSelect.wrapper, false); }); }); prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }); nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); }); fetchPreorderData(config.sheets.preorder.name1); state.preorder.initialized = true; }
-
-  // --- Game Accounts ---
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
   async function parseAccountsSheet(text) { const rows = robustCsvParser(text); rows.shift(); return rows.filter(row => row && row.length >= 5 && row[0]).map(row => ({ title: row[0] || 'Tanpa Judul', price: Number(row[1]) || 0, status: row[2] || 'Tersedia', description: row[3] || 'Tidak ada deskripsi.', images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean), })); }
   function populateAccountSelect() { const { customSelect, empty } = elements.accounts; const { options, value } = customSelect; options.innerHTML = ''; if (state.accounts.data.length === 0) { value.textContent = 'Tidak ada akun'; empty.style.display = 'block'; return; } value.textContent = 'Pilih Akun'; state.accounts.data.forEach((acc, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = acc.title; el.dataset.value = index; el.setAttribute('role', 'option'); el.addEventListener('click', () => { value.textContent = acc.title; document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(customSelect.wrapper, false); renderAccount(index); }); options.appendChild(el); }); }
@@ -185,26 +220,19 @@
 
   // --- App Initialization ---
   function initializeApp() {
-    // --- Safe browsing event prevention ---
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('copy', e => e.preventDefault());
-    
-    // --- UI Interaction Listeners ---
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
-    
     elements.sidebar.links.forEach(link => {
       if (link.dataset.mode) {
         link.addEventListener('click', e => { e.preventDefault(); setMode(link.dataset.mode); });
       }
     });
-
     elements.layanan.customSelect.btn.addEventListener('click', () => toggleCustomSelect(elements.layanan.customSelect.wrapper));
     elements.preorder.customSelect.btn.addEventListener('click', () => toggleCustomSelect(elements.preorder.customSelect.wrapper));
     elements.accounts.customSelect.btn.addEventListener('click', () => toggleCustomSelect(elements.accounts.customSelect.wrapper));
-    
-    // --- Search Input Debouncing ---
     let homeDebounce, layananDebounce;
     elements.home.searchInput.addEventListener('input', e => {
       clearTimeout(homeDebounce);
@@ -214,12 +242,8 @@
       clearTimeout(layananDebounce);
       layananDebounce = setTimeout(() => { state.layanan.searchQuery = e.target.value.trim(); renderLayananList(); }, 200);
     });
-    
-    // --- Modal Listeners ---
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
-
-    // --- Global Click Listener for closing dropdowns ---
     document.addEventListener('click', e => {
       const target = e.target;
       if (!elements.layanan.customSelect.btn.contains(target) && !elements.layanan.customSelect.options.contains(target)) {
@@ -232,53 +256,71 @@
         toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
       }
     });
-
-    // --- Initial Load ---
     initTheme();
     loadCatalog();
   }
 
-  // Start the application once the DOM is fully loaded.
   document.addEventListener('DOMContentLoaded', initializeApp);
 
 })();
 
 
-/* --- Robust mobile tap for custom-select (v2: allows scrolling) --- */
+/**
+ * --- Robust Mobile Tap Logic (v3 - Optimized) ---
+ * - Uses Pointer Events API for unified input (touch, mouse, pen).
+ * - Implements AbortController for robust event listener cleanup, preventing memory leaks.
+ * - Uses a responsive threshold based on device pixel ratio for consistent behavior.
+ */
 (function(){
   function install(optionsEl){
     if(!optionsEl) return;
-    let moved=false,startX=0,startY=0,downTarget=null;
-    const threshold=12;
-    function pt(e){ return e.touches? e.touches[0]: e; }
+    let abortController;
+
     function onDown(e){
-      const p=pt(e); if(!p) return;
-      startX=p.clientX; startY=p.clientY; moved=false;
-      downTarget = e.target.closest ? e.target.closest('.custom-select-option') : null;
-      // DO NOT preventDefault here: we want native scroll to work
-      window.addEventListener('pointermove', onMove, {passive:true});
-      window.addEventListener('pointerup', onUp, {once:true});
-      window.addEventListener('touchmove', onMove, {passive:true});
-      window.addEventListener('touchend', onUp, {once:true});
-    }
-    function onMove(e){
-      const p=pt(e); if(!p) return;
-      if(Math.abs(p.clientX-startX)>threshold || Math.abs(p.clientY-startY)>threshold) moved=true;
-    }
-    function onUp(){
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('touchmove', onMove);
-      if(!moved && downTarget){
-        try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
+      // Clean up any previous listeners that might not have completed
+      if (abortController) {
+        abortController.abort();
       }
-      downTarget=null;
+      abortController = new AbortController();
+      
+      let moved = false;
+      // Responsive threshold scales with screen density
+      const threshold = 12 * (window.devicePixelRatio || 1); 
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const downTarget = e.target.closest('.custom-select-option');
+
+      function onMove(e) {
+        if (Math.abs(e.clientX - startX) > threshold || Math.abs(e.clientY - startY) > threshold) {
+          moved = true;
+          // If movement detected, it's a scroll, so we can stop tracking.
+          abortController.abort();
+        }
+      }
+
+      function onUp() {
+        if (!moved && downTarget) {
+          // Dispatch a click event if it was a tap
+          downTarget.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
+        }
+        // Final cleanup
+        abortController.abort();
+      }
+
+      // Add listeners with the signal for easy removal
+      window.addEventListener('pointermove', onMove, { passive: true, signal: abortController.signal });
+      window.addEventListener('pointerup', onUp, { once: true, signal: abortController.signal });
     }
-    optionsEl.addEventListener('pointerdown', onDown, {passive:true});
-    optionsEl.addEventListener('touchstart', onDown, {passive:true});
+
+    // Use a single listener for all pointer types
+    optionsEl.addEventListener('pointerdown', onDown, { passive: true });
   }
+  
   try{
     install(document.getElementById('layananCustomSelectOptions'));
     install(document.getElementById('preorderCustomSelectOptions'));
     install(document.getElementById('accountCustomSelectOptions'));
-  }catch(_){}
+  } catch(err) {
+    console.error("Failed to install robust tap handler:", err);
+  }
 })();
