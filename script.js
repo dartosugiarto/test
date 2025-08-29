@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.0.0 (Production-ready, refactored for robustness and maintainability)
+ * @version 4.1.0 (Production-ready, fixed event propagation on custom selects)
  */
 
 (function () {
@@ -173,13 +173,6 @@
   }
 
   // --- DATA PARSING ---
-  /**
-   * Parses the non-standard JSON response from Google Sheets gviz API.
-   * This is a critical but fragile point. It's wrapped in checks to prevent crashes.
-   * @param {string} jsonText The raw text response from the fetch call.
-   * @returns {Array<Object>} An array of parsed item objects.
-   * @throws {Error} If the JSON format is invalid or missing key structures.
-   */
   function parseGvizPairs(jsonText) {
     const match = jsonText.match(/\{.*\}/s);
     if (!match) throw new Error('Invalid GViz response: No JSON object found.');
@@ -206,11 +199,6 @@
     return out;
   }
   
-  /**
-   * A robust CSV parser to handle fields enclosed in double quotes.
-   * @param {string} text The raw CSV text.
-   * @returns {Array<Array<string>>} A 2D array representing rows and columns.
-   */
   function robustCsvParser(text) {
     const normalizedText = text.trim().replace(/\r\n/g, '\n');
     const rows = [];
@@ -251,7 +239,10 @@
       el.dataset.value = cat.key;
       el.setAttribute('role', 'option');
       if (index === 0) el.classList.add('selected');
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        // PERBAIKAN: Hentikan event agar tidak "menembus" ke elemen di belakangnya.
+        e.stopPropagation(); 
+        
         state.layanan.activeCategory = cat.key;
         value.textContent = cat.label;
         document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
@@ -331,7 +322,6 @@
 
   // --- PAYMENT MODAL ---
   function calculateFee(price, option) { if (option.feeType === 'fixed') return option.value; if (option.feeType === 'percentage') return Math.ceil(price * option.value); return 0; }
-  
   function updatePriceDetails() {
     const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value;
     if (!selectedOptionId) return;
@@ -344,13 +334,11 @@
     elements.paymentModal.total.textContent = formatToIdr(total);
     updateWaLink(selectedOption, fee, total);
   }
-  
   function updateWaLink(option, fee, total) {
     const { catLabel = "Produk", title, price } = currentSelectedItem;
     const text = [ config.waGreeting, `› Tipe: ${catLabel}`, `› Item: ${title}`, `› Pembayaran: ${option.name}`, `› Harga: ${formatToIdr(price)}`, `› Fee: ${formatToIdr(fee)}`, `› Total: ${formatToIdr(total)}`, ].join('\n');
     elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`;
   }
-  
   function openPaymentModal(item) {
     currentSelectedItem = item;
     const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal;
@@ -366,7 +354,6 @@
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('visible'), 10);
   }
-  
   function closePaymentModal() {
     const { modal } = elements.paymentModal;
     modal.classList.remove('visible');
@@ -420,7 +407,6 @@
   }
   
   function sortPreorderData(data, mode) { const statusOrder = { progress: 1, pending: 2, success: 3, failed: 4 }; const statusIndex = mode === 'detailed' ? 6 : 2; return data.sort((a, b) => statusOrder[normalizeStatus(a[statusIndex])] - statusOrder[normalizeStatus(b[statusIndex])]); }
-  
   async function fetchPreorderData(sheetName) {
     const { listContainer, total } = elements.preorder;
     total.textContent = 'Memuat data...';
@@ -456,6 +442,9 @@
     statusSelect.addEventListener('change', rebound);
     customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
+        // PERBAIKAN: Hentikan event agar tidak "menembus" ke elemen di belakangnya.
+        e.stopPropagation();
+        
         const selectedValue = e.target.dataset.value;
         const selectedText = e.target.textContent;
         customSelect.value.textContent = selectedText;
@@ -501,7 +490,10 @@
       el.textContent = acc.title;
       el.dataset.value = index;
       el.setAttribute('role', 'option');
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        // PERBAIKAN: Hentikan event agar tidak "menembus" ke elemen di belakangnya.
+        e.stopPropagation();
+        
         value.textContent = acc.title;
         document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         el.classList.add('selected');
@@ -590,15 +582,7 @@
     initializeCarousel();
   }
 
-  /**
-   * Main application entry point. Sets up global event listeners and loads initial data.
-   */
   function initializeApp() {
-    // --- Safe browsing event prevention (Optional, can be removed for better UX) ---
-    // document.addEventListener('contextmenu', e => e.preventDefault());
-    // document.addEventListener('copy', e => e.preventDefault());
-    
-    // --- UI Interaction Listeners ---
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
@@ -609,17 +593,15 @@
       }
     });
 
-    // --- Centralized Custom Select Listeners ---
     const customSelects = [
         elements.layanan.customSelect,
         elements.preorder.customSelect,
         elements.accounts.customSelect
     ];
     customSelects.forEach(select => {
-        select.btn.addEventListener('click', () => toggleCustomSelect(select.wrapper));
+        if(select.btn) select.btn.addEventListener('click', () => toggleCustomSelect(select.wrapper));
     });
 
-    // --- Debounced Search Inputs ---
     elements.home.searchInput.addEventListener('input', debounce(e => {
       state.home.searchQuery = e.target.value.trim(); renderHomeList();
     }, 200));
@@ -627,11 +609,9 @@
       state.layanan.searchQuery = e.target.value.trim(); renderLayananList();
     }, 200));
     
-    // --- Modal Listeners ---
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
 
-    // --- Global Click Listener for closing dropdowns ---
     document.addEventListener('click', e => {
       const target = e.target;
       customSelects.forEach(select => {
@@ -641,12 +621,10 @@
       });
     });
 
-    // --- Initial Load ---
     initTheme();
     loadCatalog();
   }
   
-  // --- Robust mobile tap for custom-select ---
   (function(){
     function install(optionsEl){
       if(!optionsEl) return;
@@ -684,7 +662,6 @@
     }catch(_){}
   })();
 
-  // Start the application once the DOM is fully loaded.
   document.addEventListener('DOMContentLoaded', initializeApp);
 
 })();
