@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.3.0 (Production-ready, UI smoothness refinement for dropdown selections)
+ * @version 4.4.0 (Production-ready, professional dropdown interaction fix for seamless navigation)
  */
 
 (function () {
@@ -249,7 +249,6 @@
         el.classList.add('selected');
         toggleCustomSelect(elements.layanan.customSelect.wrapper, false);
         
-        // POLESAN UI: Tunda render list untuk memastikan teks tombol sudah ter-update lebih dulu.
         setTimeout(renderLayananList, 0);
       });
       options.appendChild(el);
@@ -454,7 +453,6 @@
         toggleCustomSelect(customSelect.wrapper, false);
         
         const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
-        // POLESAN UI: Fetch data setelah UI tombol ter-update.
         setTimeout(() => fetchPreorderData(sheet), 0);
       });
     });
@@ -501,7 +499,6 @@
         el.classList.add('selected');
         toggleCustomSelect(customSelect.wrapper, false);
         
-        // POLESAN UI: Tunda render akun untuk memastikan teks tombol sudah ter-update lebih dulu.
         setTimeout(() => renderAccount(index), 0);
       });
       options.appendChild(el);
@@ -619,7 +616,10 @@
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
 
-    document.addEventListener('click', e => {
+    // PERBAIKAN UX PROFESIONAL: Gunakan 'pointerdown' daripada 'click'.
+    // Ini akan menutup dropdown begitu jari menyentuh layar,
+    // sehingga event 'click' (saat jari diangkat) bisa bebas menjalankan tugas utamanya.
+    document.addEventListener('pointerdown', e => {
       const target = e.target;
       customSelects.forEach(select => {
         if (!select.wrapper.contains(target)) {
