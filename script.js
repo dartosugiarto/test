@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.0.0 (Optimized with advanced touch logic and render performance enhancements)
+ * @version 4.1.0 (Fixed click-through issue using event.stopPropagation)
  */
 
 (function () {
@@ -154,11 +154,6 @@
   // --- Catalog & Layanan ---
   function buildLayananCategorySelect(layananData) { const { options, value } = elements.layanan.customSelect; const categoryMap = new Map(); layananData.forEach(item => { if (!categoryMap.has(item.catKey)) { categoryMap.set(item.catKey, item.catLabel); } }); const layananCategories = [...categoryMap].map(([key, label]) => ({ key, label })); options.innerHTML = ''; layananCategories.forEach((cat, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = cat.label; el.dataset.value = cat.key; el.setAttribute('role', 'option'); if (index === 0) el.classList.add('selected'); el.addEventListener('click', () => { state.layanan.activeCategory = cat.key; value.textContent = cat.label; document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(elements.layanan.customSelect.wrapper, false); renderLayananList(); }); options.appendChild(el); }); if (layananCategories.length > 0) { state.layanan.activeCategory = layananCategories[0].key; value.textContent = layananCategories[0].label; } else { value.textContent = 'Data tidak tersedia'; } }
   
-  /**
-   * Renders a list of items into a container with performance optimizations.
-   * - Uses requestAnimationFrame for smoother DOM updates.
-   * - Limits staggered animation to the first 20 items to prevent jitter.
-   */
   function renderList(container, countInfoEl, items, emptyText) {
       container.innerHTML = '';
       if (items.length === 0) {
@@ -179,11 +174,16 @@
 
           buttonEl.querySelector('.title').textContent = item.title;
           buttonEl.querySelector('.price').textContent = formatToIdr(item.price);
-          buttonEl.addEventListener('click', () => openPaymentModal(item));
+          
+          // PERBAIKAN: Tambahkan event.stopPropagation() untuk mencegah klik tembus
+          buttonEl.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openPaymentModal(item);
+          });
+
           fragment.appendChild(clone);
       });
 
-      // Defer DOM insertion to the next frame for smoother rendering
       window.requestAnimationFrame(() => {
           container.appendChild(fragment);
       });
@@ -206,7 +206,7 @@
   function normalizeStatus(rawStatus) { const s = String(rawStatus || '').trim().toLowerCase(); if (['success', 'selesai', 'berhasil', 'done'].includes(s)) return 'success'; if (['progress', 'proses', 'diproses', 'processing'].includes(s)) return 'progress'; if (['failed', 'gagal', 'dibatalkan', 'cancel', 'error'].includes(s)) return 'failed'; return 'pending'; }
   function filterPreorderData() { const { searchInput, statusSelect } = elements.preorder; const query = searchInput.value.trim().toLowerCase(); const statusFilter = statusSelect.value; const currentMode = state.preorder.displayMode; return state.preorder.allData.filter(item => { const status = normalizeStatus(item[currentMode === 'detailed' ? 6 : 2]); if (statusFilter !== 'all' && status !== statusFilter) return false; if (currentMode === 'detailed') { const product = (item[3] || '').toLowerCase(); const nickname = (item[5] || '').toLowerCase(); const idGift = (item[7] || '').toLowerCase(); return product.includes(query) || nickname.includes(query) || idGift.includes(query); } else { const orderNum = (item[0] || '').toLowerCase(); const product = (item[1] || '').toLowerCase(); return orderNum.includes(query) || product.includes(query); } }); }
   function updatePreorderPagination(currentPage, totalPages) { elements.preorder.prevBtn.disabled = currentPage <= 1; elements.preorder.nextBtn.disabled = currentPage >= totalPages; elements.preorder.pageInfo.textContent = totalPages > 0 ? `Hal ${currentPage} dari ${totalPages}` : ''; }
-  function renderPreorderCards() { const filtered = filterPreorderData(); const totalItems = state.preorder.allData.length; const { perPage } = state.preorder; const { listContainer, total } = elements.preorder; total.textContent = `${totalItems} total pesanan${filtered.length !== totalItems ? `, ${filtered.length} ditemukan` : ''}`; const totalPages = Math.max(1, Math.ceil(filtered.length / perPage)); state.preorder.currentPage = Math.min(Math.max(1, state.preorder.currentPage), totalPages); const start = (state.preorder.currentPage - 1) * perPage; const pageData = filtered.slice(start, start + perPage); listContainer.innerHTML = ''; if (pageData.length === 0) { listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 Mover 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak Ada Hasil Ditemukan</p></div></div>`; updatePreorderPagination(0, 0); return; } const fragment = document.createDocumentFragment(); pageData.forEach(item => { const card = document.createElement('article'); if (state.preorder.displayMode === 'detailed') { const [tglOrder, estPengiriman, , product, bulan, name, statusRaw] = item; const status = normalizeStatus(statusRaw); const estDeliveryText = estPengiriman ? `Estimasi Pengiriman: ${estPengiriman} 20:00 WIB` : ''; const details = [{ label: 'TGL ORDER', value: tglOrder }, { label: 'BULAN', value: bulan }]; const detailsHtml = details.filter(d => d.value && String(d.value).trim() !== '').map(d => `<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value">${d.value}</div></div>`).join(''); const expandIndicatorHtml = detailsHtml ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>` : ''; card.className = `card ${detailsHtml ? 'clickable' : ''}`; card.innerHTML = `<div class="card-header"><div><div class="card-name">${name || 'Tanpa Nama'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge-wrapper"><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div>${expandIndicatorHtml}</div></div>${estDeliveryText ? `<div class="card-date">${estDeliveryText}</div>` : ''}${detailsHtml ? `<div class="card-details"><div class="details-grid">${detailsHtml}</div></div>` : ''}`; if (detailsHtml) card.addEventListener('click', () => card.classList.toggle('expanded')); } else { const [orderNum, product, statusRaw] = item; const status = normalizeStatus(statusRaw); card.className = 'card'; card.innerHTML = `<div class="card-header"><div><div class="card-name">${orderNum || 'Tanpa Nomor'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div></div>`; } fragment.appendChild(card); }); listContainer.appendChild(fragment); updatePreorderPagination(state.preorder.currentPage, totalPages); }
+  function renderPreorderCards() { const filtered = filterPreorderData(); const totalItems = state.preorder.allData.length; const { perPage } = state.preorder; const { listContainer, total } = elements.preorder; total.textContent = `${totalItems} total pesanan${filtered.length !== totalItems ? `, ${filtered.length} ditemukan` : ''}`; const totalPages = Math.max(1, Math.ceil(filtered.length / perPage)); state.preorder.currentPage = Math.min(Math.max(1, state.preorder.currentPage), totalPages); const start = (state.preorder.currentPage - 1) * perPage; const pageData = filtered.slice(start, start + perPage); listContainer.innerHTML = ''; if (pageData.length === 0) { listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak Ada Hasil Ditemukan</p></div></div>`; updatePreorderPagination(0, 0); return; } const fragment = document.createDocumentFragment(); pageData.forEach(item => { const card = document.createElement('article'); if (state.preorder.displayMode === 'detailed') { const [tglOrder, estPengiriman, , product, bulan, name, statusRaw] = item; const status = normalizeStatus(statusRaw); const estDeliveryText = estPengiriman ? `Estimasi Pengiriman: ${estPengiriman} 20:00 WIB` : ''; const details = [{ label: 'TGL ORDER', value: tglOrder }, { label: 'BULAN', value: bulan }]; const detailsHtml = details.filter(d => d.value && String(d.value).trim() !== '').map(d => `<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value">${d.value}</div></div>`).join(''); const expandIndicatorHtml = detailsHtml ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>` : ''; card.className = `card ${detailsHtml ? 'clickable' : ''}`; card.innerHTML = `<div class="card-header"><div><div class="card-name">${name || 'Tanpa Nama'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge-wrapper"><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div>${expandIndicatorHtml}</div></div>${estDeliveryText ? `<div class="card-date">${estDeliveryText}</div>` : ''}${detailsHtml ? `<div class="card-details"><div class="details-grid">${detailsHtml}</div></div>` : ''}`; if (detailsHtml) card.addEventListener('click', () => card.classList.toggle('expanded')); } else { const [orderNum, product, statusRaw] = item; const status = normalizeStatus(statusRaw); card.className = 'card'; card.innerHTML = `<div class="card-header"><div><div class="card-name">${orderNum || 'Tanpa Nomor'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div></div>`; } fragment.appendChild(card); }); listContainer.appendChild(fragment); updatePreorderPagination(state.preorder.currentPage, totalPages); }
   function sortPreorderData(data, mode) { const statusOrder = { progress: 1, pending: 2, success: 3, failed: 4 }; const statusIndex = mode === 'detailed' ? 6 : 2; return data.sort((a, b) => statusOrder[normalizeStatus(a[statusIndex])] - statusOrder[normalizeStatus(b[statusIndex])]); }
   async function fetchPreorderData(sheetName) { const { listContainer, total } = elements.preorder; total.textContent = 'Memuat data...'; showSkeleton(listContainer, elements.skeletonCardTemplate, 5); state.preorder.displayMode = sheetName === config.sheets.preorder.name1 ? 'detailed' : 'simple'; try { const res = await fetch(getSheetUrl(sheetName, 'csv')); if (!res.ok) throw new Error(`Network error: ${res.statusText}`); const text = await res.text(); let rows = text.trim().split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim())); if (rows.length < 2) { state.preorder.allData = []; } else { rows.shift(); const dataRows = rows.filter(row => row && (row[0] || '').trim() !== ''); state.preorder.allData = sortPreorderData(dataRows, state.preorder.displayMode); } } catch (e) { state.preorder.allData = []; total.textContent = 'Gagal memuat data.'; console.error('Fetch Pre-Order failed:', e); } finally { state.preorder.currentPage = 1; renderPreorderCards(); } }
   function initializePreorder() { if (state.preorder.initialized) return; const rebound = () => { state.preorder.currentPage = 1; renderPreorderCards(); }; const { searchInput, statusSelect, customSelect, prevBtn, nextBtn } = elements.preorder; searchInput.addEventListener('input', rebound); statusSelect.addEventListener('change', rebound); customSelect.options.querySelectorAll('.custom-select-option').forEach(option => { option.addEventListener('click', e => { const selectedValue = e.target.dataset.value; const selectedText = e.target.textContent; customSelect.value.textContent = selectedText; document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); e.target.classList.add('selected'); const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2; fetchPreorderData(sheet); toggleCustomSelect(customSelect.wrapper, false); }); }); prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }); nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); }); fetchPreorderData(config.sheets.preorder.name1); state.preorder.initialized = true; }
@@ -277,14 +277,12 @@
     let abortController;
 
     function onDown(e){
-      // Clean up any previous listeners that might not have completed
       if (abortController) {
         abortController.abort();
       }
       abortController = new AbortController();
       
       let moved = false;
-      // Responsive threshold scales with screen density
       const threshold = 12 * (window.devicePixelRatio || 1); 
       const startX = e.clientX;
       const startY = e.clientY;
@@ -293,26 +291,21 @@
       function onMove(e) {
         if (Math.abs(e.clientX - startX) > threshold || Math.abs(e.clientY - startY) > threshold) {
           moved = true;
-          // If movement detected, it's a scroll, so we can stop tracking.
           abortController.abort();
         }
       }
 
       function onUp() {
         if (!moved && downTarget) {
-          // Dispatch a click event if it was a tap
           downTarget.dispatchEvent(new Event('click', { bubbles: true, cancelable: true }));
         }
-        // Final cleanup
         abortController.abort();
       }
 
-      // Add listeners with the signal for easy removal
       window.addEventListener('pointermove', onMove, { passive: true, signal: abortController.signal });
       window.addEventListener('pointerup', onUp, { once: true, signal: abortController.signal });
     }
 
-    // Use a single listener for all pointer types
     optionsEl.addEventListener('pointerdown', onDown, { passive: true });
   }
   
