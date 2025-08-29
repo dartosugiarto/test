@@ -1,71 +1,53 @@
-// menu.js
 (function (global) {
-  // Menu: Film gratis + Donasi (Saweria)
   const MENU_ITEMS = [
     { id:'toKatalog',  label:'Katalog',         type:'route', value:'katalog' },
-    { id:'toPreorder', label:'Lacak Pre‑Order', type:'route', value:'preorder' },
+    { id:'toPreorder', label:'Lacak Pre-Order', type:'route', value:'preorder' },
     { id:'toAccounts', label:'Akun Game',       type:'route', value:'accounts' },
     { divider:true },
     { id:'film',    label:'Tonton Film (Gratis)',  type:'route', value:'film' },
     { id:'donasi',  label:'Donasi (Saweria)',      type:'link',  href:'https://saweria.co/playpal' },
-    { id:'ebook',   label:'E‑book',        type:'link', href:'#' },
+    { id:'ebook',   label:'E-book',        type:'link', href:'#' },
     { id:'assets',  label:'Asset Editing', type:'link', href:'#' }
   ];
 
   function renderMenu(container, items, onRoute, closeAll) {
     if (!container) return;
     container.innerHTML = '';
-    items.forEach(item => {
-      if (item.divider) {
-        const d = document.createElement('div');
-        d.className = 'menu-divider';
-        container.appendChild(d);
+    const frag = document.createDocumentFragment();
+    items.forEach(it => {
+      if (it.divider) {
+        const div = document.createElement('div');
+        div.style.height = '1px';
+        div.style.background = 'var(--separator)';
+        div.style.margin = '10px 0';
+        frag.appendChild(div);
         return;
       }
-      const btn = document.createElement('button');
-      btn.className = 'menu-btn';
-      btn.type = 'button';
-      btn.textContent = item.label;
-      if (item.type === 'route') {
-        btn.addEventListener('click', () => { onRoute?.(item.value); closeAll(); });
+      const a = document.createElement('a');
+      a.className = 'nav-item';
+      a.href = it.type === 'link' ? it.href : '#';
+      a.textContent = it.label;
+      if (it.type === 'route') {
+        a.addEventListener('click', e => { e.preventDefault(); closeAll && closeAll(); onRoute && onRoute(it.value); });
       } else {
-        btn.addEventListener('click', () => { window.open(item.href, '_blank', 'noopener'); closeAll(); });
+        a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener');
       }
-      container.appendChild(btn);
+      frag.appendChild(a);
     });
+    container.appendChild(frag);
   }
 
-  function init({ burgerCat, burgerPO, burgerAcc, menuCat, menuPO, menuAcc, onRoute }) {
-    const closeAll = () => {
-      [burgerCat, burgerPO, burgerAcc].forEach(b => b && b.classList.remove('active'));
-      [menuCat, menuPO, menuAcc].forEach(m => m && m.classList.remove('open'));
-    };
-    const toggle = (btn, menu) => {
-      const open = menu?.classList.contains('open');
-      closeAll();
-      if (!open) { btn?.classList.add('active'); menu?.classList.add('open'); }
-    };
-
-    [menuCat, menuPO, menuAcc].forEach(m => renderMenu(m, MENU_ITEMS, onRoute, closeAll));
-    burgerCat ?.addEventListener('click', () => toggle(burgerCat, menuCat),  { passive:true });
-    burgerPO  ?.addEventListener('click', () => toggle(burgerPO , menuPO ),  { passive:true });
-    burgerAcc ?.addEventListener('click', () => toggle(burgerAcc, menuAcc),  { passive:true });
-
-
-    document.addEventListener('click', (e) => {
-      const inside =
-        menuCat?.contains(e.target)  || burgerCat?.contains(e.target) ||
-        menuPO ?.contains(e.target)  || burgerPO ?.contains(e.target) ||
-        menuAcc?.contains(e.target) || burgerAcc?.contains(e.target);
-      if (!inside) closeAll();
-    }, { passive:true });
-
+  function init({ menuCat, menuPO, menuAcc, onRoute, closeAll }) {
+    renderMenu(menuCat, MENU_ITEMS, onRoute, closeAll);
+    renderMenu(menuPO, MENU_ITEMS, onRoute, closeAll);
+    renderMenu(menuAcc, MENU_ITEMS, onRoute, closeAll);
     return {
-      closeAll,
-      get items(){ return [...MENU_ITEMS]; },
-      set(items){
-        MENU_ITEMS.splice(0, MENU_ITEMS.length, ...items);
-        [menuCat, menuPO, menuAcc].forEach(m => renderMenu(m, MENU_ITEMS, onRoute, closeAll));
+      remove(id){
+        const i = MENU_ITEMS.findIndex(m => m.id === id);
+        if (i >= 0) {
+          MENU_ITEMS.splice(i,1);
+          [menuCat, menuPO, menuAcc].forEach(m => renderMenu(m, MENU_ITEMS, onRoute, closeAll));
+        }
       },
       add(item){
         MENU_ITEMS.push(item);
