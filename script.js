@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.1.0 (Production-ready, fixed event propagation on custom selects)
+ * @version 4.2.0 (Production-ready, removed custom mobile tap handler to definitively fix event propagation)
  */
 
 (function () {
@@ -240,7 +240,6 @@
       el.setAttribute('role', 'option');
       if (index === 0) el.classList.add('selected');
       el.addEventListener('click', (e) => {
-        // PERBAIKAN: Hentikan event agar tidak "menembus" ke elemen di belakangnya.
         e.stopPropagation(); 
         
         state.layanan.activeCategory = cat.key;
@@ -442,7 +441,6 @@
     statusSelect.addEventListener('change', rebound);
     customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
-        // PERBAIKAN: Hentikan event agar tidak "menembus" ke elemen di belakangnya.
         e.stopPropagation();
         
         const selectedValue = e.target.dataset.value;
@@ -491,7 +489,6 @@
       el.dataset.value = index;
       el.setAttribute('role', 'option');
       el.addEventListener('click', (e) => {
-        // PERBAIKAN: Hentikan event agar tidak "menembus" ke elemen di belakangnya.
         e.stopPropagation();
         
         value.textContent = acc.title;
@@ -599,7 +596,10 @@
         elements.accounts.customSelect
     ];
     customSelects.forEach(select => {
-        if(select.btn) select.btn.addEventListener('click', () => toggleCustomSelect(select.wrapper));
+        if(select.btn) select.btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleCustomSelect(select.wrapper)
+        });
     });
 
     elements.home.searchInput.addEventListener('input', debounce(e => {
@@ -625,42 +625,10 @@
     loadCatalog();
   }
   
-  (function(){
-    function install(optionsEl){
-      if(!optionsEl) return;
-      let moved=false,startX=0,startY=0,downTarget=null;
-      const threshold=12;
-      function pt(e){ return e.touches? e.touches[0]: e; }
-      function onDown(e){
-        const p=pt(e); if(!p) return;
-        startX=p.clientX; startY=p.clientY; moved=false;
-        downTarget = e.target.closest ? e.target.closest('.custom-select-option') : null;
-        window.addEventListener('pointermove', onMove, {passive:true});
-        window.addEventListener('pointerup', onUp, {once:true});
-        window.addEventListener('touchmove', onMove, {passive:true});
-        window.addEventListener('touchend', onUp, {once:true});
-      }
-      function onMove(e){
-        const p=pt(e); if(!p) return;
-        if(Math.abs(p.clientX-startX)>threshold || Math.abs(p.clientY-startY)>threshold) moved=true;
-      }
-      function onUp(){
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('touchmove', onMove);
-        if(!moved && downTarget){
-          try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
-        }
-        downTarget=null;
-      }
-      optionsEl.addEventListener('pointerdown', onDown, {passive:true});
-      optionsEl.addEventListener('touchstart', onDown, {passive:true});
-    }
-    try{
-      install(document.getElementById('layananCustomSelectOptions'));
-      install(document.getElementById('preorderCustomSelectOptions'));
-      install(document.getElementById('accountCustomSelectOptions'));
-    }catch(_){}
-  })();
+  // PERBAIKAN FINAL: Menghapus seluruh blok 'robust mobile tap' handler
+  // yang menyebabkan event klik ganda dan 'tembus'.
+  // Perilaku klik/tap sekarang sepenuhnya ditangani oleh browser,
+  // yang lebih stabil dan dapat diprediksi.
 
   document.addEventListener('DOMContentLoaded', initializeApp);
 
