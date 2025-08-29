@@ -1,12 +1,13 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.2.0 (Production-ready, removed custom mobile tap handler to definitively fix event propagation)
+ * @version 4.3.0 (Production-ready, UI smoothness refinement for dropdown selections)
  */
 
 (function () {
   'use strict';
 
+  // ... (Bagian config, state, dan elements tetap sama persis seperti sebelumnya) ...
   const config = {
     sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
     sheets: {
@@ -247,7 +248,9 @@
         document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         el.classList.add('selected');
         toggleCustomSelect(elements.layanan.customSelect.wrapper, false);
-        renderLayananList();
+        
+        // POLESAN UI: Tunda render list untuk memastikan teks tombol sudah ter-update lebih dulu.
+        setTimeout(renderLayananList, 0);
       });
       options.appendChild(el);
     });
@@ -448,9 +451,11 @@
         customSelect.value.textContent = selectedText;
         document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         e.target.classList.add('selected');
-        const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
-        fetchPreorderData(sheet);
         toggleCustomSelect(customSelect.wrapper, false);
+        
+        const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
+        // POLESAN UI: Fetch data setelah UI tombol ter-update.
+        setTimeout(() => fetchPreorderData(sheet), 0);
       });
     });
     prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
@@ -495,7 +500,9 @@
         document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         el.classList.add('selected');
         toggleCustomSelect(customSelect.wrapper, false);
-        renderAccount(index);
+        
+        // POLESAN UI: Tunda render akun untuk memastikan teks tombol sudah ter-update lebih dulu.
+        setTimeout(() => renderAccount(index), 0);
       });
       options.appendChild(el);
     });
@@ -625,11 +632,6 @@
     loadCatalog();
   }
   
-  // PERBAIKAN FINAL: Menghapus seluruh blok 'robust mobile tap' handler
-  // yang menyebabkan event klik ganda dan 'tembus'.
-  // Perilaku klik/tap sekarang sepenuhnya ditangani oleh browser,
-  // yang lebih stabil dan dapat diprediksi.
-
   document.addEventListener('DOMContentLoaded', initializeApp);
 
 })();
