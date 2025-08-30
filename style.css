@@ -83,20 +83,19 @@ p { font-size: var(--font-size-body); line-height: 1.5; color: var(--text-second
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 
-/* --- MODIFIKASI LAYOUT & SIDEBAR BARU --- */
 .sidebar {
   position: fixed;
   top: 0;
-  right: 0; /* Ubah ke kanan */
-  left: auto; /* Hapus posisi kiri */
+  right: 0;
+  left: auto;
   z-index: 1100;
   width: var(--sidebar-width);
   height: 100%;
   background-color: var(--surface-primary);
-  border-left: 1px solid var(--separator); /* Ubah ke border kiri */
+  border-left: 1px solid var(--separator);
   border-right: none;
   padding: var(--sp-fib-5);
-  transform: translateX(100%); /* Sembunyikan ke kanan */
+  transform: translateX(100%);
   transition: transform var(--duration-natural) var(--ease-natural);
   display: flex;
   flex-direction: column;
@@ -105,8 +104,6 @@ p { font-size: var(--font-size-body); line-height: 1.5; color: var(--text-second
 body.sidebar-open .sidebar {
   transform: translateX(0);
 }
-
-/* Hapus .sidebar-header dan .sidebar-logo, .sidebar-title */
 
 .sidebar-nav {
   display: flex;
@@ -151,15 +148,12 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 }
 
 @media (min-width: 769px) {
-  /* Hapus .page-container { margin-left } */
   .page-container {
     margin-left: 0; 
   }
   .sidebar {
-    /* sidebar di desktop tetap tersembunyi sampai diklik */
     transform: translateX(100%); 
   }
-  /* Burger button sekarang selalu ada */
   #burgerBtn {
     display: grid;
   }
@@ -178,7 +172,6 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .wrap { max-width: 1200px; margin: 0 auto; padding: 0 var(--sp-fib-5) var(--sp-fib-7); }
 [data-rail] { width: 100%; margin: 0; padding: 0; }
 
-/* --- HEADER BARU --- */
 .main-header {
   position: sticky;
   top: 0;
@@ -213,20 +206,18 @@ body.dark-mode .main-header {
 .header-logo {
   height: 36px;
   width: 36px;
+  object-fit: contain; /* [PERBAIKAN LOGO GEPENG] */
 }
 .header-title {
   font-weight: 800;
   font-size: 20px;
-  display: none; /* Sembunyi di mobile */
+  display: none;
 }
 @media (min-width: 769px) {
   .header-title {
-    display: block; /* Tampil di desktop */
+    display: block;
   }
 }
-
-
-/* SISA CSS HEADER LAMA DIHAPUS/TIDAK DIPAKAI */
 
 .page-title-header { margin-top: var(--sp-fib-6); margin-bottom: var(--sp-fib-5); }
 .page-title-header h1 { margin: 0; line-height: 1.2; }
@@ -265,7 +256,6 @@ body.dark-mode .main-header {
 .icon-btn:hover { background: var(--surface-secondary); color: var(--brand-blue); }
 .icon-btn:active { transform: scale(0.95); }
 
-
 .sidebar-action-item {
   display: flex;
   justify-content: space-between;
@@ -292,7 +282,6 @@ body.dark-mode .main-header {
 body.dark-mode .icon-sun { opacity: 1; transform: translate(-50%, -50%) rotate(0deg) scale(1); }
 body.dark-mode .icon-moon { opacity: 0; transform: translate(-50%, -50%) rotate(90deg) scale(0.5); }
 
-/* MODIFIKASI ANIMASI BURGER KE X */
 .burger span {
   display: block;
   width: 24px;
@@ -314,7 +303,6 @@ body.dark-mode .icon-moon { opacity: 0; transform: translate(-50%, -50%) rotate(
   transform: translateY(-8.5px) rotate(-45deg);
 }
 
-/* SISA CSS TIDAK PERLU DIUBAH */
 .custom-select-wrapper { position: relative; flex-grow: 1; }
 .custom-select-btn {
   display: flex; justify-content: space-between; align-items: center; width: 100%; height: var(--control-h);
@@ -547,7 +535,6 @@ body.dark-mode .skeleton::after { background-image: linear-gradient(90deg, trans
 #homeCountInfo[data-rail], #layananCountInfo[data-rail] { text-align: center; background: var(--surface-secondary); color: var(--text-primary); font-weight: 700; padding: var(--sp-fib-3) var(--sp-fib-5); border-radius: var(--radius-fib-small); }
 #viewPreorder #preorderTotal.meta { text-align: center; background: var(--surface-secondary); color: var(--text-primary); font-weight: 700; padding: var(--sp-fib-3) var(--sp-fib-5); border-radius: var(--radius-fib-small); }
 
-/* --- Perbaikan untuk Tampilan Menu Mobile --- */
 body.sidebar-open .sidebar {
   transform: translateX(0);
 }
@@ -558,7 +545,6 @@ body.sidebar-open .sidebar {
   }
 }
 
-/* touch/scroll & logo safety */
 .sidebar-logo{object-fit:contain;object-position:center;}
 .custom-select-options{-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 .custom-select-option{user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
