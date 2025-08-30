@@ -21,12 +21,31 @@
     </div>
   </noscript>
 
-  <aside class="sidebar" id="sidebarNav">
-    <div class="sidebar-header">
-      <img src="logo.jpeg" alt="PlayPal.ID Logo" class="sidebar-logo">
-      <span class="sidebar-title">PlayPal.ID</span>
+  <header class="main-header">
+    <div class="header-content">
+        <a href="#" class="header-logo-link" data-mode="home">
+          <img src="logo.jpeg" alt="PlayPal.ID Logo" class="header-logo">
+          <span class="header-title">PlayPal.ID</span>
+        </a>
+  
+        <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
     </div>
+  </header>
+  
+  <aside class="sidebar" id="sidebarNav">
     <nav class="sidebar-nav">
+      <div class="sidebar-action-item">
+        <span>Ganti Tema</span>
+        <button class="icon-btn theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Ganti tema">
+            <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+      </div>
+      
+      <div class="nav-divider"></div>
+  
       <a href="#" class="nav-item active" data-mode="home">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
         <span>Home</span>
@@ -68,25 +87,6 @@
 
   <div class="page-container" id="pageContainer">
     <main class="wrap">
-      <header class="main-header">
-          <div class="header-content">
-              <div class="promo-select-wrapper">
-                  <div class="promo-static">
-                      Promo Spesial Segera Hadir!
-                  </div>
-              </div>
-              <div class="header-actions">
-                  <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Ganti tema">
-                      <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                      <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                  </button>
-                  <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
-                      <span></span><span></span><span></span>
-                  </button>
-              </div>
-          </div>
-      </header>
-
       <section id="viewHome" class="view-section active" aria-label="Home">
         <header class="page-title-header">
           <h1>Promo Hari Ini</h1>
