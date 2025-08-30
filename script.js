@@ -283,7 +283,35 @@
   function initTheme() { const savedTheme = localStorage.getItem('theme'); const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light'); applyTheme(currentTheme); }
   function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }
   function toggleSidebar(forceOpen) { const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); document.body.classList.toggle('sidebar-open', isOpen); elements.sidebar.burger.classList.toggle('active', isOpen); }
-  function setMode(nextMode) { if (nextMode === 'donasi') { window.open('https://saweria.co/playpal', '_blank', 'noopener'); return; } const viewMap = { home: elements.viewHome, layanan: elements.viewLayanan, preorder: elements.viewPreorder, accounts: elements.viewAccounts, perpustakaan: elements.viewPerpustakaan, film: elements.viewFilm, }; const nextView = viewMap[nextMode]; if (!nextView) return; document.querySelector('.view-section.active')?.classList.remove('active'); nextView.classList.add('active'); elements.sidebar.links.forEach(link => { link.classList.toggle('active', link.dataset.mode === nextMode); }); if (window.innerWidth < 769) { toggleSidebar(false); } window.scrollTo({ top: 0, behavior: 'smooth' }); if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder(); if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts(); }
+  
+  function setMode(nextMode) {
+    if (nextMode === 'donasi') {
+      window.open('https://saweria.co/playpal', '_blank', 'noopener');
+      return;
+    }
+    const viewMap = {
+      home: elements.viewHome,
+      layanan: elements.viewLayanan,
+      preorder: elements.viewPreorder,
+      accounts: elements.viewAccounts,
+      perpustakaan: elements.viewPerpustakaan,
+      film: elements.viewFilm,
+    };
+    const nextView = viewMap[nextMode];
+    if (!nextView) return;
+    document.querySelector('.view-section.active')?.classList.remove('active');
+    nextView.classList.add('active');
+    elements.sidebar.links.forEach(link => {
+      link.classList.toggle('active', link.dataset.mode === nextMode);
+    });
+    if (window.innerWidth < 769) {
+      toggleSidebar(false);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
+    if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
+  }
+
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
   function buildLayananCategorySelect(layananData) { const { options, value } = elements.layanan.customSelect; const categoryMap = new Map(); layananData.forEach(item => { if (!categoryMap.has(item.catKey)) { categoryMap.set(item.catKey, item.catLabel); } }); const layananCategories = [...categoryMap].map(([key, label]) => ({ key, label })); options.innerHTML = ''; layananCategories.forEach((cat, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = cat.label; el.dataset.value = cat.key; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); if (index === 0) el.classList.add('selected'); el.addEventListener('click', () => { state.layanan.activeCategory = cat.key; value.textContent = cat.label; document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(elements.layanan.customSelect.wrapper, false); renderLayananList(); }); options.appendChild(el); }); if (layananCategories.length > 0) { state.layanan.activeCategory = layananCategories[0].key; value.textContent = layananCategories[0].label; } else { value.textContent = 'Data tidak tersedia'; } }
@@ -525,6 +553,116 @@
     state.accounts.initialized = true; 
   }
 
+  // --- START: Library Functions ---
+
+  // Fungsi untuk mengambil dan menampilkan semua buku
+  async function initializeLibrary() {
+    const container = getElement('libraryGridContainer');
+    const errorEl = getElement('libraryError');
+    
+    // Tampilkan skeleton loading
+    container.innerHTML = '<p>Memuat buku...</p>'; // Ganti dengan skeleton jika ada template
+    errorEl.style.display = 'none';
+
+    try {
+      // Ganti 'Sheet6' dengan nama sheet perpustakaan Anda
+      const sheetName = 'Sheet6'; 
+      const res = await fetch(getSheetUrl(sheetName, 'csv'));
+      if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
+      
+      const text = await res.text();
+      const rows = robustCsvParser(text);
+      rows.shift(); // Hapus baris header
+      
+      const books = rows
+        .filter(row => row && row[0]) // Pastikan baris dan judul tidak kosong
+        .map(row => ({
+          title: row[0],
+          coverUrl: row[1],
+          bookUrl: row[2]
+        }));
+      
+      renderLibraryGrid(books);
+
+    } catch (err) {
+      console.error('Failed to load library:', err);
+      container.innerHTML = '';
+      errorEl.textContent = 'Gagal memuat perpustakaan. Coba lagi nanti.';
+      errorEl.style.display = 'block';
+    }
+  }
+
+  // Fungsi untuk merender galeri buku
+  function renderLibraryGrid(books) {
+    const container = getElement('libraryGridContainer');
+    if (!books || books.length === 0) {
+      container.innerHTML = '<div class="empty">Belum ada buku yang ditambahkan.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    books.forEach(book => {
+      const card = document.createElement('button');
+      card.className = 'book-card';
+      card.innerHTML = `
+        <img src="${book.coverUrl}" alt="${book.title}" class="cover" loading="lazy">
+        <div class="title">${book.title}</div>
+      `;
+      card.addEventListener('click', () => openBookReader(book));
+      fragment.appendChild(card);
+    });
+    container.appendChild(fragment);
+  }
+
+  // Fungsi untuk membuka modal pembaca buku
+  function openBookReader(book) {
+    const modal = getElement('bookReaderModal');
+    const titleEl = getElement('bookReaderTitle');
+    const frameEl = getElement('bookReaderFrame');
+
+    titleEl.textContent = book.title;
+    frameEl.src = book.bookUrl;
+
+    modal.classList.add('visible');
+  }
+
+  // Fungsi untuk menutup modal
+  function closeBookReader() {
+    const modal = getElement('bookReaderModal');
+    const frameEl = getElement('bookReaderFrame');
+    
+    modal.classList.remove('visible');
+    // Hentikan pemuatan iframe untuk menghemat resource
+    frameEl.src = ''; 
+  }
+
+  // Tambahkan event listener untuk tombol tutup dan overlay
+  getElement('closeReaderModalBtn').addEventListener('click', closeBookReader);
+  getElement('bookReaderModal').addEventListener('click', (e) => {
+    if (e.target === getElement('bookReaderModal')) {
+      closeBookReader();
+    }
+  });
+
+  // Tambahkan event listener untuk tombol Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && getElement('bookReaderModal').classList.contains('visible')) {
+      closeBookReader();
+    }
+  });
+
+  // --- END: Library Functions ---
+
+  // Panggil fungsi initializeLibrary saat menu perpustakaan diklik
+  const originalSetMode = setMode;
+  setMode = function(nextMode) {
+    originalSetMode(nextMode); // Jalankan fungsi setMode yang asli
+    if (nextMode === 'perpustakaan') {
+      initializeLibrary();
+    }
+  };
+  
   document.addEventListener('DOMContentLoaded', initializeApp);
 
 })();
