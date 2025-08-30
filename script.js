@@ -30,6 +30,8 @@
   let catalogFetchController;
   let preorderFetchController;
   let accountsFetchController;
+  let modalFocusTrap = { listener: null, focusableEls: [], firstEl: null, lastEl: null };
+  let elementToFocusOnModalClose = null;
 
   const state = {
     layanan: { activeCategory: '', searchQuery: '' },
@@ -147,9 +149,6 @@
    * Main application entry point.
    */
   function initializeApp() {
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('copy', e => e.preventDefault());
-    
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
@@ -288,7 +287,7 @@
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
   function buildLayananCategorySelect(layananData) { const { options, value } = elements.layanan.customSelect; const categoryMap = new Map(); layananData.forEach(item => { if (!categoryMap.has(item.catKey)) { categoryMap.set(item.catKey, item.catLabel); } }); const layananCategories = [...categoryMap].map(([key, label]) => ({ key, label })); options.innerHTML = ''; layananCategories.forEach((cat, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = cat.label; el.dataset.value = cat.key; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); if (index === 0) el.classList.add('selected'); el.addEventListener('click', () => { state.layanan.activeCategory = cat.key; value.textContent = cat.label; document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(elements.layanan.customSelect.wrapper, false); renderLayananList(); }); options.appendChild(el); }); if (layananCategories.length > 0) { state.layanan.activeCategory = layananCategories[0].key; value.textContent = layananCategories[0].label; } else { value.textContent = 'Data tidak tersedia'; } }
-  function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); let animationDelay = 0; for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.style.animationDelay = `${animationDelay}ms`; animationDelay += 50; buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
+  function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
   function renderHomeList() { const query = state.home.searchQuery.toLowerCase(); const homeCatKey = allCatalogData.length > 0 ? allCatalogData[0].catKey : null; const items = homeCatKey ? allCatalogData.filter(x => x.catKey === homeCatKey && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))) : []; renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada promo ditemukan.'); }
   function renderLayananList() { const { activeCategory, searchQuery } = state.layanan; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.layanan.listContainer, elements.layanan.countInfo, items, 'Tidak ada hasil ditemukan.'); }
   
@@ -325,8 +324,67 @@
   function calculateFee(price, option) { if (option.feeType === 'fixed') return option.value; if (option.feeType === 'percentage') return Math.ceil(price * option.value); return 0; }
   function updatePriceDetails() { const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value; if (!selectedOptionId) return; const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId); if (!currentSelectedItem || !selectedOption) return; const price = currentSelectedItem.price; const fee = calculateFee(price, selectedOption); const total = price + fee; elements.paymentModal.fee.textContent = formatToIdr(fee); elements.paymentModal.total.textContent = formatToIdr(total); updateWaLink(selectedOption, fee, total); }
   function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `› Tipe: ${catLabel}`, `› Item: ${title}`, `› Pembayaran: ${option.name}`, `› Harga: ${formatToIdr(price)}`, `› Fee: ${formatToIdr(fee)}`, `› Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
-  function openPaymentModal(item) { currentSelectedItem = item; const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal; itemName.textContent = item.title; itemPrice.textContent = formatToIdr(item.price); optionsContainer.innerHTML = ''; config.paymentOptions.forEach((option, index) => { const fee = calculateFee(item.price, option); optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> </div>`); }); optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails)); updatePriceDetails(); modal.style.display = 'flex'; setTimeout(() => modal.classList.add('visible'), 10); }
-  function closePaymentModal() { const { modal } = elements.paymentModal; modal.classList.remove('visible'); setTimeout(() => { modal.style.display = 'none'; currentSelectedItem = null; }, 200); }
+  
+  function openPaymentModal(item) {
+    elementToFocusOnModalClose = document.activeElement; // Simpan elemen yang aktif sebelum modal dibuka
+    currentSelectedItem = item;
+    const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal;
+    itemName.textContent = item.title;
+    itemPrice.textContent = formatToIdr(item.price);
+    optionsContainer.innerHTML = '';
+    config.paymentOptions.forEach((option, index) => {
+      const fee = calculateFee(item.price, option);
+      optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> </div>`);
+    });
+    optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails));
+    updatePriceDetails();
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('visible'), 10);
+
+    // --- LOGIKA FOCUS TRAP DIMULAI ---
+    const focusableEls = modal.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), input[type="radio"]:not([disabled])');
+    modalFocusTrap.focusableEls = Array.from(focusableEls);
+    modalFocusTrap.firstEl = modalFocusTrap.focusableEls[0];
+    modalFocusTrap.lastEl = modalFocusTrap.focusableEls[modalFocusTrap.focusableEls.length - 1];
+    
+    modalFocusTrap.listener = function(e) {
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) { // Shift + Tab
+        if (document.activeElement === modalFocusTrap.firstEl) {
+          modalFocusTrap.lastEl.focus();
+          e.preventDefault();
+        }
+      } else { // Tab
+        if (document.activeElement === modalFocusTrap.lastEl) {
+          modalFocusTrap.firstEl.focus();
+          e.preventDefault();
+        }
+      }
+    };
+    modal.addEventListener('keydown', modalFocusTrap.listener);
+    setTimeout(() => modalFocusTrap.firstEl.focus(), 100); // Fokus ke elemen pertama saat modal terbuka
+    // --- LOGIKA FOCUS TRAP SELESAI ---
+  }
+
+  function closePaymentModal() {
+    const { modal } = elements.paymentModal;
+    modal.classList.remove('visible');
+    
+    // Hapus listener keydown untuk mencegah memory leak
+    if (modalFocusTrap.listener) {
+      modal.removeEventListener('keydown', modalFocusTrap.listener);
+    }
+
+    setTimeout(() => {
+      modal.style.display = 'none';
+      currentSelectedItem = null;
+      // Kembalikan fokus ke elemen yang membuka modal
+      if (elementToFocusOnModalClose) {
+        elementToFocusOnModalClose.focus();
+      }
+    }, 200);
+  }
+
   function normalizeStatus(rawStatus) { const s = String(rawStatus || '').trim().toLowerCase(); if (['success', 'selesai', 'berhasil', 'done'].includes(s)) return 'success'; if (['progress', 'proses', 'diproses', 'processing'].includes(s)) return 'progress'; if (['failed', 'gagal', 'dibatalkan', 'cancel', 'error'].includes(s)) return 'failed'; return 'pending'; }
   function filterPreorderData() { const { searchInput, statusSelect } = elements.preorder; const query = searchInput.value.trim().toLowerCase(); const statusFilter = statusSelect.value; const currentMode = state.preorder.displayMode; return state.preorder.allData.filter(item => { const status = normalizeStatus(item[currentMode === 'detailed' ? 6 : 2]); if (statusFilter !== 'all' && status !== statusFilter) return false; if (currentMode === 'detailed') { const product = (item[3] || '').toLowerCase(); const nickname = (item[5] || '').toLowerCase(); const idGift = (item[7] || '').toLowerCase(); return product.includes(query) || nickname.includes(query) || idGift.includes(query); } else { const orderNum = (item[0] || '').toLowerCase(); const product = (item[1] || '').toLowerCase(); return orderNum.includes(query) || product.includes(query); } }); }
   function updatePreorderPagination(currentPage, totalPages) { elements.preorder.prevBtn.disabled = currentPage <= 1; elements.preorder.nextBtn.disabled = currentPage >= totalPages; elements.preorder.pageInfo.textContent = totalPages > 0 ? `Hal ${currentPage} dari ${totalPages}` : ''; }
