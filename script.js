@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 3.2.0 (Fix for Mobile Nav, Keyboard Nav, and Race Condition)
+ * @version 3.3.0 (Fix for Dropdown Click-Through)
  */
 
 (function () {
@@ -148,41 +148,27 @@
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     
-    // --- [PERBAIKAN BUG 3] Membuat Navigasi Sidebar Lebih Responsif di Mobile ---
     elements.sidebar.links.forEach(link => {
       if (link.dataset.mode) {
-        let startX = 0;
-        let startY = 0;
-        let isMoved = false;
-
-        // Catat posisi awal sentuhan
+        let startX = 0, startY = 0, isMoved = false;
         link.addEventListener('touchstart', (e) => {
           startX = e.touches[0].clientX;
           startY = e.touches[0].clientY;
           isMoved = false;
         }, { passive: true });
-
-        // Cek apakah jari bergerak (scroll)
         link.addEventListener('touchmove', (e) => {
           const deltaX = Math.abs(e.touches[0].clientX - startX);
           const deltaY = Math.abs(e.touches[0].clientY - startY);
-          if (deltaX > 10 || deltaY > 10) {
-            isMoved = true;
-          }
+          if (deltaX > 10 || deltaY > 10) isMoved = true;
         }, { passive: true });
-
-        // Jika jari tidak bergerak banyak (ini adalah tap), jalankan navigasi
         link.addEventListener('touchend', (e) => {
           if (!isMoved) {
-            e.preventDefault(); // Mencegah event 'click' ganda
+            e.preventDefault();
             setMode(link.dataset.mode);
           }
         });
-
-        // Fallback untuk klik di desktop
         link.addEventListener('click', e => {
-            // Hanya jalankan jika bukan dari event touchend
-            if (e.detail !== 0) { // e.detail adalah 0 untuk klik yang disimulasikan dari touchend
+            if (e.detail !== 0) {
                e.preventDefault();
                setMode(link.dataset.mode);
             }
@@ -190,9 +176,19 @@
       }
     });
 
-    elements.layanan.customSelect.btn.addEventListener('click', () => toggleCustomSelect(elements.layanan.customSelect.wrapper));
-    elements.preorder.customSelect.btn.addEventListener('click', () => toggleCustomSelect(elements.preorder.customSelect.wrapper));
-    elements.accounts.customSelect.btn.addEventListener('click', () => toggleCustomSelect(elements.accounts.customSelect.wrapper));
+    // --- [PERBAIKAN BUG KLIK TEMBUS] ---
+    elements.layanan.customSelect.btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Menghentikan event agar tidak menjalar
+      toggleCustomSelect(elements.layanan.customSelect.wrapper);
+    });
+    elements.preorder.customSelect.btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Menghentikan event agar tidak menjalar
+      toggleCustomSelect(elements.preorder.customSelect.wrapper);
+    });
+    elements.accounts.customSelect.btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Menghentikan event agar tidak menjalar
+      toggleCustomSelect(elements.accounts.customSelect.wrapper);
+    });
     
     let homeDebounce, layananDebounce;
     elements.home.searchInput.addEventListener('input', e => {
