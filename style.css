@@ -500,8 +500,6 @@ body.dark-mode .icon-moon {
   text-decoration: none;
   cursor: pointer;
   transition: transform var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast);
-  opacity: 0;
-  animation: fadeInItem 0.5s ease-out forwards;
 }
 @keyframes fadeInItem {
   from {
