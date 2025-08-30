@@ -3,157 +3,165 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="color-scheme" content="light dark">
   <title>PlayPal.ID</title>
   <meta name="description" content="Destinasi Utama Para Pecinta Game, Film & Musik">
-
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
-  <script src="menu.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#mainContent">Lewati ke konten</a>
 
   <noscript>
-    <div class="noscript-warning" role="alert">
+    <div class="noscript-warning">
       Website ini membutuhkan JavaScript untuk berfungsi sepenuhnya. Silakan aktifkan JavaScript di browser Anda.
     </div>
   </noscript>
 
-  <aside class="sidebar" id="sidebarNav" aria-label="Navigasi utama">
+  <aside class="sidebar" id="sidebarNav">
     <div class="sidebar-header">
-      <img src="logo.jpeg" alt="PlayPal.ID" class="sidebar-logo" width="44" height="44">
+      <img src="logo.jpeg" alt="PlayPal.ID Logo" class="sidebar-logo">
       <span class="sidebar-title">PlayPal.ID</span>
     </div>
-    <nav class="sidebar-nav" role="navigation">
-      <a href="#" class="nav-item active" data-mode="home" aria-current="page">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-mode="home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.68-8.69a2.25 2.25 0 00-3.18 0l-8.69 8.69a.75.75 0 001.06 1.06l8.69-8.69z"></path><path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z"></path></svg>
         <span>Home</span>
       </a>
       <a href="#" class="nav-item" data-mode="layanan">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.75a3.25 3.25 0 01-2.598 4.875H4.644a3.25 3.25 0 01-2.598-4.875L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd"></path></svg>
         <span>Layanan</span>
       </a>
       <a href="#" class="nav-item" data-mode="preorder">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 8v4l3 3"></path><circle cx="12" cy="12" r="10"></circle></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd"></path></svg>
         <span>Pre Order</span>
       </a>
       <a href="#" class="nav-item" data-mode="accounts">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M10.375 2.25a4.125 4.125 0 100 8.25 4.125 4.125 0 000-8.25zM10.375 12a7.125 7.125 0 00-7.124 7.125 1.125 1.125 0 002.25 0c0-2.803 2.29-5.093 5.124-4.861a.75.75 0 01.626.626C11.093 17.71 8.803 20 6 20a1.125 1.125 0 000 2.25c3.383 0 6.095-2.712 6.095-6.095a.75.75 0 01.75-.75h.001c.414 0 .75.336.75.75 0 3.383-2.712 6.095-6.095 6.095a1.125 1.125 0 000 2.25c3.626 0 6.6-2.974 6.6-6.6v-.005a.75.75 0 01.75-.75h.005c.414 0 .75.336.75.75v.005c0 3.626 2.974 6.6 6.6 6.6a1.125 1.125 0 000-2.25c-2.803 0-5.093-2.29-4.861-5.124a.75.75 0 01.626-.626c2.834-.233 5.124-2.523 5.124-5.325a1.125 1.125 0 00-2.25 0 4.875 4.875 0 01-9.75 0z"></path></svg>
         <span>Akun Game</span>
       </a>
       <a href="#" class="nav-item" data-mode="perpustakaan">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M.25 4.5a.75.75 0 01.75-.75h11.5a.75.75 0 01.75.75v15a.75.75 0 01-.75.75H1a.75.75 0 01-.75-.75v-15z"></path><path d="M14.75 3.75a.75.75 0 01.75-.75h5.5a.75.75 0 01.75.75v16.5a.75.75 0 01-.75.75h-5.5a.75.75 0 01-.75-.75V3.75z"></path></svg>
         <span>Perpustakaan</span>
       </a>
       <a href="#" class="nav-item" data-mode="film">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 4.5a3 3 0 00-3 3v9a3 3 0 003 3h15a3 3 0 003-3v-9a3 3 0 00-3-3h-15z"></path></svg>
         <span>Film</span>
       </a>
-
-      <div class="nav-divider" role="separator" aria-hidden="true"></div>
+      
+      <div class="nav-divider"></div>
 
       <a href="https://chat.whatsapp.com/B8P0L2ExsreGFI6iMPDYnc?mode=ems_copy_c" target="_blank" rel="noopener" class="nav-item">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M4.913 2.658c2.075-.615 4.19-.615 6.265 0L12 3l.822-.342c2.075-.615 4.19-.615 6.265 0l1.245.368a.75.75 0 01.527.734v.223a.75.75 0 01-.527.734l-1.245.368c-2.075.615-4.19.615-6.265 0L12 5l-.822.342c-2.075.615-4.19.615-6.265 0L3.668 5.005a.75.75 0 01-.527-.734v-.223a.75.75 0 01.527-.734L4.913 2.658zM8.25 12a.75.75 0 01.75-.75h6a.75.75 0 010 1.5h-6a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z"></path><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 10zM3.75 16.5a.75.75 0 000 1.5h16.5a.75.75 0 000-1.5H3.75z" clip-rule="evenodd"></path></svg>
         <span>Komunitas</span>
       </a>
       <a href="#" class="nav-item" data-mode="donasi">
-        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-1.344-.688 15.247 15.247 0 01-1.344-.688c-.118-.061-.236-.123-.353-.186-.118-.062-.235-.124-.353-.186l-.002-.001-.004-.002-.003-.002-.002-.001-.003-.001-.002-.001-.003-.001a.752.752 0 01-.112-.069l-.003-.002a21.68 21.68 0 00-4.34-2.583 21.68 21.68 0 00-4.34-2.583.752.752 0 01-.112-.069l-.003-.002s-.001-.001-.002-.001l-.002-.002-.003-.002a.75.75 0 01-.058-.046l-.003-.002a.75.75 0 01-.058-.046l-.002-.002a.75.75 0 01-.046-.058l-.002-.003a.75.75 0 01-.046-.058l-.002-.003a.75.75 0 01-.033-.06l-.002-.003a.75.75 0 01-.033-.06l-.002-.003a.75.75 0 01-.022-.06l-.002-.003a.75.75 0 01-.022-.06l-.002-.003a.75.75 0 01-.011-.06l-.002-.003a.75.75 0 01-.011-.06l-.002-.003a.75.75 0 01-.005-.06l-.002-.003a.75.75 0 01-.005-.06a.75.75 0 01-.003-.06l-.002-.003a.75.75 0 01-.003-.06l-.002-.003a.75.75 0 010-.06l-.002-.003a.75.75 0 010-.06l-.002-.003c0-.02-.002-.04-.002-.06v-.003a.75.75 0 010-.06l-.002-.003c0-.02-.002-.04-.002-.06l-.002-.003a.75.75 0 010-.06l-.002-.003a.75.75 0 010-.06l-.002-.003a.75.75 0 010-.06l-.002-.003a.75.75 0 01.002-.06l-.002-.003a.75.75 0 01.002-.06l-.002-.003a.75.75 0 01.005-.06l-.002-.003a.75.75 0 01.005-.06l-.002-.003a.75.75 0 01.011-.06l-.002-.003a.75.75 0 01.011-.06l-.002-.003a.75.75 0 01.022-.06l-.002-.003a.75.75 0 01.022-.06l-.002-.003a.75.75 0 01.033-.06l-.002-.003a.75.75 0 01.033-.06l-.002-.003a.75.75 0 01.046-.058l-.002-.003a.75.75 0 01.046-.058l-.002-.003a.75.75 0 01.058-.046l-.002-.003a.75.75 0 01.058-.046l-.002-.002a.75.75 0 01.112-.069l-.003-.002c.118-.061.235-.123.353-.186.118-.062.236-.124.353-.186a15.247 15.247 0 011.344-.688 15.247 15.247 0 011.344-.688l.022-.012.007-.003c.043-.02.085-.04.128-.06l.006-.003c.043-.02.085-.04.128-.06l.006-.003c.043-.02.085-.04.128-.06l.006-.003c.043-.02.085-.04.128-.06l.006-.003c.064-.031.128-.062.192-.093l.006-.003c.064-.031.128-.062.192-.093l.006-.003c.064-.031.128-.062.192-.093l.006-.003c.128-.062.256-.125.384-.188l.006-.003c.128-.062.256-.125.384-.188l.006-.003c.128-.062.256-.125.384-.188l.006-.003c.128-.062.256-.124.384-.187l.006-.003c.128-.062.256-.124.384-.187l.006-.003c.128-.062.256-.124.384-.187l.006-.003c.128-.062.256-.124.384-.187l.006-.003c.128-.062.256-.124.384-.187l.006-.003c.256-.125.512-.25.768-.375l.006-.003c.256-.125.512-.25.768-.375l.003-.002c.256-.125.512-.25.768-.375l.003-.002c.256-.125.512-.25.768-.375l.003-.002c.512-.25.1024-.5.1536-.75l.003-.002c.512-.25.1024-.5.1536-.75l.003-.002c.512-.25.1024-.5.1536-.75l.003-.002c.512-.25.1024-.5.1536-.75a21.68 21.68 0 002.583-4.34l.002-.003.002-.003a.75.75 0 01.06-.033l.002-.003a.75.75 0 01.06-.033l.002-.003a.75.75 0 01.06-.022l.002-.003a.75.75 0 01.06-.022l.002-.003a.75.75 0 01.06-.011l.002-.003a.75.75 0 01.06-.011l.002-.003a.75.75 0 01.06-.005l.002-.003a.75.75 0 01.06-.005l.002-.003a.75.75 0 01.06-.003l.002-.003a.75.75 0 01.06-.003l.002-.003a.75.75 0 01.06 0l.002-.003a.75.75 0 01.06 0l.002-.003c.02.002.04.002.06.002l.002-.003c.02.002.04.002.06.002l.002-.003c.02.002.04.002.06.002l.002-.003a.75.75 0 01.06.005l.002-.003a.75.75 0 01.06.005l.002-.003a.75.75 0 01.06.011l.002-.003a.75.75 0 01.06.011l.002-.003a.75.75 0 01.06.022l.002-.003a.75.75 0 01.06.022l.002-.003a.75.75 0 01.033.06l.002-.003a.75.75 0 01.033.06l.002-.003a.75.75 0 01.022.06l.002-.003a.75.75 0 01.022.06l.003-.002a.75.75 0 01.011.06l.003-.002a.75.75 0 01.011.06l.003-.002a.75.75 0 01.005.06l.003-.002a.75.75 0 01.005.06a.75.75 0 01.003.06l.003-.002a.75.75 0 01.003.06l.003-.002a.75.75 0 010 .06l.003-.002a.75.75 0 010 .06l.003-.002c0 .02.002.04.002.06v.003a.75.75 0 010 .06l.003-.002c0 .02.002.04.002.06l.003-.002a.75.75 0 010 .06l.003-.002a.75.75 0 010 .06l.003-.002a.75.75 0 010 .06l.003-.002a.75.75 0 01-.002.06l.003-.002a.75.75 0 01-.002.06l.003-.002a.75.75 0 01-.005.06l.003-.002a.75.75 0 01-.005.06l.003-.002a.75.75 0 01-.011.06l.003-.002a.75.75 0 01-.011.06l.003-.002a.75.75 0 01-.022.06l.003-.002a.75.75 0 01-.022.06l.003-.002a.75.75 0 01-.033.06l.003-.002a.75.75 0 01-.033.06l.003-.002a.75.75 0 01-.046.058l.003-.002a.75.75 0 01-.046.058l.003-.002a.75.75 0 01-.058.046l.003-.002a.75.75 0 01-.058.046l.002-.002a.75.75 0 01-.112.069l.003-.002a21.68 21.68 0 00-4.34 2.583 21.68 21.68 0 00-4.34 2.583.752.752 0 01-.112.069l-.003-.002s-.001.001-.002.001l-.002.002-.003.002a.75.75 0 01-.058.046l-.003.002a.75.75 0 01-.058.046l-.002.002a.75.75 0 01-.046.058l-.002.003a.75.75 0 01-.046.058l-.002.003a.75.75 0 01-.033.06l-.002.003a.75.75 0 01-.033.06l-.002.003a.75.75 0 01-.022.06l-.002.003a.75.75 0 01-.022.06l-.002.003a.75.75 0 01-.011.06l-.002.003a.75.75 0 01-.011.06l-.002.003a.75.75 0 01-.005.06l-.002.003a.75.75 0 01-.005.06a.75.75 0 01-.003.06l-.002.003a.75.75 0 01-.003.06l-.002.003a.75.75 0 010 .06l-.002.003a.75.75 0 010 .06l-.002.003c0 .02-.002.04-.002.06v.003a.75.75 0 010 .06l-.002.003c0 .02-.002.04-.002.06l-.002.003a.75.75 0 010 .06l-.002.003a.75.75 0 010 .06l-.002.003a.75.75 0 010 .06l-.002.003a.75.75 0 01.002.06l-.002.003a.75.75 0 01.002.06l-.002.003a.75.75 0 01.005.06l-.002.003a.75.75 0 01.005.06l-.002.003a.75.75 0 01.011.06l-.002.003a.75.75 0 01.011.06l-.002.003a.75.75 0 01.022.06l-.002.003a.75.75 0 01.022.06l-.002.003a.75.75 0 01.033.06l-.002.003a.75.75 0 01.033.06l-.002.003a.75.75 0 01.046.058l-.002.003a.75.75 0 01.046.058l-.002.003a.75.75 0 01.058.046l-.002.003a.75.75 0 01.058.046l.002.002c.043.02.085.04.128.06l.006.003c.043.02.085.04.128.06l.006.003c.043.02.085.04.128.06l.006.003c.043.02.085.04.128.06l.006.003c.064.031.128.062.192.093l.006.003c.064.031.128.062.192.093l.006.003c.064.031.128.062.192.093l.006.003c.128.062.256.125.384.188l.006.003c.128.062.256.125.384.188l.006.003c.128.062.256.125.384.188l.006.003c.128.062.256.124.384.187l.006.003c.128.062.256.124.384.187l.006.003c.128.062.256.124.384.187l.006.003c.128.062.256.124.384.187l.006.003c.128.062.256.124.384.187l.006-.003c.256.125.512.25.768.375l.006-.003c.256.125.512.25.768.375l.003.002c.256.125.512.25.768.375l.003.002c.256.125.512.25.768.375l.003.002c.512.25 1.024.5 1.536.75l.003.002c.512.25 1.024.5 1.536.75l.003.002c.512.25 1.024.5 1.536.75l.003.002c.512.25 1.024.5 1.536.75a21.68 21.68 0 002.583 4.34l.002.003.002.003a.75.75 0 01.06.033l.002.003a.75.75 0 01.06.033l.002.003a.75.75 0 01.06.022l.002.003a.75.75 0 01.06.022l.002.003a.75.75 0 01.06.011l.002.003a.75.75 0 01.06.011l.002.003a.75.75 0 01.06.005l.002.003a.75.75 0 01.06.005l.002.003a.75.75 0 01.06.003l.002.003a.75.75 0 01.06.003l.002.003a.75.75 0 01.06 0l.002.003a.75.75 0 01.06 0l.002.003c.02-.002.04-.002.06-.002l.002.003c.02-.002.04-.002.06-.002l.002.003c.02-.002.04-.002.06-.002h.002a.75.75 0 01.058-.005l.002.003a.75.75 0 01.058-.005l.002.003a.75.75 0 01.058-.011l.002.003a.75.75 0 01.058-.011l.002.003a.75.75 0 01.058-.022l.002.003a.75.75 0 01.058-.022l.002.003a.75.75 0 01.058-.033l.002.003a.75.75 0 01.058-.033l.002.003a.75.75 0 01.046-.058l.002.003a.75.75 0 01.046-.058l.002.003a.75.75 0 01.033-.058l.002.003a.75.75 0 01.033-.058l.002.003a.75.75 0 01.022-.058l.002.003a.75.75 0 01.022-.058l.003-.002a.75.75 0 01.011-.058l.003-.002a.75.75 0 01.011-.058l.003-.002a.75.75 0 01.005-.058l.003-.002a.75.75 0 01.005-.058l.003-.002a.75.75 0 01.003-.058l.003-.002a.75.75 0 01.003-.058l.003-.002a.75.75 0 010-.058l.003-.002a.75.75 0 010-.058l.003-.002a.75.75 0 010-.058l.003-.002a.75.75 0 010-.058l.003-.002a.75.75 0 010-.058l.003-.002a.75.75 0 01-.002-.058l.003-.002a.75.75 0 01-.002-.058l.003-.002a.75.75 0 01-.005-.058l.003-.002a.75.75 0 01-.005-.058l.003-.002a.75.75 0 01-.011-.058l.003-.002a.75.75 0 01-.011-.058l.003-.002a.75.75 0 01-.022-.058l.003-.002a.75.75 0 01-.022-.058l.003-.002a.75.75 0 01-.033-.058l.003-.002a.75.75 0 01-.033-.058l.003-.002a.75.75 0 01-.046-.058l.003-.002a.75.75 0 01-.046-.058l.003-.002a.75.75 0 01-.058-.046l.003-.002a.75.75 0 01-.058-.046l.003-.002z" clip-rule="evenodd"></path></svg>
         <span>Donasi</span>
       </a>
     </nav>
   </aside>
-  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <div class="page-container" id="pageContainer">
-    <main class="wrap" id="mainContent" tabindex="-1">
+    <main class="wrap">
       <header class="main-header">
-        <div class="header-content">
-          <div class="header-actions">
-            <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Ganti tema" aria-pressed="false">
-              <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-              <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            </button>
-            <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
-              <span></span><span></span><span></span>
-            </button>
+          <div class="header-content">
+              <div class="promo-select-wrapper">
+                  <div class="promo-static">
+                      Promo Spesial Segera Hadir!
+                  </div>
+              </div>
+              <div class="header-actions">
+                  <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Ganti tema">
+                      <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.106a.75.75 0 010 1.06l-1.591 1.59a.75.75 0 11-1.06-1.061l1.591-1.59a.75.75 0 011.06 0zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.803 17.803a.75.75 0 01-1.06 0l-1.59-1.591a.75.75 0 111.06-1.06l1.59 1.591a.75.75 0 010 1.06zM12 21a.75.75 0 01-.75-.75v-2.25a.75.75 0 011.5 0V21a.75.75 0 01-.75.75zM4.197 17.803a.75.75 0 010-1.06l1.59-1.591a.75.75 0 111.06 1.06l-1.59 1.591a.75.75 0 01-1.06 0zM3 12a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H3.75A.75.75 0 013 12zM6.106 6.106a.75.75 0 011.06 0l1.591 1.59a.75.75 0 01-1.06 1.061L6.106 7.167a.75.75 0 010-1.06z"></path></svg>
+                      <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69a.75.75 0 01.981.981A10.503 10.503 0 0118 18a10.5 10.5 0 01-10.5-10.5c0-4.368 2.667-8.112 6.46-9.672a.75.75 0 01.818.162z" clip-rule="evenodd"></path></svg>
+                  </button>
+                  <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Buka Menu" aria-expanded="false" aria-controls="sidebarNav">
+                      <span></span><span></span><span></span>
+                  </button>
+              </div>
           </div>
-        </div>
       </header>
 
-      <section id="viewHome" class="view-section active" aria-label="Home">
+      <section id="viewHome" class="view-section active" aria-labelledby="home-title">
         <header class="page-title-header">
-          <h1>Promo Hari Ini</h1>
+          <h1 id="home-title">Promo Hari Ini</h1>
           <p class="page-subtitle">Daftar promo spesial dan penawaran terbaik hari ini.</p>
         </header>
-        <div class="head-block" data-rail>
-          <div class="search-row" data-rail>
+        <div class="head-block">
+          <div class="search-row">
             <div class="search-wrap">
-              <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
               <input id="homeSearchInput" class="search-input" type="search" placeholder="Cari promo..." aria-label="Cari promo">
             </div>
           </div>
-          <div id="homeCountInfo" data-rail></div>
+          <div id="homeCountInfo" class="count-info"></div>
         </div>
-        <section id="homeListContainer" class="list-container" aria-live="polite" data-rail></section>
-        <section id="homeErrorContainer" class="err" style="display:none" data-rail></section>
+        <section id="homeListContainer" class="list-container" aria-live="polite"></section>
+        <section id="homeErrorContainer" class="err" style="display:none"></section>
       </section>
 
-      <section id="viewLayanan" class="view-section" aria-label="Layanan">
-        <div class="head-block" data-rail>
-          <div class="topbar" data-rail>
+      <section id="viewLayanan" class="view-section" aria-labelledby="layanan-title">
+        <header class="page-title-header">
+          <h1 id="layanan-title">Layanan</h1>
+          <p class="page-subtitle">Jelajahi berbagai layanan digital yang kami tawarkan.</p>
+        </header>
+        <div class="head-block">
+          <div class="topbar">
             <div class="topbar-grid">
               <div class="custom-select-wrapper" id="layananCustomSelectWrapper">
-                <button class="custom-select-btn" id="layananCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <button class="custom-select-btn" id="layananCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="layanan-select-label layananCustomSelectValue">
+                  <span id="layanan-select-label" class="sr-only">Kategori Layanan:</span>
                   <span id="layananCustomSelectValue">Pilih Kategori</span>
-                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                 </button>
-                <div class="custom-select-options" id="layananCustomSelectOptions" role="listbox"></div>
+                <div class="custom-select-options" id="layananCustomSelectOptions" role="listbox" tabindex="-1"></div>
               </div>
             </div>
           </div>
-          <div class="search-row" data-rail>
+          <div class="search-row">
             <div class="search-wrap">
-              <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
               <input id="layananSearchInput" class="search-input" type="search" placeholder="Cari item..." aria-label="Cari layanan">
             </div>
           </div>
-          <div id="layananCountInfo" data-rail></div>
+          <div id="layananCountInfo" class="count-info"></div>
         </div>
-        <section id="layananListContainer" class="list-container" aria-live="polite" data-rail></section>
-        <section id="layananErrorContainer" class="err" style="display:none" data-rail></section>
+        <section id="layananListContainer" class="list-container" aria-live="polite"></section>
+        <section id="layananErrorContainer" class="err" style="display:none"></section>
       </section>
 
-      <section id="viewPreorder" class="view-section" aria-label="Pre-Order">
+      <section id="viewPreorder" class="view-section" aria-labelledby="preorder-title">
         <header class="page-title-header">
-          <h1>Lacak Pre-Order</h1>
+          <h1 id="preorder-title">Lacak Pre-Order</h1>
           <p class="page-subtitle">Cek status pesanan Anda di sini.</p>
         </header>
-        <div class="head-block" data-rail>
+        <div class="head-block">
           <div class="topbar-grid" style="grid-template-columns: 1fr;">
               <div class="custom-select-wrapper" id="preorderCustomSelectWrapper">
-                <button class="custom-select-btn" id="preorderCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <button class="custom-select-btn" id="preorderCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="preorder-select-label preorderCustomSelectValue">
+                  <span id="preorder-select-label" class="sr-only">Jenis Pre-Order:</span>
                   <span id="preorderCustomSelectValue">Starlight Member</span>
-                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                 </button>
-                <div class="custom-select-options" id="preorderCustomSelectOptions" role="listbox">
+                <div class="custom-select-options" id="preorderCustomSelectOptions" role="listbox" tabindex="-1">
                   <div class="custom-select-option selected" data-value="0" role="option" aria-selected="true">Starlight Member</div>
                   <div class="custom-select-option" data-value="1" role="option">Pesanan Umum</div>
                 </div>
               </div>
           </div>
-          <div class="search-row" data-rail>
+          <div class="search-row">
             <div class="search-wrap">
-              <svg class="icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-              <input id="preorderSearchInput" type="search" class="search-input" placeholder="Cari nama / ID Server..." aria-label="Cari pre-order">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <input id="preorderSearchInput" type="search" class="search-input" placeholder="Cari nama atau produk..." />
             </div>
           </div>
-          <div class="status-row" data-rail>
-            <select class="status-select" id="preorderStatusSelect" aria-label="Filter status">
+          <div class="status-row">
+            <select class="status-select" id="preorderStatusSelect" aria-label="Filter status pesanan">
               <option value="all">Semua Status</option>
               <option value="success">Success</option>
               <option value="progress">Progress</option>
@@ -161,11 +169,11 @@
               <option value="failed">Gagal</option>
             </select>
           </div>
-          <div id="preorderTotal" class="meta" data-rail></div>
+          <div id="preorderTotal" class="count-info meta"></div>
         </div>
-        <div class="container">
-          <main id="preorderListContainer" class="card-grid" aria-live="polite" data-rail></main>
-          <nav class="pagination" aria-label="Pagination" data-rail>
+        <div>
+          <main id="preorderListContainer" class="card-grid" aria-live="polite"></main>
+          <nav class="pagination" aria-label="Navigasi halaman">
             <button id="preorderPrevBtn" class="pagination-btn" disabled>Sebelumnya</button>
             <div id="preorderPageInfo" class="pagination-info" aria-live="polite"></div>
             <button id="preorderNextBtn" class="pagination-btn" disabled>Selanjutnya</button>
@@ -173,31 +181,32 @@
         </div>
       </section>
 
-      <section id="viewAccounts" class="view-section" aria-label="Akun Game">
+      <section id="viewAccounts" class="view-section" aria-labelledby="accounts-title">
         <header class="page-title-header">
-          <h1>Akun Game</h1>
+          <h1 id="accounts-title">Akun Game</h1>
           <p class="page-subtitle">Temukan akun game impian Anda dengan penawaran terbaik.</p>
         </header>
-        <div class="head-block" data-rail>
+        <div class="head-block">
             <div class="topbar-grid" style="grid-template-columns: 1fr;">
                 <div class="custom-select-wrapper" id="accountCustomSelectWrapper">
-                  <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="account-select-label accountCustomSelectValue">
+                    <span id="account-select-label" class="sr-only">Pilih Akun:</span>
                     <span id="accountCustomSelectValue">Memuat akun...</span>
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                   </button>
-                  <div class="custom-select-options" id="accountCustomSelectOptions" role="listbox"></div>
+                  <div class="custom-select-options" id="accountCustomSelectOptions" role="listbox" tabindex="-1"></div>
                 </div>
             </div>
         </div>
-
-        <div id="accountDisplay" class="account-display-card" style="display: none;" data-rail>
+        
+        <div id="accountDisplay" class="account-display-card" style="display: none;">
           <div class="carousel-container">
             <div id="carouselTrack" class="carousel-track"></div>
             <button id="carouselPrevBtn" class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
             </button>
             <button id="carouselNextBtn" class="carousel-btn next" type="button" aria-label="Gambar selanjutnya">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
             </button>
             <div id="carouselIndicators" class="carousel-indicators"></div>
           </div>
@@ -206,7 +215,9 @@
               <h2 id="accountPrice" class="account-price"></h2>
               <div class="account-header-right">
                 <span id="accountStatus" class="account-status-badge"></span>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="expand-indicator"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                </svg>
               </div>
             </div>
             <div id="accountDescriptionContainer" class="account-description-container">
@@ -218,27 +229,30 @@
             </div>
           </div>
         </div>
-        <div id="accountEmpty" class="empty" data-rail>
+        <div id="accountEmpty" class="empty">
           <div class="empty-content">
-            <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" viewBox="0 0 24 24"><path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
             <p>Pilih akun dari daftar di atas untuk melihat detail.</p>
           </div>
         </div>
-        <section id="accountError" class="err" style="display:none" data-rail></section>
+        <section id="accountError" class="err" style="display:none"></section>
       </section>
 
-      <section id="viewPerpustakaan" class="view-section" aria-label="Perpustakaan">
-        <header class="page-title-header"><h1>Perpustakaan</h1></header>
+      <section id="viewPerpustakaan" class="view-section" aria-labelledby="perpustakaan-title">
+        <header class="page-title-header"><h1 id="perpustakaan-title">Perpustakaan</h1></header>
         <div class="empty">Halaman ini sedang dalam pengembangan.</div>
       </section>
 
-      <section id="viewFilm" class="view-section" aria-label="Film">
-        <header class="page-title-header"><h1>Film</h1></header>
+      <section id="viewFilm" class="view-section" aria-labelledby="film-title">
+        <header class="page-title-header"><h1 id="film-title">Film</h1></header>
         <div class="empty">Halaman ini sedang dalam pengembangan.</div>
       </section>
+      
     </main>
   </div>
-
+  
   <template id="itemTemplate">
     <button type="button" class="list-item">
       <span class="title"></span>
@@ -265,11 +279,11 @@
       <div class="skeleton-text" style="width: 65%; height: 12px; margin-top: 10px;"></div>
     </div>
   </template>
-
-  <div id="paymentModal" class="modal-overlay" style="display: none;" aria-modal="true" role="dialog" aria-labelledby="paymentTitle">
+  
+  <div id="paymentModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display: none;">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="paymentTitle">Pilih Pembayaran</h2>
+        <h2 id="modal-title" class="modal-title">Pilih Pembayaran</h2>
         <button id="closeModalBtn" class="close-btn" type="button" aria-label="Tutup">&times;</button>
       </div>
       <div class="modal-body">
@@ -288,5 +302,8 @@
       </div>
     </div>
   </div>
+
+  <div class="sr-only" aria-live="polite"></div>
+
 </body>
 </html>
