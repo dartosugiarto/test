@@ -1,13 +1,12 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 3.1.0 (Fix for Keyboard Navigation and Race Condition)
+ * @version 3.2.0 (Fix for Mobile Nav, Keyboard Nav, and Race Condition)
  */
 
 (function () {
   'use strict';
 
-  // ... (Bagian config, state, dan elements tetap sama persis seperti sebelumnya) ...
   const config = {
     sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
     sheets: {
@@ -28,11 +27,9 @@
 
   let allCatalogData = [];
   let currentSelectedItem = null;
-  // --- [PERBAIKAN BUG 2] Deklarasi AbortController ---
   let catalogFetchController;
   let preorderFetchController;
   let accountsFetchController;
-
 
   const state = {
     layanan: { activeCategory: '', searchQuery: '' },
@@ -151,9 +148,45 @@
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     
+    // --- [PERBAIKAN BUG 3] Membuat Navigasi Sidebar Lebih Responsif di Mobile ---
     elements.sidebar.links.forEach(link => {
       if (link.dataset.mode) {
-        link.addEventListener('click', e => { e.preventDefault(); setMode(link.dataset.mode); });
+        let startX = 0;
+        let startY = 0;
+        let isMoved = false;
+
+        // Catat posisi awal sentuhan
+        link.addEventListener('touchstart', (e) => {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          isMoved = false;
+        }, { passive: true });
+
+        // Cek apakah jari bergerak (scroll)
+        link.addEventListener('touchmove', (e) => {
+          const deltaX = Math.abs(e.touches[0].clientX - startX);
+          const deltaY = Math.abs(e.touches[0].clientY - startY);
+          if (deltaX > 10 || deltaY > 10) {
+            isMoved = true;
+          }
+        }, { passive: true });
+
+        // Jika jari tidak bergerak banyak (ini adalah tap), jalankan navigasi
+        link.addEventListener('touchend', (e) => {
+          if (!isMoved) {
+            e.preventDefault(); // Mencegah event 'click' ganda
+            setMode(link.dataset.mode);
+          }
+        });
+
+        // Fallback untuk klik di desktop
+        link.addEventListener('click', e => {
+            // Hanya jalankan jika bukan dari event touchend
+            if (e.detail !== 0) { // e.detail adalah 0 untuk klik yang disimulasikan dari touchend
+               e.preventDefault();
+               setMode(link.dataset.mode);
+            }
+        });
       }
     });
 
@@ -187,7 +220,6 @@
       }
     });
 
-    // --- [PERBAIKAN BUG 1] Panggil fungsi setup keyboard navigation ---
     setupKeyboardNavForSelect(elements.layanan.customSelect.wrapper);
     setupKeyboardNavForSelect(elements.preorder.customSelect.wrapper);
     setupKeyboardNavForSelect(elements.accounts.customSelect.wrapper);
@@ -196,7 +228,6 @@
     loadCatalog();
   }
   
-  // --- [PERBAIKAN BUG 1] Fungsi untuk navigasi keyboard dropdown ---
   function setupKeyboardNavForSelect(wrapper) {
     const btn = wrapper.querySelector('.custom-select-btn');
     const optionsEl = wrapper.querySelector('.custom-select-options');
@@ -208,14 +239,12 @@
 
         const isOpen = wrapper.classList.contains('open');
         
-        // Menutup dropdown dengan Escape
         if (e.key === 'Escape') {
             toggleCustomSelect(wrapper, false);
             btn.focus();
             return;
         }
 
-        // Membuka dropdown dengan Enter atau Spasi
         if (document.activeElement === btn && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             toggleCustomSelect(wrapper, true);
@@ -224,7 +253,6 @@
             options[focusIndex]?.focus();
         }
         
-        // Navigasi dengan panah
         if (isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
             e.preventDefault();
             if (e.key === 'ArrowDown') {
@@ -235,7 +263,6 @@
             options[focusIndex]?.focus();
         }
 
-        // Memilih opsi dengan Enter atau Spasi
         if (isOpen && (e.key === 'Enter' || e.key === ' ') && document.activeElement.classList.contains('custom-select-option')) {
             e.preventDefault();
             document.activeElement.click();
@@ -244,7 +271,6 @@
     });
   }
 
-  // --- SEMUA FUNGSI UTILITAS LAINNYA ---
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
@@ -260,7 +286,6 @@
   function renderHomeList() { const query = state.home.searchQuery.toLowerCase(); const homeCatKey = allCatalogData.length > 0 ? allCatalogData[0].catKey : null; const items = homeCatKey ? allCatalogData.filter(x => x.catKey === homeCatKey && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))) : []; renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada promo ditemukan.'); }
   function renderLayananList() { const { activeCategory, searchQuery } = state.layanan; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.layanan.listContainer, elements.layanan.countInfo, items, 'Tidak ada hasil ditemukan.'); }
   
-  // --- [PERBAIKAN BUG 2] Modifikasi fungsi loadCatalog ---
   async function loadCatalog() { 
     if (catalogFetchController) catalogFetchController.abort();
     catalogFetchController = new AbortController();
@@ -305,7 +330,6 @@
   function renderPreorderCards() { const filtered = filterPreorderData(); const totalItems = state.preorder.allData.length; const { perPage } = state.preorder; const { listContainer, total } = elements.preorder; total.textContent = `${totalItems} total pesanan${filtered.length !== totalItems ? `, ${filtered.length} ditemukan` : ''}`; const totalPages = Math.max(1, Math.ceil(filtered.length / perPage)); state.preorder.currentPage = Math.min(Math.max(1, state.preorder.currentPage), totalPages); const start = (state.preorder.currentPage - 1) * perPage; const pageData = filtered.slice(start, start + perPage); listContainer.innerHTML = ''; if (pageData.length === 0) { listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak Ada Hasil Ditemukan</p></div></div>`; updatePreorderPagination(0, 0); return; } const fragment = document.createDocumentFragment(); pageData.forEach(item => { const card = document.createElement('article'); if (state.preorder.displayMode === 'detailed') { const [tglOrder, estPengiriman, , product, bulan, name, statusRaw] = item; const status = normalizeStatus(statusRaw); const estDeliveryText = estPengiriman ? `Estimasi Pengiriman: ${estPengiriman} 20:00 WIB` : ''; const details = [{ label: 'TGL ORDER', value: tglOrder }, { label: 'BULAN', value: bulan }]; const detailsHtml = details.filter(d => d.value && String(d.value).trim() !== '').map(d => `<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value">${d.value}</div></div>`).join(''); const expandIndicatorHtml = detailsHtml ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>` : ''; card.className = `card ${detailsHtml ? 'clickable' : ''}`; card.innerHTML = `<div class="card-header"><div><div class="card-name">${name || 'Tanpa Nama'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge-wrapper"><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div>${expandIndicatorHtml}</div></div>${estDeliveryText ? `<div class="card-date">${estDeliveryText}</div>` : ''}${detailsHtml ? `<div class="card-details"><div class="details-grid">${detailsHtml}</div></div>` : ''}`; if (detailsHtml) card.addEventListener('click', () => card.classList.toggle('expanded')); } else { const [orderNum, product, statusRaw] = item; const status = normalizeStatus(statusRaw); card.className = 'card'; card.innerHTML = `<div class="card-header"><div><div class="card-name">${orderNum || 'Tanpa Nomor'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div></div>`; } fragment.appendChild(card); }); listContainer.appendChild(fragment); updatePreorderPagination(state.preorder.currentPage, totalPages); }
   function sortPreorderData(data, mode) { const statusOrder = { progress: 1, pending: 2, success: 3, failed: 4 }; const statusIndex = mode === 'detailed' ? 6 : 2; return data.sort((a, b) => statusOrder[normalizeStatus(a[statusIndex])] - statusOrder[normalizeStatus(b[statusIndex])]); }
   
-  // --- [PERBAIKAN BUG 2] Modifikasi fungsi fetchPreorderData ---
   async function fetchPreorderData(sheetName) { 
     if (preorderFetchController) preorderFetchController.abort();
     preorderFetchController = new AbortController();
@@ -349,7 +373,6 @@
   function updateCarousel() { const account = state.accounts.currentAccount; if (!account) return; const { track, prevBtn, nextBtn, indicators } = elements.accounts.carousel; const totalSlides = account.images.length || 1; track.style.transform = `translateX(-${state.accounts.currentIndex * 100}%)`; prevBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex === 0; nextBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex >= totalSlides - 1; indicators.querySelectorAll('.indicator-dot').forEach((dot, i) => { dot.classList.toggle('active', i === state.accounts.currentIndex); }); }
   function initializeCarousel() { const { prevBtn, nextBtn, track } = elements.accounts.carousel; prevBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentIndex > 0) { state.accounts.currentIndex--; updateCarousel(); } }); nextBtn.addEventListener('click', e => { e.stopPropagation(); const account = state.accounts.currentAccount; if (!account) return; if (state.accounts.currentIndex < account.images.length - 1) { state.accounts.currentIndex++; updateCarousel(); } }); let touchStartX = 0; track.addEventListener('touchstart', e => { e.stopPropagation(); touchStartX = e.changedTouches[0].screenX; }, { passive: true }); track.addEventListener('touchend', e => { e.stopPropagation(); const touchEndX = e.changedTouches[0].screenX; if (touchEndX < touchStartX - 50) nextBtn.click(); if (touchEndX > touchStartX + 50) prevBtn.click(); }, { passive: true }); }
   
-  // --- [PERBAIKAN BUG 2] Modifikasi fungsi initializeAccounts ---
   async function initializeAccounts() { 
     if (state.accounts.initialized) return; 
     if (accountsFetchController) accountsFetchController.abort();
