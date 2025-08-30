@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 3.3.0 (Fix for Dropdown Click-Through)
+ * @version 3.4.0 (Cumulative Fixes)
  */
 
 (function () {
@@ -112,6 +112,12 @@
         value: getElement('preorderCustomSelectValue'),
         options: getElement('preorderCustomSelectOptions'),
       },
+      customStatusSelect: {
+        wrapper: getElement('preorderStatusCustomSelectWrapper'),
+        btn: getElement('preorderStatusCustomSelectBtn'),
+        value: getElement('preorderStatusCustomSelectValue'),
+        options: getElement('preorderStatusCustomSelectOptions'),
+      }
     },
     accounts: {
       display: getElement('accountDisplay'),
@@ -176,17 +182,16 @@
       }
     });
 
-    // --- [PERBAIKAN BUG KLIK TEMBUS] ---
     elements.layanan.customSelect.btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Menghentikan event agar tidak menjalar
+      e.stopPropagation();
       toggleCustomSelect(elements.layanan.customSelect.wrapper);
     });
     elements.preorder.customSelect.btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Menghentikan event agar tidak menjalar
+      e.stopPropagation();
       toggleCustomSelect(elements.preorder.customSelect.wrapper);
     });
     elements.accounts.customSelect.btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Menghentikan event agar tidak menjalar
+      e.stopPropagation();
       toggleCustomSelect(elements.accounts.customSelect.wrapper);
     });
     
@@ -211,6 +216,9 @@
       if (!elements.preorder.customSelect.btn.contains(target) && !elements.preorder.customSelect.options.contains(target)) {
         toggleCustomSelect(elements.preorder.customSelect.wrapper, false);
       }
+      if (!elements.preorder.customStatusSelect.btn.contains(target) && !elements.preorder.customStatusSelect.options.contains(target)) {
+        toggleCustomSelect(elements.preorder.customStatusSelect.wrapper, false);
+      }
       if (!elements.accounts.customSelect.btn.contains(target) && !elements.accounts.customSelect.options.contains(target)) {
         toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
       }
@@ -218,6 +226,7 @@
 
     setupKeyboardNavForSelect(elements.layanan.customSelect.wrapper);
     setupKeyboardNavForSelect(elements.preorder.customSelect.wrapper);
+    setupKeyboardNavForSelect(elements.preorder.customStatusSelect.wrapper);
     setupKeyboardNavForSelect(elements.accounts.customSelect.wrapper);
     
     initTheme();
@@ -225,6 +234,7 @@
   }
   
   function setupKeyboardNavForSelect(wrapper) {
+    if (!wrapper) return;
     const btn = wrapper.querySelector('.custom-select-btn');
     const optionsEl = wrapper.querySelector('.custom-select-options');
     let focusIndex = -1;
@@ -302,10 +312,7 @@
       renderHomeList(); 
       renderLayananList(); 
     } catch (err) { 
-      if (err.name === 'AbortError') {
-        console.log('Catalog fetch aborted.');
-        return;
-      }
+      if (err.name === 'AbortError') { return; }
       console.error('Failed to load catalog:', err); 
       [elements.home, elements.layanan].forEach(view => { 
         view.listContainer.innerHTML = ''; 
@@ -348,10 +355,7 @@
         state.preorder.allData = sortPreorderData(dataRows, state.preorder.displayMode); 
       } 
     } catch (e) { 
-      if (e.name === 'AbortError') {
-        console.log('Preorder fetch aborted.');
-        return;
-      }
+      if (e.name === 'AbortError') { return; }
       state.preorder.allData = []; 
       total.textContent = 'Gagal memuat data.'; 
       console.error('Fetch Pre-Order failed:', e); 
@@ -361,7 +365,70 @@
     } 
   }
 
-  function initializePreorder() { if (state.preorder.initialized) return; const rebound = () => { state.preorder.currentPage = 1; renderPreorderCards(); }; const { searchInput, statusSelect, customSelect, prevBtn, nextBtn } = elements.preorder; searchInput.addEventListener('input', rebound); statusSelect.addEventListener('change', rebound); customSelect.options.querySelectorAll('.custom-select-option').forEach(option => { option.addEventListener('click', e => { const selectedValue = e.target.dataset.value; const selectedText = e.target.textContent; customSelect.value.textContent = selectedText; document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); e.target.classList.add('selected'); const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2; fetchPreorderData(sheet); toggleCustomSelect(customSelect.wrapper, false); }); }); prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); } }); nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); }); fetchPreorderData(config.sheets.preorder.name1); state.preorder.initialized = true; }
+  function initializePreorder() {
+    if (state.preorder.initialized) return;
+  
+    const rebound = () => {
+      state.preorder.currentPage = 1;
+      renderPreorderCards();
+    };
+  
+    const { searchInput, statusSelect, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
+  
+    searchInput.addEventListener('input', rebound);
+
+    customSelect.btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCustomSelect(customSelect.wrapper);
+    });
+
+    customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
+      option.addEventListener('click', e => {
+        const selectedValue = e.target.dataset.value;
+        const selectedText = e.target.textContent;
+        customSelect.value.textContent = selectedText;
+        document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+        e.target.classList.add('selected');
+        const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
+        fetchPreorderData(sheet);
+        toggleCustomSelect(customSelect.wrapper, false);
+      });
+    });
+  
+    customStatusSelect.btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleCustomSelect(customStatusSelect.wrapper);
+    });
+  
+    customStatusSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
+      option.addEventListener('click', e => {
+        const selectedValue = e.target.dataset.value;
+        const selectedText = e.target.textContent;
+        customStatusSelect.value.textContent = selectedText;
+        document.querySelector('#preorderStatusCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+        e.target.classList.add('selected');
+        statusSelect.value = selectedValue;
+        toggleCustomSelect(customStatusSelect.wrapper, false);
+        rebound();
+      });
+    });
+  
+    prevBtn.addEventListener('click', () => {
+      if (state.preorder.currentPage > 1) {
+        state.preorder.currentPage--;
+        renderPreorderCards();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+    nextBtn.addEventListener('click', () => {
+      state.preorder.currentPage++;
+      renderPreorderCards();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  
+    fetchPreorderData(config.sheets.preorder.name1);
+    state.preorder.initialized = true;
+  }
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
   async function parseAccountsSheet(text) { const rows = robustCsvParser(text); rows.shift(); return rows.filter(row => row && row.length >= 5 && row[0]).map(row => ({ title: row[0] || 'Tanpa Judul', price: Number(row[1]) || 0, status: row[2] || 'Tersedia', description: row[3] || 'Tidak ada deskripsi.', images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean), })); }
   function populateAccountSelect() { const { customSelect, empty } = elements.accounts; const { options, value } = customSelect; options.innerHTML = ''; if (state.accounts.data.length === 0) { value.textContent = 'Tidak ada akun'; empty.style.display = 'block'; return; } value.textContent = 'Pilih Akun'; state.accounts.data.forEach((acc, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = acc.title; el.dataset.value = index; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); el.addEventListener('click', () => { value.textContent = acc.title; document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(customSelect.wrapper, false); renderAccount(index); }); options.appendChild(el); }); }
@@ -384,10 +451,7 @@
       state.accounts.data = await parseAccountsSheet(text); 
       populateAccountSelect(); 
     } catch (err) { 
-      if (err.name === 'AbortError') {
-        console.log('Accounts fetch aborted.');
-        return;
-      }
+      if (err.name === 'AbortError') { return; }
       console.error('Fetch Accounts failed:', err); 
       error.textContent = 'Gagal memuat data akun. Coba lagi nanti.'; 
       error.style.display = 'block'; 
