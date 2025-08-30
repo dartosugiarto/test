@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 3.4.0 (Cumulative Fixes)
+ * @version 3.5.0 (Definitive Fix for Mobile Tap Click-Through)
  */
 
 (function () {
@@ -216,7 +216,7 @@
       if (!elements.preorder.customSelect.btn.contains(target) && !elements.preorder.customSelect.options.contains(target)) {
         toggleCustomSelect(elements.preorder.customSelect.wrapper, false);
       }
-      if (!elements.preorder.customStatusSelect.btn.contains(target) && !elements.preorder.customStatusSelect.options.contains(target)) {
+      if (elements.preorder.customStatusSelect.wrapper && !elements.preorder.customStatusSelect.btn.contains(target) && !elements.preorder.customStatusSelect.options.contains(target)) {
         toggleCustomSelect(elements.preorder.customStatusSelect.wrapper, false);
       }
       if (!elements.accounts.customSelect.btn.contains(target) && !elements.accounts.customSelect.options.contains(target)) {
@@ -472,7 +472,7 @@
 })();
 
 
-/* --- Robust mobile tap for custom-select (v2: allows scrolling) --- */
+/* --- Robust mobile tap for custom-select (v3: Definitive fix for click-through) --- */
 (function(){
   function install(optionsEl){
     if(!optionsEl) return;
@@ -484,18 +484,19 @@
       startX=p.clientX; startY=p.clientY; moved=false;
       downTarget = e.target.closest ? e.target.closest('.custom-select-option') : null;
       window.addEventListener('pointermove', onMove, {passive:true});
-      window.addEventListener('pointerup', onUp, {once:true});
+      window.addEventListener('pointerup', (e) => onUp(e), {once:true});
       window.addEventListener('touchmove', onMove, {passive:true});
-      window.addEventListener('touchend', onUp, {once:true});
+      window.addEventListener('touchend', (e) => onUp(e), {once:true});
     }
     function onMove(e){
       const p=pt(e); if(!p) return;
       if(Math.abs(p.clientX-startX)>threshold || Math.abs(p.clientY-startY)>threshold) moved=true;
     }
-    function onUp(){
+    function onUp(e){
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('touchmove', onMove);
       if(!moved && downTarget){
+        e.preventDefault(); // <-- THE FIX: Prevent browser from firing its own click event later
         try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
       }
       downTarget=null;
@@ -507,5 +508,6 @@
     install(document.getElementById('layananCustomSelectOptions'));
     install(document.getElementById('preorderCustomSelectOptions'));
     install(document.getElementById('accountCustomSelectOptions'));
+    install(document.getElementById('preorderStatusCustomSelectOptions'));
   }catch(_){}
 })();
