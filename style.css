@@ -501,16 +501,6 @@ body.dark-mode .icon-moon {
   cursor: pointer;
   transition: transform var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast);
 }
-@keyframes fadeInItem {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 .list-item:hover {
   border-color: var(--brand-blue);
   box-shadow: var(--shadow-sm);
@@ -1132,4 +1122,109 @@ body.sidebar-open .sidebar {
   outline: none;
   box-shadow: var(--shadow-focus);
   border-color: var(--brand-blue);
+}
+/* -- Library Grid Styling -- */
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--sp-fib-5);
+}
+
+.book-card {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.book-card .cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-fib-small);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-natural), box-shadow var(--duration-natural);
+  margin-bottom: var(--sp-fib-4);
+}
+
+.book-card:hover .cover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 8px 21px rgba(48, 57, 82, 0.15);
+}
+
+.book-card .title {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+/* -- Book Reader Modal Styling -- */
+.reader-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2000;
+  display: none; /* Diubah oleh JS */
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity var(--duration-natural) var(--ease-natural);
+}
+
+.reader-modal-overlay.visible {
+  display: flex;
+  opacity: 1;
+}
+
+.reader-modal-content {
+  width: 90%;
+  height: 90%;
+  max-width: 800px;
+  background: var(--surface-primary);
+  border-radius: var(--radius-fib-medium);
+  box-shadow: 0 8px 34px rgba(0, 0, 0, 0.15);
+  transform: scale(0.95);
+  transition: transform var(--duration-natural) var(--ease-natural);
+  display: flex;
+  flex-direction: column;
+}
+
+.reader-modal-overlay.visible .reader-modal-content {
+  transform: scale(1);
+}
+
+.reader-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-fib-4) var(--sp-fib-5);
+  border-bottom: 1px solid var(--separator);
+  flex-shrink: 0;
+}
+
+.reader-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reader-modal-body {
+  flex-grow: 1;
+  padding: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.reader-modal-body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
 }
