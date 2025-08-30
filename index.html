@@ -280,8 +280,14 @@
       </section>
 
       <section id="viewPerpustakaan" class="view-section" aria-label="Perpustakaan">
-        <header class="page-title-header"><h1>Perpustakaan</h1></header>
-        <div class="empty">Halaman ini sedang dalam pengembangan.</div>
+        <header class="page-title-header">
+          <h1>Perpustakaan Digital</h1>
+          <p class="page-subtitle">Kumpulan tulisan dan cerita pendek.</p>
+        </header>
+      
+        <div id="libraryGridContainer" class="library-grid"></div>
+        <div id="libraryError" class="err" style="display:none"></div>
+      
       </section>
 
       <section id="viewFilm" class="view-section" aria-label="Film">
@@ -338,6 +344,18 @@
       </div>
       <div class="modal-footer">
         <a id="continueToWaBtn" class="wa-button" href="#" target="_blank" rel="noopener">Lanjutkan ke WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="bookReaderModal" class="reader-modal-overlay">
+    <div class="reader-modal-content">
+      <div class="reader-modal-header">
+        <h2 id="bookReaderTitle"></h2>
+        <button id="closeReaderModalBtn" class="close-btn" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <div class="reader-modal-body">
+        <iframe id="bookReaderFrame" src="" frameborder="0"></iframe>
       </div>
     </div>
   </div>
