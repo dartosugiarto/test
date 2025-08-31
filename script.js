@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 3.5.1 (Definitive Fix for Pre-order Dropdown Click-Through)
+ * @version 4.0.0 (Simplified Event Handling)
  */
 
 (function () {
@@ -32,7 +32,6 @@
   let accountsFetchController;
   let modalFocusTrap = { listener: null, focusableEls: [], firstEl: null, lastEl: null };
   let elementToFocusOnModalClose = null;
-  let isTapBlocked = false; // Variabel "perisai" untuk mencegah klik tembus
 
   const state = {
     layanan: { activeCategory: '', searchQuery: '' },
@@ -150,44 +149,17 @@
    * Main application entry point.
    */
   function initializeApp() {
-    // Listener "perisai" yang berjalan pertama untuk semua klik
-    document.body.addEventListener('click', (e) => {
-      if (isTapBlocked) {
-        e.stopPropagation();
-        e.preventDefault();
-      }
-    }, true); // `true` membuat listener ini berjalan paling awal
-
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     
     elements.sidebar.links.forEach(link => {
-      if (link.dataset.mode) {
-        let startX = 0, startY = 0, isMoved = false;
-        link.addEventListener('touchstart', (e) => {
-          startX = e.touches[0].clientX;
-          startY = e.touches[0].clientY;
-          isMoved = false;
-        }, { passive: true });
-        link.addEventListener('touchmove', (e) => {
-          const deltaX = Math.abs(e.touches[0].clientX - startX);
-          const deltaY = Math.abs(e.touches[0].clientY - startY);
-          if (deltaX > 10 || deltaY > 10) isMoved = true;
-        }, { passive: true });
-        link.addEventListener('touchend', (e) => {
-          if (!isMoved) {
-            e.preventDefault();
-            setMode(link.dataset.mode);
-          }
-        });
-        link.addEventListener('click', e => {
-            if (e.detail !== 0) {
-               e.preventDefault();
-               setMode(link.dataset.mode);
-            }
-        });
-      }
+      link.addEventListener('click', e => {
+        if (link.dataset.mode) {
+          e.preventDefault();
+          setMode(link.dataset.mode);
+        }
+      });
     });
 
     elements.layanan.customSelect.btn.addEventListener('click', (e) => {
@@ -198,9 +170,9 @@
       e.stopPropagation();
       toggleCustomSelect(elements.preorder.customSelect.wrapper);
     });
-     elements.preorder.customStatusSelect.btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleCustomSelect(elements.preorder.customStatusSelect.wrapper);
+    elements.preorder.customStatusSelect.btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCustomSelect(elements.preorder.customStatusSelect.wrapper);
     });
     elements.accounts.customSelect.btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -220,20 +192,13 @@
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
 
-    document.addEventListener('click', e => {
-      const target = e.target;
-      if (!elements.layanan.customSelect.btn.contains(target) && !elements.layanan.customSelect.options.contains(target)) {
-        toggleCustomSelect(elements.layanan.customSelect.wrapper, false);
-      }
-      if (!elements.preorder.customSelect.btn.contains(target) && !elements.preorder.customSelect.options.contains(target)) {
-        toggleCustomSelect(elements.preorder.customSelect.wrapper, false);
-      }
-      if (elements.preorder.customStatusSelect.wrapper && !elements.preorder.customStatusSelect.btn.contains(target) && !elements.preorder.customStatusSelect.options.contains(target)) {
+    document.addEventListener('click', () => {
+      toggleCustomSelect(elements.layanan.customSelect.wrapper, false);
+      toggleCustomSelect(elements.preorder.customSelect.wrapper, false);
+      if (elements.preorder.customStatusSelect.wrapper) {
         toggleCustomSelect(elements.preorder.customStatusSelect.wrapper, false);
       }
-      if (!elements.accounts.customSelect.btn.contains(target) && !elements.accounts.customSelect.options.contains(target)) {
-        toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
-      }
+      toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
     });
 
     setupKeyboardNavForSelect(elements.layanan.customSelect.wrapper);
@@ -367,7 +332,7 @@
   function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `› Tipe: ${catLabel}`, `› Item: ${title}`, `› Pembayaran: ${option.name}`, `› Harga: ${formatToIdr(price)}`, `› Fee: ${formatToIdr(fee)}`, `› Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
   
   function openPaymentModal(item) {
-    elementToFocusOnModalClose = document.activeElement; // Simpan elemen yang aktif sebelum modal dibuka
+    elementToFocusOnModalClose = document.activeElement;
     currentSelectedItem = item;
     const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal;
     itemName.textContent = item.title;
@@ -382,7 +347,6 @@
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('visible'), 10);
 
-    // --- LOGIKA FOCUS TRAP DIMULAI ---
     const focusableEls = modal.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), input[type="radio"]:not([disabled])');
     modalFocusTrap.focusableEls = Array.from(focusableEls);
     modalFocusTrap.firstEl = modalFocusTrap.focusableEls[0];
@@ -390,12 +354,12 @@
     
     modalFocusTrap.listener = function(e) {
       if (e.key !== 'Tab') return;
-      if (e.shiftKey) { // Shift + Tab
+      if (e.shiftKey) { 
         if (document.activeElement === modalFocusTrap.firstEl) {
           modalFocusTrap.lastEl.focus();
           e.preventDefault();
         }
-      } else { // Tab
+      } else { 
         if (document.activeElement === modalFocusTrap.lastEl) {
           modalFocusTrap.firstEl.focus();
           e.preventDefault();
@@ -403,15 +367,13 @@
       }
     };
     modal.addEventListener('keydown', modalFocusTrap.listener);
-    setTimeout(() => modalFocusTrap.firstEl.focus(), 100); // Fokus ke elemen pertama saat modal terbuka
-    // --- LOGIKA FOCUS TRAP SELESAI ---
+    setTimeout(() => modalFocusTrap.firstEl.focus(), 100);
   }
 
   function closePaymentModal() {
     const { modal } = elements.paymentModal;
     modal.classList.remove('visible');
     
-    // Hapus listener keydown untuk mencegah memory leak
     if (modalFocusTrap.listener) {
       modal.removeEventListener('keydown', modalFocusTrap.listener);
     }
@@ -419,7 +381,6 @@
     setTimeout(() => {
       modal.style.display = 'none';
       currentSelectedItem = null;
-      // Kembalikan fokus ke elemen yang membuka modal
       if (elementToFocusOnModalClose) {
         elementToFocusOnModalClose.focus();
       }
@@ -472,9 +433,35 @@
       renderPreorderCards();
     };
   
-    const { searchInput, prevBtn, nextBtn } = elements.preorder;
+    const { searchInput, statusSelect, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
   
     searchInput.addEventListener('input', rebound);
+
+    customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
+      option.addEventListener('click', e => {
+        const selectedValue = e.target.dataset.value;
+        const selectedText = e.target.textContent;
+        customSelect.value.textContent = selectedText;
+        document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+        e.target.classList.add('selected');
+        const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
+        fetchPreorderData(sheet);
+        toggleCustomSelect(customSelect.wrapper, false);
+      });
+    });
+  
+    customStatusSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
+      option.addEventListener('click', e => {
+        const selectedValue = e.target.dataset.value;
+        const selectedText = e.target.textContent;
+        customStatusSelect.value.textContent = selectedText;
+        document.querySelector('#preorderStatusCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+        e.target.classList.add('selected');
+        statusSelect.value = selectedValue;
+        toggleCustomSelect(customStatusSelect.wrapper, false);
+        rebound();
+      });
+    });
   
     prevBtn.addEventListener('click', () => {
       if (state.preorder.currentPage > 1) {
@@ -533,7 +520,6 @@
 
   // --- START: Library Functions ---
 
-  // Fungsi untuk mengambil dan menampilkan semua buku
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
@@ -568,7 +554,6 @@
     }
   }
 
-  // Fungsi untuk merender galeri buku
   function renderLibraryGrid(books) {
     const container = getElement('libraryGridContainer');
     if (!books || books.length === 0) {
@@ -582,8 +567,8 @@
       const card = document.createElement('a');
       card.className = 'book-card';
       card.href = book.bookUrl;
-      card.target = '_blank'; // Membuka link di tab baru
-      card.rel = 'noopener'; // Praktik keamanan untuk link eksternal
+      card.target = '_blank';
+      card.rel = 'noopener';
       card.innerHTML = `
         <img src="${book.coverUrl}" alt="${book.title}" class="cover" loading="lazy">
         <div class="overlay"></div>
@@ -606,71 +591,4 @@
   };
   
   document.addEventListener('DOMContentLoaded', initializeApp);
-
-  /* --- Robust mobile tap for custom-select (v3.2: Click-through Guard) --- */
-  (function(){
-    function install(optionsEl){
-      if(!optionsEl) return;
-      let moved=false,startX=0,startY=0,downTarget=null;
-      const threshold=12;
-      function pt(e){ return e.touches? e.touches[0]: e; }
-      function onDown(e){
-        const p=pt(e); if(!p) return;
-        startX=p.clientX; startY=p.clientY; moved=false;
-        downTarget = e.target.closest ? e.target.closest('.custom-select-option') : null;
-        window.addEventListener('pointermove', onMove, {passive:true});
-        window.addEventListener('pointerup', onUp, {once:true});
-        window.addEventListener('touchmove', onMove, {passive:true});
-        window.addEventListener('touchend', onUp, {once:true});
-      }
-      function onMove(e){
-        const p=pt(e); if(!p) return;
-        if(Math.abs(p.clientX-startX)>threshold || Math.abs(p.clientY-startY)>threshold) moved=true;
-      }
-      function onUp(e){
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('touchmove', onMove);
-        if(!moved && downTarget){
-          e.preventDefault();
-          
-          isTapBlocked = true;
-          setTimeout(() => { isTapBlocked = false; }, 350);
-
-          const parentOptionsId = downTarget.parentElement.id;
-
-          if (parentOptionsId === 'preorderCustomSelectOptions') {
-              const { customSelect } = elements.preorder;
-              const selectedValue = downTarget.dataset.value;
-              customSelect.value.textContent = downTarget.textContent;
-              document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
-              downTarget.classList.add('selected');
-              const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
-              fetchPreorderData(sheet);
-              toggleCustomSelect(customSelect.wrapper, false);
-          } else if (parentOptionsId === 'preorderStatusCustomSelectOptions') {
-              const { customStatusSelect, statusSelect } = elements.preorder;
-              const selectedValue = downTarget.dataset.value;
-              customStatusSelect.value.textContent = downTarget.textContent;
-              document.querySelector('#preorderStatusCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
-              downTarget.classList.add('selected');
-              statusSelect.value = selectedValue;
-              toggleCustomSelect(customStatusSelect.wrapper, false);
-              state.preorder.currentPage = 1;
-              renderPreorderCards();
-          } else {
-             try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
-          }
-        }
-        downTarget=null;
-      }
-      optionsEl.addEventListener('pointerdown', onDown, {passive:true});
-      optionsEl.addEventListener('touchstart', onDown, {passive:true});
-    }
-    try{
-      install(document.getElementById('layananCustomSelectOptions'));
-      install(document.getElementById('preorderCustomSelectOptions'));
-      install(document.getElementById('accountCustomSelectOptions'));
-      install(document.getElementById('preorderStatusCustomSelectOptions'));
-    }catch(_){}
-  })();
 })();
