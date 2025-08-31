@@ -538,22 +538,20 @@
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
     
-    // Tampilkan skeleton loading
-    container.innerHTML = '<p>Memuat buku...</p>'; // Ganti dengan skeleton jika ada template
+    container.innerHTML = '<p>Memuat buku...</p>';
     errorEl.style.display = 'none';
 
     try {
-      // Ganti 'Sheet6' dengan nama sheet perpustakaan Anda
       const sheetName = 'Sheet6'; 
       const res = await fetch(getSheetUrl(sheetName, 'csv'));
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
       
       const text = await res.text();
       const rows = robustCsvParser(text);
-      rows.shift(); // Hapus baris header
+      rows.shift(); 
       
       const books = rows
-        .filter(row => row && row[0]) // Pastikan baris dan judul tidak kosong
+        .filter(row => row && row[0]) 
         .map(row => ({
           title: row[0],
           coverUrl: row[1],
@@ -612,7 +610,6 @@
     const frameEl = getElement('bookReaderFrame');
     
     modal.classList.remove('visible');
-    // Hentikan pemuatan iframe untuk menghemat resource
     frameEl.src = ''; 
   }
 
@@ -636,7 +633,7 @@
   // Panggil fungsi initializeLibrary saat menu perpustakaan diklik
   const originalSetMode = setMode;
   setMode = function(nextMode) {
-    originalSetMode(nextMode); // Jalankan fungsi setMode yang asli
+    originalSetMode(nextMode); 
     if (nextMode === 'perpustakaan') {
       initializeLibrary();
     }
@@ -670,7 +667,6 @@
         if(!moved && downTarget){
           e.preventDefault();
           
-          // Aktifkan "perisai" klik
           isTapBlocked = true;
           setTimeout(() => { isTapBlocked = false; }, 350);
 
