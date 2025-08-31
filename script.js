@@ -579,55 +579,21 @@
     container.innerHTML = '';
     const fragment = document.createDocumentFragment();
     books.forEach(book => {
-      const card = document.createElement('button');
+      const card = document.createElement('a');
       card.className = 'book-card';
+      card.href = book.bookUrl;
+      card.target = '_blank'; // Membuka link di tab baru
+      card.rel = 'noopener'; // Praktik keamanan untuk link eksternal
       card.innerHTML = `
         <img src="${book.coverUrl}" alt="${book.title}" class="cover" loading="lazy">
         <div class="overlay"></div>
         <div class="title">${book.title}</div>
       `;
-      card.addEventListener('click', () => openBookReader(book));
       fragment.appendChild(card);
     });
     container.appendChild(fragment);
   }
-
-  // Fungsi untuk membuka modal pembaca buku
-  function openBookReader(book) {
-    const modal = getElement('bookReaderModal');
-    const titleEl = getElement('bookReaderTitle');
-    const frameEl = getElement('bookReaderFrame');
-
-    titleEl.textContent = book.title;
-    frameEl.src = book.bookUrl;
-
-    modal.classList.add('visible');
-  }
-
-  // Fungsi untuk menutup modal
-  function closeBookReader() {
-    const modal = getElement('bookReaderModal');
-    const frameEl = getElement('bookReaderFrame');
-    
-    modal.classList.remove('visible');
-    frameEl.src = ''; 
-  }
-
-  // Tambahkan event listener untuk tombol tutup dan overlay
-  getElement('closeReaderModalBtn').addEventListener('click', closeBookReader);
-  getElement('bookReaderModal').addEventListener('click', (e) => {
-    if (e.target === getElement('bookReaderModal')) {
-      closeBookReader();
-    }
-  });
-
-  // Tambahkan event listener untuk tombol Escape
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && getElement('bookReaderModal').classList.contains('visible')) {
-      closeBookReader();
-    }
-  });
-
+  
   // --- END: Library Functions ---
 
   // Panggil fungsi initializeLibrary saat menu perpustakaan diklik
