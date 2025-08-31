@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 3.5.0 (Definitive Fix for Mobile Tap Click-Through)
+ * @version 3.5.1 (Definitive Fix for Pre-order Dropdown Click-Through)
  */
 
 (function () {
@@ -32,6 +32,7 @@
   let accountsFetchController;
   let modalFocusTrap = { listener: null, focusableEls: [], firstEl: null, lastEl: null };
   let elementToFocusOnModalClose = null;
+  let isTapBlocked = false; // Variabel "perisai" untuk mencegah klik tembus
 
   const state = {
     layanan: { activeCategory: '', searchQuery: '' },
@@ -149,6 +150,14 @@
    * Main application entry point.
    */
   function initializeApp() {
+    // Listener "perisai" yang berjalan pertama untuk semua klik
+    document.body.addEventListener('click', (e) => {
+      if (isTapBlocked) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true); // `true` membuat listener ini berjalan paling awal
+
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
@@ -576,6 +585,7 @@
       card.className = 'book-card';
       card.innerHTML = `
         <img src="${book.coverUrl}" alt="${book.title}" class="cover" loading="lazy">
+        <div class="overlay"></div>
         <div class="title">${book.title}</div>
       `;
       card.addEventListener('click', () => openBookReader(book));
@@ -634,7 +644,7 @@
   
   document.addEventListener('DOMContentLoaded', initializeApp);
 
-  /* --- Robust mobile tap for custom-select (v3.1: Integrated Logic) --- */
+  /* --- Robust mobile tap for custom-select (v3.2: Click-through Guard) --- */
   (function(){
     function install(optionsEl){
       if(!optionsEl) return;
@@ -660,7 +670,10 @@
         if(!moved && downTarget){
           e.preventDefault();
           
-          // --- LOGIKA BARU DITAMBAHKAN DI SINI ---
+          // Aktifkan "perisai" klik
+          isTapBlocked = true;
+          setTimeout(() => { isTapBlocked = false; }, 350);
+
           const parentOptionsId = downTarget.parentElement.id;
 
           if (parentOptionsId === 'preorderCustomSelectOptions') {
@@ -680,12 +693,10 @@
               downTarget.classList.add('selected');
               statusSelect.value = selectedValue;
               toggleCustomSelect(customStatusSelect.wrapper, false);
-              // Panggil rebound untuk memfilter
               state.preorder.currentPage = 1;
               renderPreorderCards();
           } else {
-               // Jalankan klik standar untuk dropdown lain (Layanan, Akun, dll)
-               try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
+             try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
           }
         }
         downTarget=null;
