@@ -1123,11 +1123,12 @@ body.sidebar-open .sidebar {
   box-shadow: var(--shadow-focus);
   border-color: var(--brand-blue);
 }
-/* -- Library Grid Styling -- */
+
+/* -- Library Grid Styling (Modern Minimalist) -- */
 .library-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: var(--sp-fib-5);
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--sp-fib-5); /* Jarak antar buku sedikit lebih besar untuk kesan lega */
 }
 
 .book-card {
@@ -1136,6 +1137,7 @@ body.sidebar-open .sidebar {
   padding: 0;
   cursor: pointer;
   text-align: left;
+  transition: color var(--duration-fast);
 }
 
 .book-card .cover {
@@ -1143,21 +1145,40 @@ body.sidebar-open .sidebar {
   aspect-ratio: 2 / 3;
   object-fit: cover;
   border-radius: var(--radius-fib-small);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-natural), box-shadow var(--duration-natural);
-  margin-bottom: var(--sp-fib-4);
+  /* Bayangan yang lebih halus dan modern */
+  box-shadow: 0 4px 12px rgba(48, 57, 82, 0.08);
+  /* Garis batas tipis agar sampul putih terlihat */
+  border: 1px solid var(--separator);
+  /* Transisi untuk semua efek hover */
+  transition: transform var(--duration-natural), box-shadow var(--duration-natural), border-color var(--duration-natural);
+  margin-bottom: var(--sp-fib-3);
 }
 
+/* Efek hover yang lebih halus dan elegan */
 .book-card:hover .cover {
-  transform: translateY(-8px) scale(1.05);
-  box-shadow: 0 8px 21px rgba(48, 57, 82, 0.15);
+  transform: translateY(-5px);
+  box-shadow: 0 7px 20px rgba(48, 57, 82, 0.12);
+  border-color: var(--brand-blue);
 }
 
 .book-card .title {
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--text-primary);
+  font-weight: 600; /* Sedikit lebih tipis (semi-bold) */
+  font-size: 14px; /* Sedikit lebih kecil */
+  color: var(--text-secondary); /* Warna lebih lembut */
   line-height: 1.4;
+  
+  /* Trik agar judul maksimal 2 baris dan tidak berantakan */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  
+  transition: color var(--duration-fast);
+}
+
+/* Judul menjadi lebih jelas saat disentuh */
+.book-card:hover .title {
+  color: var(--text-primary);
 }
 
 /* -- Book Reader Modal Styling -- */
