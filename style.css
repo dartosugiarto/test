@@ -1249,3 +1249,9 @@ body.sidebar-open .sidebar {
   height: 100%;
   border: none;
 }
+
+/* Perbaikan untuk layout Perpustakaan yang mepet */
+#viewPerpustakaan {
+  padding-left: var(--sp-fib-5);
+  padding-right: var(--sp-fib-5);
+}
