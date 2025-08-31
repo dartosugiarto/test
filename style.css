@@ -1127,7 +1127,8 @@ body.sidebar-open .sidebar {
 /* -- Library Grid Styling (New Layout) -- */
 .library-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  /* Membuat 3 kolom sama lebar */
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--sp-fib-4);
 }
 
@@ -1137,10 +1138,10 @@ body.sidebar-open .sidebar {
   border: none;
   padding: 0;
   cursor: pointer;
-  border-radius: var(--radius-fib-small);
+  border-radius: var(--radius-fib-medium); /* Sedikit lebih rounded */
   overflow: hidden; /* Penting agar semua elemen anak mengikuti border-radius */
   aspect-ratio: 3 / 4; /* Aspek rasio kartu sesuai contoh */
-  transition: transform var(--duration-fast);
+  transition: transform var(--duration-fast) ease-in-out;
 }
 
 .book-card:hover {
@@ -1151,6 +1152,8 @@ body.sidebar-open .sidebar {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* Efek gambar sedikit gelap agar teks lebih menonjol */
+  filter: brightness(0.9);
 }
 
 /* Lapisan gradien untuk membuat teks terbaca */
@@ -1159,20 +1162,21 @@ body.sidebar-open .sidebar {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60%;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  border-radius: 0 0 var(--radius-fib-small) var(--radius-fib-small);
+  height: 70%;
+  background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+  border-radius: 0 0 var(--radius-fib-medium) var(--radius-fib-medium);
 }
 
 .book-card .title {
   position: absolute;
-  bottom: var(--sp-fib-3);
-  left: var(--sp-fib-3);
-  right: var(--sp-fib-3);
+  bottom: var(--sp-fib-4);
+  left: var(--sp-fib-4);
+  right: var(--sp-fib-4);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   color: #fff; /* Teks berwarna putih agar kontras */
   line-height: 1.4;
+  text-align: center;
   
   /* Trik agar judul maksimal 2 baris */
   display: -webkit-box;
@@ -1250,8 +1254,7 @@ body.sidebar-open .sidebar {
   border: none;
 }
 
-/* Perbaikan untuk layout Perpustakaan yang mepet */
+/* Perbaikan untuk layout Perpustakaan yang mepet ke samping dan atas */
 #viewPerpustakaan {
-  padding-left: var(--sp-fib-5);
-  padding-right: var(--sp-fib-5);
+  padding: var(--sp-fib-5); /* Memberi jarak atas, kiri, dan kanan sekaligus */
 }
