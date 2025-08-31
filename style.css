@@ -1256,5 +1256,5 @@ body.sidebar-open .sidebar {
 
 /* Perbaikan untuk layout Perpustakaan yang mepet ke samping dan atas */
 #viewPerpustakaan {
-  padding: var(--sp-fib-5); /* Memberi jarak atas, kiri, dan kanan sekaligus */
+  padding-top: var(--sp-fib-5); /* HANYA memberi jarak di bagian atas */
 }
