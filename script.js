@@ -189,6 +189,10 @@
       e.stopPropagation();
       toggleCustomSelect(elements.preorder.customSelect.wrapper);
     });
+     elements.preorder.customStatusSelect.btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleCustomSelect(elements.preorder.customStatusSelect.wrapper);
+    });
     elements.accounts.customSelect.btn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleCustomSelect(elements.accounts.customSelect.wrapper);
@@ -284,7 +288,7 @@
   function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }
   function toggleSidebar(forceOpen) { const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); document.body.classList.toggle('sidebar-open', isOpen); elements.sidebar.burger.classList.toggle('active', isOpen); }
   
-  function setMode(nextMode) {
+  let setMode = function(nextMode) {
     if (nextMode === 'donasi') {
       window.open('https://saweria.co/playpal', '_blank', 'noopener');
       return;
@@ -459,45 +463,9 @@
       renderPreorderCards();
     };
   
-    const { searchInput, statusSelect, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
+    const { searchInput, prevBtn, nextBtn } = elements.preorder;
   
     searchInput.addEventListener('input', rebound);
-
-    customSelect.btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleCustomSelect(customSelect.wrapper);
-    });
-
-    customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
-      option.addEventListener('click', e => {
-        const selectedValue = e.target.dataset.value;
-        const selectedText = e.target.textContent;
-        customSelect.value.textContent = selectedText;
-        document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
-        e.target.classList.add('selected');
-        const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
-        fetchPreorderData(sheet);
-        toggleCustomSelect(customSelect.wrapper, false);
-      });
-    });
-  
-    customStatusSelect.btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleCustomSelect(customStatusSelect.wrapper);
-    });
-  
-    customStatusSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
-      option.addEventListener('click', e => {
-        const selectedValue = e.target.dataset.value;
-        const selectedText = e.target.textContent;
-        customStatusSelect.value.textContent = selectedText;
-        document.querySelector('#preorderStatusCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
-        e.target.classList.add('selected');
-        statusSelect.value = selectedValue;
-        toggleCustomSelect(customStatusSelect.wrapper, false);
-        rebound();
-      });
-    });
   
     prevBtn.addEventListener('click', () => {
       if (state.preorder.currentPage > 1) {
@@ -515,6 +483,7 @@
     fetchPreorderData(config.sheets.preorder.name1);
     state.preorder.initialized = true;
   }
+
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
   async function parseAccountsSheet(text) { const rows = robustCsvParser(text); rows.shift(); return rows.filter(row => row && row.length >= 5 && row[0]).map(row => ({ title: row[0] || 'Tanpa Judul', price: Number(row[1]) || 0, status: row[2] || 'Tersedia', description: row[3] || 'Tidak ada deskripsi.', images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean), })); }
   function populateAccountSelect() { const { customSelect, empty } = elements.accounts; const { options, value } = customSelect; options.innerHTML = ''; if (state.accounts.data.length === 0) { value.textContent = 'Tidak ada akun'; empty.style.display = 'block'; return; } value.textContent = 'Pilih Akun'; state.accounts.data.forEach((acc, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = acc.title; el.dataset.value = index; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); el.addEventListener('click', () => { value.textContent = acc.title; document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(customSelect.wrapper, false); renderAccount(index); }); options.appendChild(el); }); }
@@ -665,45 +634,70 @@
   
   document.addEventListener('DOMContentLoaded', initializeApp);
 
-})();
-
-
-/* --- Robust mobile tap for custom-select (v3: Definitive fix for click-through) --- */
-(function(){
-  function install(optionsEl){
-    if(!optionsEl) return;
-    let moved=false,startX=0,startY=0,downTarget=null;
-    const threshold=12;
-    function pt(e){ return e.touches? e.touches[0]: e; }
-    function onDown(e){
-      const p=pt(e); if(!p) return;
-      startX=p.clientX; startY=p.clientY; moved=false;
-      downTarget = e.target.closest ? e.target.closest('.custom-select-option') : null;
-      window.addEventListener('pointermove', onMove, {passive:true});
-      window.addEventListener('pointerup', (e) => onUp(e), {once:true});
-      window.addEventListener('touchmove', onMove, {passive:true});
-      window.addEventListener('touchend', (e) => onUp(e), {once:true});
-    }
-    function onMove(e){
-      const p=pt(e); if(!p) return;
-      if(Math.abs(p.clientX-startX)>threshold || Math.abs(p.clientY-startY)>threshold) moved=true;
-    }
-    function onUp(e){
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('touchmove', onMove);
-      if(!moved && downTarget){
-        e.preventDefault(); // <-- THE FIX: Prevent browser from firing its own click event later
-        try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
+  /* --- Robust mobile tap for custom-select (v3.1: Integrated Logic) --- */
+  (function(){
+    function install(optionsEl){
+      if(!optionsEl) return;
+      let moved=false,startX=0,startY=0,downTarget=null;
+      const threshold=12;
+      function pt(e){ return e.touches? e.touches[0]: e; }
+      function onDown(e){
+        const p=pt(e); if(!p) return;
+        startX=p.clientX; startY=p.clientY; moved=false;
+        downTarget = e.target.closest ? e.target.closest('.custom-select-option') : null;
+        window.addEventListener('pointermove', onMove, {passive:true});
+        window.addEventListener('pointerup', onUp, {once:true});
+        window.addEventListener('touchmove', onMove, {passive:true});
+        window.addEventListener('touchend', onUp, {once:true});
       }
-      downTarget=null;
+      function onMove(e){
+        const p=pt(e); if(!p) return;
+        if(Math.abs(p.clientX-startX)>threshold || Math.abs(p.clientY-startY)>threshold) moved=true;
+      }
+      function onUp(e){
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('touchmove', onMove);
+        if(!moved && downTarget){
+          e.preventDefault();
+          
+          // --- LOGIKA BARU DITAMBAHKAN DI SINI ---
+          const parentOptionsId = downTarget.parentElement.id;
+
+          if (parentOptionsId === 'preorderCustomSelectOptions') {
+              const { customSelect } = elements.preorder;
+              const selectedValue = downTarget.dataset.value;
+              customSelect.value.textContent = downTarget.textContent;
+              document.querySelector('#preorderCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+              downTarget.classList.add('selected');
+              const sheet = selectedValue === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2;
+              fetchPreorderData(sheet);
+              toggleCustomSelect(customSelect.wrapper, false);
+          } else if (parentOptionsId === 'preorderStatusCustomSelectOptions') {
+              const { customStatusSelect, statusSelect } = elements.preorder;
+              const selectedValue = downTarget.dataset.value;
+              customStatusSelect.value.textContent = downTarget.textContent;
+              document.querySelector('#preorderStatusCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+              downTarget.classList.add('selected');
+              statusSelect.value = selectedValue;
+              toggleCustomSelect(customStatusSelect.wrapper, false);
+              // Panggil rebound untuk memfilter
+              state.preorder.currentPage = 1;
+              renderPreorderCards();
+          } else {
+               // Jalankan klik standar untuk dropdown lain (Layanan, Akun, dll)
+               try{ downTarget.dispatchEvent(new Event('click',{bubbles:true})); }catch(_){}
+          }
+        }
+        downTarget=null;
+      }
+      optionsEl.addEventListener('pointerdown', onDown, {passive:true});
+      optionsEl.addEventListener('touchstart', onDown, {passive:true});
     }
-    optionsEl.addEventListener('pointerdown', onDown, {passive:true});
-    optionsEl.addEventListener('touchstart', onDown, {passive:true});
-  }
-  try{
-    install(document.getElementById('layananCustomSelectOptions'));
-    install(document.getElementById('preorderCustomSelectOptions'));
-    install(document.getElementById('accountCustomSelectOptions'));
-    install(document.getElementById('preorderStatusCustomSelectOptions'));
-  }catch(_){}
+    try{
+      install(document.getElementById('layananCustomSelectOptions'));
+      install(document.getElementById('preorderCustomSelectOptions'));
+      install(document.getElementById('accountCustomSelectOptions'));
+      install(document.getElementById('preorderStatusCustomSelectOptions'));
+    }catch(_){}
+  })();
 })();
