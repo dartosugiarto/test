@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.0.0 (Simplified Event Handling)
+ * @version 7.0.0 (Full & Final Code with Confirmed Logic)
  */
 
 (function () {
@@ -46,8 +46,7 @@
     accounts: {
       initialized: false,
       data: [],
-      currentIndex: 0,
-      currentAccount: null,
+      activeCategory: 'all',
     },
   };
 
@@ -90,6 +89,7 @@
     itemTemplate: getElement('itemTemplate'),
     skeletonItemTemplate: getElement('skeletonItemTemplate'),
     skeletonCardTemplate: getElement('skeletonCardTemplate'),
+    accountCardTemplate: getElement('accountCardTemplate'),
     paymentModal: {
       modal: getElement('paymentModal'),
       closeBtn: getElement('closeModalBtn'),
@@ -122,32 +122,18 @@
       }
     },
     accounts: {
-      display: getElement('accountDisplay'),
-      empty: getElement('accountEmpty'),
       error: getElement('accountError'),
-      carousel: {
-        track: getElement('carouselTrack'),
-        prevBtn: getElement('carouselPrevBtn'),
-        nextBtn: getElement('carouselNextBtn'),
-        indicators: getElement('carouselIndicators'),
-      },
-      price: getElement('accountPrice'),
-      status: getElement('accountStatus'),
-      description: getElement('accountDescription'),
-      buyBtn: getElement('buyAccountBtn'),
-      offerBtn: getElement('offerAccountBtn'),
-      customSelect: {
-        wrapper: getElement('accountCustomSelectWrapper'),
-        btn: getElement('accountCustomSelectBtn'),
-        value: getElement('accountCustomSelectValue'),
-        options: getElement('accountCustomSelectOptions'),
+      gridContainer: getElement('accountGridContainer'),
+      countInfo: getElement('accountCountInfo'),
+      filterSelect: {
+        wrapper: getElement('accountFilterSelectWrapper'),
+        btn: getElement('accountFilterSelectBtn'),
+        value: getElement('accountFilterSelectValue'),
+        options: getElement('accountFilterSelectOptions'),
       },
     },
   };
 
-  /**
-   * Main application entry point.
-   */
   function initializeApp() {
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
@@ -174,9 +160,9 @@
         e.stopPropagation();
         toggleCustomSelect(elements.preorder.customStatusSelect.wrapper);
     });
-    elements.accounts.customSelect.btn.addEventListener('click', (e) => {
+    elements.accounts.filterSelect.btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleCustomSelect(elements.accounts.customSelect.wrapper);
+      toggleCustomSelect(elements.accounts.filterSelect.wrapper);
     });
     
     let homeDebounce, layananDebounce;
@@ -198,62 +184,13 @@
       if (elements.preorder.customStatusSelect.wrapper) {
         toggleCustomSelect(elements.preorder.customStatusSelect.wrapper, false);
       }
-      toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
+      toggleCustomSelect(elements.accounts.filterSelect.wrapper, false);
     });
-
-    setupKeyboardNavForSelect(elements.layanan.customSelect.wrapper);
-    setupKeyboardNavForSelect(elements.preorder.customSelect.wrapper);
-    setupKeyboardNavForSelect(elements.preorder.customStatusSelect.wrapper);
-    setupKeyboardNavForSelect(elements.accounts.customSelect.wrapper);
     
     initTheme();
     loadCatalog();
   }
   
-  function setupKeyboardNavForSelect(wrapper) {
-    if (!wrapper) return;
-    const btn = wrapper.querySelector('.custom-select-btn');
-    const optionsEl = wrapper.querySelector('.custom-select-options');
-    let focusIndex = -1;
-
-    wrapper.addEventListener('keydown', e => {
-        const options = Array.from(optionsEl.querySelectorAll('.custom-select-option'));
-        if (options.length === 0) return;
-
-        const isOpen = wrapper.classList.contains('open');
-        
-        if (e.key === 'Escape') {
-            toggleCustomSelect(wrapper, false);
-            btn.focus();
-            return;
-        }
-
-        if (document.activeElement === btn && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault();
-            toggleCustomSelect(wrapper, true);
-            focusIndex = options.findIndex(opt => opt.classList.contains('selected'));
-            if(focusIndex === -1) focusIndex = 0;
-            options[focusIndex]?.focus();
-        }
-        
-        if (isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-            e.preventDefault();
-            if (e.key === 'ArrowDown') {
-                focusIndex = Math.min(focusIndex + 1, options.length - 1);
-            } else { // ArrowUp
-                focusIndex = Math.max(focusIndex - 1, 0);
-            }
-            options[focusIndex]?.focus();
-        }
-
-        if (isOpen && (e.key === 'Enter' || e.key === ' ') && document.activeElement.classList.contains('custom-select-option')) {
-            e.preventDefault();
-            document.activeElement.click();
-            btn.focus();
-        }
-    });
-  }
-
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
@@ -292,7 +229,7 @@
 
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
-  function buildLayananCategorySelect(layananData) { const { options, value } = elements.layanan.customSelect; const categoryMap = new Map(); layananData.forEach(item => { if (!categoryMap.has(item.catKey)) { categoryMap.set(item.catKey, item.catLabel); } }); const layananCategories = [...categoryMap].map(([key, label]) => ({ key, label })); options.innerHTML = ''; layananCategories.forEach((cat, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = cat.label; el.dataset.value = cat.key; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); if (index === 0) el.classList.add('selected'); el.addEventListener('click', () => { state.layanan.activeCategory = cat.key; value.textContent = cat.label; document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(elements.layanan.customSelect.wrapper, false); renderLayananList(); }); options.appendChild(el); }); if (layananCategories.length > 0) { state.layanan.activeCategory = layananCategories[0].key; value.textContent = layananCategories[0].label; } else { value.textContent = 'Data tidak tersedia'; } }
+  function buildLayananCategorySelect(layananData) { const { options, value } = elements.layanan.customSelect; const categoryMap = new Map(); layananData.forEach(item => { if (!categoryMap.has(item.catKey)) { categoryMap.set(item.catKey, item.catLabel); } }); const layananCategories = [...categoryMap].map(([key, label]) => ({ key, label })); options.innerHTML = ''; layananCategories.forEach((cat, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = cat.label; el.dataset.value = cat.key; if (index === 0) el.classList.add('selected'); el.addEventListener('click', () => { state.layanan.activeCategory = cat.key; value.textContent = cat.label; document.querySelector('#layananCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(elements.layanan.customSelect.wrapper, false); renderLayananList(); }); options.appendChild(el); }); if (layananCategories.length > 0) { state.layanan.activeCategory = layananCategories[0].key; value.textContent = layananCategories[0].label; } else { value.textContent = 'Data tidak tersedia'; } }
   function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
   function renderHomeList() { const query = state.home.searchQuery.toLowerCase(); const homeCatKey = allCatalogData.length > 0 ? allCatalogData[0].catKey : null; const items = homeCatKey ? allCatalogData.filter(x => x.catKey === homeCatKey && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))) : []; renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada promo ditemukan.'); }
   function renderLayananList() { const { activeCategory, searchQuery } = state.layanan; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.layanan.listContainer, elements.layanan.countInfo, items, 'Tidak ada hasil ditemukan.'); }
@@ -346,38 +283,12 @@
     updatePriceDetails();
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('visible'), 10);
-
-    const focusableEls = modal.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), input[type="radio"]:not([disabled])');
-    modalFocusTrap.focusableEls = Array.from(focusableEls);
-    modalFocusTrap.firstEl = modalFocusTrap.focusableEls[0];
-    modalFocusTrap.lastEl = modalFocusTrap.focusableEls[modalFocusTrap.focusableEls.length - 1];
-    
-    modalFocusTrap.listener = function(e) {
-      if (e.key !== 'Tab') return;
-      if (e.shiftKey) { 
-        if (document.activeElement === modalFocusTrap.firstEl) {
-          modalFocusTrap.lastEl.focus();
-          e.preventDefault();
-        }
-      } else { 
-        if (document.activeElement === modalFocusTrap.lastEl) {
-          modalFocusTrap.firstEl.focus();
-          e.preventDefault();
-        }
-      }
-    };
-    modal.addEventListener('keydown', modalFocusTrap.listener);
-    setTimeout(() => modalFocusTrap.firstEl.focus(), 100);
+    setTimeout(() => elements.paymentModal.closeBtn.focus(), 100);
   }
 
   function closePaymentModal() {
     const { modal } = elements.paymentModal;
     modal.classList.remove('visible');
-    
-    if (modalFocusTrap.listener) {
-      modal.removeEventListener('keydown', modalFocusTrap.listener);
-    }
-
     setTimeout(() => {
       modal.style.display = 'none';
       currentSelectedItem = null;
@@ -481,48 +392,139 @@
   }
 
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
-  async function parseAccountsSheet(text) { const rows = robustCsvParser(text); rows.shift(); return rows.filter(row => row && row.length >= 5 && row[0]).map(row => ({ title: row[0] || 'Tanpa Judul', price: Number(row[1]) || 0, status: row[2] || 'Tersedia', description: row[3] || 'Tidak ada deskripsi.', images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean), })); }
-  function populateAccountSelect() { const { customSelect, empty } = elements.accounts; const { options, value } = customSelect; options.innerHTML = ''; if (state.accounts.data.length === 0) { value.textContent = 'Tidak ada akun'; empty.style.display = 'block'; return; } value.textContent = 'Pilih Akun'; state.accounts.data.forEach((acc, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = acc.title; el.dataset.value = index; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); el.addEventListener('click', () => { value.textContent = acc.title; document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(customSelect.wrapper, false); renderAccount(index); }); options.appendChild(el); }); }
-  function renderAccount(index) { const { display, empty, price, description, status: statusEl } = elements.accounts; const account = state.accounts.data[index]; state.accounts.currentAccount = account; if (!account) { display.style.display = 'none'; empty.style.display = 'block'; return; } display.classList.remove('expanded'); price.textContent = formatToIdr(account.price); description.textContent = account.description; statusEl.textContent = account.status; statusEl.className = 'account-status-badge'; statusEl.classList.add(account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'); const { track, indicators } = elements.accounts.carousel; track.innerHTML = ''; indicators.innerHTML = ''; if (account.images && account.images.length > 0) { account.images.forEach((src, i) => { track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><img src="${src}" alt="Gambar untuk ${account.title}" loading="lazy"></div>`); indicators.insertAdjacentHTML('beforeend', `<button class="indicator-dot" data-index="${i}"></button>`); }); } else { track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><div style="display:flex;align-items:center;justify-content:center;height:100%;aspect-ratio:16/9;background-color:var(--surface-secondary);color:var(--text-tertiary);">Gambar tidak tersedia</div></div>`); } indicators.querySelectorAll('.indicator-dot').forEach(dot => { dot.addEventListener('click', e => { e.stopPropagation(); state.accounts.currentIndex = parseInt(e.target.dataset.index); updateCarousel(); }); }); state.accounts.currentIndex = 0; updateCarousel(); empty.style.display = 'none'; display.style.display = 'block'; }
-  function updateCarousel() { const account = state.accounts.currentAccount; if (!account) return; const { track, prevBtn, nextBtn, indicators } = elements.accounts.carousel; const totalSlides = account.images.length || 1; track.style.transform = `translateX(-${state.accounts.currentIndex * 100}%)`; prevBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex === 0; nextBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex >= totalSlides - 1; indicators.querySelectorAll('.indicator-dot').forEach((dot, i) => { dot.classList.toggle('active', i === state.accounts.currentIndex); }); }
-  function initializeCarousel() { const { prevBtn, nextBtn, track } = elements.accounts.carousel; prevBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentIndex > 0) { state.accounts.currentIndex--; updateCarousel(); } }); nextBtn.addEventListener('click', e => { e.stopPropagation(); const account = state.accounts.currentAccount; if (!account) return; if (state.accounts.currentIndex < account.images.length - 1) { state.accounts.currentIndex++; updateCarousel(); } }); let touchStartX = 0; track.addEventListener('touchstart', e => { e.stopPropagation(); touchStartX = e.changedTouches[0].screenX; }, { passive: true }); track.addEventListener('touchend', e => { e.stopPropagation(); const touchEndX = e.changedTouches[0].screenX; if (touchEndX < touchStartX - 50) nextBtn.click(); if (touchEndX > touchStartX + 50) prevBtn.click(); }, { passive: true }); }
-  
-  async function initializeAccounts() { 
-    if (state.accounts.initialized) return; 
-    if (accountsFetchController) accountsFetchController.abort();
-    accountsFetchController = new AbortController();
 
-    const { customSelect, error, empty, display, buyBtn, offerBtn } = elements.accounts; 
-    error.style.display = 'none'; 
-    try { 
-      const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      
-      const text = await res.text(); 
-      state.accounts.data = await parseAccountsSheet(text); 
-      populateAccountSelect(); 
-    } catch (err) { 
-      if (err.name === 'AbortError') { return; }
-      console.error('Fetch Accounts failed:', err); 
-      error.textContent = 'Gagal memuat data akun. Coba lagi nanti.'; 
-      error.style.display = 'block'; 
-      empty.style.display = 'none'; 
-      customSelect.value.textContent = 'Gagal memuat'; 
-    } 
-    
-    display.addEventListener('click', e => { if (!e.target.closest('.action-btn, .carousel-btn, .indicator-dot')) display.classList.toggle('expanded'); }); 
-    buyBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { openPaymentModal({ title: state.accounts.currentAccount.title, price: state.accounts.currentAccount.price, catLabel: 'Akun Game' }); } }); 
-    offerBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { const text = `Halo, saya tertarik untuk menawar Akun Game: ${state.accounts.currentAccount.title}`; window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`, '_blank', 'noopener'); } }); 
-    
-    initializeCarousel(); 
-    state.accounts.initialized = true; 
+  async function parseAccountsSheet(text) {
+    const rows = robustCsvParser(text);
+    rows.shift();
+    return rows
+        .filter(row => row && row.length >= 2 && row[1] && row[1].trim() !== '')
+        .map(row => ({
+            category: (row[0] || 'Lainnya').trim(),
+            title: (row[1] || 'Tanpa Judul').trim(),
+            price: Number(row[2]) || 0,
+            status: (row[3] || 'Tersedia').trim(),
+            description: (row[4] || 'Tidak ada deskripsi.').trim(),
+            images: (row[5] || '').split(',').map(url => url.trim()).filter(Boolean),
+        }));
   }
 
-  // --- START: Library Functions ---
+  function buildAccountCategoryFilter() {
+    const { options, value } = elements.accounts.filterSelect;
+    options.innerHTML = '';
+
+    const categories = [...new Set(state.accounts.data.map(acc => acc.category))];
+
+    const createOption = (text, val) => {
+        const el = document.createElement('div');
+        el.className = 'custom-select-option';
+        el.textContent = text;
+        el.dataset.value = val;
+        el.addEventListener('click', () => {
+            state.accounts.activeCategory = val;
+            value.textContent = text;
+            document.querySelector('#accountFilterSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+            el.classList.add('selected');
+            toggleCustomSelect(elements.accounts.filterSelect.wrapper, false);
+            renderFilteredAccounts();
+        });
+        return el;
+    };
+
+    const allOption = createOption('Semua Kategori', 'all');
+    allOption.classList.add('selected');
+    options.appendChild(allOption);
+
+    categories.forEach(cat => {
+        options.appendChild(createOption(cat, cat));
+    });
+
+    value.textContent = 'Semua Kategori';
+  }
+
+  function renderFilteredAccounts() {
+    const { gridContainer, countInfo } = elements.accounts;
+    
+    const filteredData = state.accounts.activeCategory === 'all'
+        ? state.accounts.data
+        : state.accounts.data.filter(acc => acc.category === state.accounts.activeCategory);
+
+    gridContainer.innerHTML = '';
+    
+    if (filteredData.length === 0) {
+        gridContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak ada akun ditemukan.</p></div></div>`;
+        countInfo.textContent = '';
+        return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    filteredData.forEach(account => {
+        const clone = elements.accountCardTemplate.content.cloneNode(true);
+        const card = clone.querySelector('.account-card');
+        const img = clone.querySelector('.account-card-img');
+        const statusEl = clone.querySelector('.account-card-status');
+        const titleEl = clone.querySelector('.account-card-title');
+        const priceEl = clone.querySelector('.account-card-price');
+
+        img.src = account.images[0] || '';
+        img.alt = account.title;
+        
+        titleEl.textContent = account.title;
+        priceEl.textContent = formatToIdr(account.price);
+        statusEl.textContent = account.status;
+        statusEl.className = 'account-card-status';
+        statusEl.classList.add(account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold');
+
+        card.addEventListener('click', () => {
+          openPaymentModal({
+            title: account.title,
+            price: account.price,
+            catLabel: 'Akun Game'
+          });
+        });
+
+        fragment.appendChild(clone);
+    });
+
+    gridContainer.appendChild(fragment);
+    countInfo.textContent = `${filteredData.length} akun ditemukan`;
+  }
+
+  async function initializeAccounts() {
+      if (state.accounts.initialized) return;
+      if (accountsFetchController) accountsFetchController.abort();
+      accountsFetchController = new AbortController();
+
+      const { error, gridContainer, countInfo } = elements.accounts;
+      error.style.display = 'none';
+      countInfo.textContent = 'Memuat data akun...';
+      showSkeleton(gridContainer, elements.itemTemplate, 6);
+
+      try {
+          const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal });
+          if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
+          
+          const text = await res.text();
+          state.accounts.data = await parseAccountsSheet(text);
+          
+          buildAccountCategoryFilter();
+          renderFilteredAccounts();
+
+      } catch (err) {
+          if (err.name === 'AbortError') { return; }
+          console.error('Fetch Accounts failed:', err);
+          error.textContent = 'Gagal memuat data akun. Coba lagi nanti.';
+          error.style.display = 'block';
+          gridContainer.innerHTML = '';
+          countInfo.textContent = '';
+      } finally {
+          state.accounts.initialized = true;
+      }
+  }
 
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
+    if (container.innerHTML !== '') return;
     
     container.innerHTML = '<p>Memuat buku...</p>';
     errorEl.style.display = 'none';
@@ -579,9 +581,6 @@
     container.appendChild(fragment);
   }
   
-  // --- END: Library Functions ---
-
-  // Panggil fungsi initializeLibrary saat menu perpustakaan diklik
   const originalSetMode = setMode;
   setMode = function(nextMode) {
     originalSetMode(nextMode); 
