@@ -682,197 +682,6 @@ body.dark-mode .icon-moon {
   min-width: 120px;
   text-align: center;
 }
-.account-display-card {
-  margin-top: var(--sp-fib-5);
-  overflow: hidden;
-  background: var(--surface-primary);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-fib-large);
-  box-shadow: var(--shadow-sm);
-  cursor: pointer;
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
-}
-.account-display-card:hover {
-  box-shadow: 0 8px 21px rgba(48, 57, 82, 0.12);
-  transform: translateY(-5px);
-}
-.carousel-container {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  border-radius: var(--radius-fib-large) var(--radius-fib-large) 0 0;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-.carousel-container:active {
-  cursor: grabbing;
-}
-.carousel-track {
-  display: flex;
-  transition: transform var(--duration-natural) var(--ease-natural);
-}
-.carousel-slide {
-  flex: 0 0 100%;
-  min-width: 100%;
-}
-.carousel-slide img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  background-color: var(--surface-secondary);
-}
-.carousel-btn {
-  position: absolute;
-  top: 50%;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.35);
-  color: white;
-  opacity: 0;
-  cursor: pointer;
-  transform: translateY(-50%);
-  transition: background-color var(--duration-fast), opacity var(--duration-fast);
-}
-.carousel-btn svg {
-  width: 24px;
-  height: 24px;
-}
-.carousel-container:hover .carousel-btn, .carousel-container:focus-within .carousel-btn {
-  opacity: 1;
-}
-@media (hover: none) and (pointer: coarse) {
-  .carousel-btn {
-    opacity: 1;
-  }
-}
-.carousel-btn.prev {
-  left: var(--sp-fib-4);
-}
-.carousel-btn.next {
-  right: var(--sp-fib-4);
-}
-.carousel-btn:hover {
-  background-color: rgba(0, 0, 0, 0.6);
-}
-.carousel-btn:disabled {
-  opacity: 0.2;
-  cursor: not-allowed;
-}
-.carousel-indicators {
-  position: absolute;
-  bottom: var(--sp-fib-4);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: var(--sp-fib-3);
-  z-index: 3;
-}
-.indicator-dot {
-  width: 10px;
-  height: 10px;
-  padding: 0;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: background-color 0.3s, transform 0.3s;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-.indicator-dot.active {
-  background-color: #fff;
-  transform: scale(1.2);
-}
-.account-details {
-  padding: var(--sp-fib-5);
-}
-.account-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--sp-fib-4);
-}
-.account-price {
-  margin: 0;
-  font-size: var(--font-size-h2);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--brand-blue);
-}
-.account-status-badge {
-  flex-shrink: 0;
-  display: inline-block;
-  padding: var(--sp-fib-2) var(--sp-fib-4);
-  border: 1px solid transparent;
-  border-radius: 9999px;
-  font-size: var(--font-size-caption);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.account-status-badge.available {
-  background-color: #DCFCE7;
-  border-color: #86EFAC;
-  color: #166534;
-}
-.account-status-badge.sold {
-  background-color: var(--surface-secondary);
-  border-color: var(--separator);
-  color: var(--text-secondary);
-}
-.account-description-container {
-  max-height: 0;
-  margin-top: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height var(--duration-natural) var(--ease-natural), opacity var(--duration-fast), margin-top var(--duration-natural), padding-top var(--duration-natural);
-}
-.account-display-card.expanded .account-description-container {
-  max-height: 9999px;
-  margin-top: var(--sp-fib-5);
-  padding-top: var(--sp-fib-5);
-  border-top: 1px solid var(--separator);
-  opacity: 1;
-}
-.account-description-container p {
-  margin: 0;
-  white-space: pre-wrap;
-}
-.account-actions {
-  display: flex;
-  gap: var(--sp-fib-4);
-  margin-top: var(--sp-fib-5);
-}
-.action-btn {
-  flex-grow: 1;
-  padding: var(--sp-fib-4);
-  border: none;
-  border-radius: var(--radius-fib-small);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform var(--duration-fast), opacity var(--duration-fast);
-}
-.action-btn:hover {
-  transform: scale(1.03);
-}
-.action-btn.buy {
-  background-color: var(--brand-blue);
-  color: #fff;
-}
-.action-btn.offer {
-  background-color: var(--surface-secondary);
-  color: var(--text-primary);
-}
 .empty {
   grid-column: 1 / -1;
   display: flex;
@@ -951,18 +760,13 @@ body.dark-mode .skeleton::after {
   color: var(--text-tertiary);
   transition: transform var(--duration-natural) var(--ease-natural);
 }
-.card.expanded .expand-indicator, .account-display-card.expanded .expand-indicator {
+.card.expanded .expand-indicator {
   transform: rotate(180deg);
 }
 .status-badge-wrapper {
   display: flex;
   align-items: center;
   gap: var(--sp-fib-3);
-}
-.account-header-right {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-fib-4);
 }
 @media (min-width: 769px) {
   #viewPreorder .card-grid[data-rail] {
@@ -1118,45 +922,36 @@ body.sidebar-open .sidebar {
 .view-section:not(#viewHome) .head-block {
   margin-top: var(--sp-fib-6);
 }
-.nav-item:focus-visible, .icon-btn:focus-visible, .list-item:focus-visible, .pagination-btn:focus-visible, .carousel-btn:focus-visible {
+.nav-item:focus-visible, .icon-btn:focus-visible, .list-item:focus-visible, .pagination-btn:focus-visible {
   outline: none;
   box-shadow: var(--shadow-focus);
   border-color: var(--brand-blue);
 }
-
-/* -- Library Grid Styling (New Layout) -- */
 .library-grid {
   display: grid;
-  /* Membuat 3 kolom sama lebar */
   grid-template-columns: repeat(3, 1fr);
   gap: var(--sp-fib-4);
 }
-
 .book-card {
-  position: relative; /* Kunci untuk menumpuk elemen di dalamnya */
+  position: relative;
   background: var(--surface-secondary);
   border: none;
   padding: 0;
   cursor: pointer;
-  border-radius: var(--radius-fib-medium); /* Sedikit lebih rounded */
-  overflow: hidden; /* Penting agar semua elemen anak mengikuti border-radius */
-  aspect-ratio: 3 / 4; /* Aspek rasio kartu sesuai contoh */
+  border-radius: var(--radius-fib-medium);
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
   transition: transform var(--duration-fast) ease-in-out;
 }
-
 .book-card:hover {
-  transform: scale(1.05); /* Efek hover simpel */
+  transform: scale(1.05);
 }
-
 .book-card .cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Efek gambar sedikit gelap agar teks lebih menonjol */
   filter: brightness(0.9);
 }
-
-/* Lapisan gradien untuk membuat teks terbaca */
 .book-card .overlay {
   position: absolute;
   bottom: 0;
@@ -1166,7 +961,6 @@ body.sidebar-open .sidebar {
   background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
   border-radius: 0 0 var(--radius-fib-medium) var(--radius-fib-medium);
 }
-
 .book-card .title {
   position: absolute;
   bottom: var(--sp-fib-4);
@@ -1174,87 +968,99 @@ body.sidebar-open .sidebar {
   right: var(--sp-fib-4);
   font-weight: 700;
   font-size: 14px;
-  color: #fff; /* Teks berwarna putih agar kontras */
+  color: #fff;
   line-height: 1.4;
   text-align: center;
-  
-  /* Trik agar judul maksimal 2 baris */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;  
   overflow: hidden;
 }
-
-/* -- Book Reader Modal Styling -- */
-.reader-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 2000;
-  display: none; /* Diubah oleh JS */
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  opacity: 0;
-  transition: opacity var(--duration-natural) var(--ease-natural);
-}
-
-.reader-modal-overlay.visible {
-  display: flex;
-  opacity: 1;
-}
-
-.reader-modal-content {
-  width: 90%;
-  height: 90%;
-  max-width: 800px;
-  background: var(--surface-primary);
-  border-radius: var(--radius-fib-medium);
-  box-shadow: 0 8px 34px rgba(0, 0, 0, 0.15);
-  transform: scale(0.95);
-  transition: transform var(--duration-natural) var(--ease-natural);
-  display: flex;
-  flex-direction: column;
-}
-
-.reader-modal-overlay.visible .reader-modal-content {
-  transform: scale(1);
-}
-
-.reader-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--sp-fib-4) var(--sp-fib-5);
-  border-bottom: 1px solid var(--separator);
-  flex-shrink: 0;
-}
-
-.reader-modal-header h2 {
-  margin: 0;
-  font-size: 18px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.reader-modal-body {
-  flex-grow: 1;
-  padding: 0;
-  -webkit-overflow-scrolling: touch;
-}
-
-.reader-modal-body iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-/* Perbaikan untuk layout Perpustakaan yang mepet ke samping dan atas */
 #viewPerpustakaan {
-  padding-top: var(--sp-fib-5); /* HANYA memberi jarak di bagian atas */
+  padding-top: var(--sp-fib-5);
+}
+#accountCountInfo[data-rail] {
+    margin-top: var(--sp-fib-4);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    padding: var(--sp-fib-3) var(--sp-fib-5);
+    border-radius: var(--radius-fib-small);
+    background: var(--surface-secondary);
+    text-align: center;
+}
+.account-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-primary);
+    border: 1px solid var(--separator);
+    border-radius: var(--radius-fib-medium);
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--text-primary);
+    width: 100%;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    transition: transform var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.account-card:hover, .account-card:focus-visible {
+    border-color: var(--brand-blue);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-5px);
+    outline: none;
+}
+.account-card-image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background-color: var(--surface-secondary);
+}
+.account-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.account-card-status {
+    position: absolute;
+    top: var(--sp-fib-3);
+    right: var(--sp-fib-3);
+    padding: var(--sp-fib-2) var(--sp-fib-4);
+    border-radius: 9999px;
+    font-size: var(--font-size-caption);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background-clip: padding-box;
+    border: 2px solid transparent;
+}
+.account-card-status.available {
+    background-color: #DCFCE7;
+    border-color: var(--surface-primary);
+    color: #166534;
+}
+.account-card-status.sold {
+    background-color: var(--surface-secondary);
+    border-color: var(--surface-primary);
+    color: var(--text-secondary);
+}
+.account-card-body {
+    padding: var(--sp-fib-4);
+}
+.account-card-title {
+    margin: 0 0 var(--sp-fib-2) 0;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-primary);
+}
+.account-card-price {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--brand-blue);
 }
