@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 7.0.0 (Full & Final Code with Confirmed Logic)
+ * @version 8.0.0 (Corrected Logic - Minimal Changes)
  */
 
 (function () {
@@ -397,14 +397,15 @@
     const rows = robustCsvParser(text);
     rows.shift();
     return rows
+        // Pastikan baris punya judul di Kolom B untuk dianggap valid
         .filter(row => row && row.length >= 2 && row[1] && row[1].trim() !== '')
         .map(row => ({
-            category: (row[0] || 'Lainnya').trim(),
-            title: (row[1] || 'Tanpa Judul').trim(),
-            price: Number(row[2]) || 0,
-            status: (row[3] || 'Tersedia').trim(),
+            category:    (row[0] || 'Lainnya').trim(),
+            title:       (row[1] || 'Tanpa Judul').trim(),
+            price:       Number(row[2]) || 0,
+            status:      (row[3] || 'Tersedia').trim(),
             description: (row[4] || 'Tidak ada deskripsi.').trim(),
-            images: (row[5] || '').split(',').map(url => url.trim()).filter(Boolean),
+            images:      (row[4] || '').split(',').map(url => url.trim()).filter(Boolean), // KEMBALI KE KOLOM E (index 4)
         }));
   }
 
@@ -497,7 +498,7 @@
       const { error, gridContainer, countInfo } = elements.accounts;
       error.style.display = 'none';
       countInfo.textContent = 'Memuat data akun...';
-      showSkeleton(gridContainer, elements.itemTemplate, 6);
+      showSkeleton(gridContainer, elements.itemTemplate, 6); // Skeleton sementara, bisa disesuaikan
 
       try {
           const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal });
