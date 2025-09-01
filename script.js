@@ -524,7 +524,7 @@
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
-    if (container.innerHTML !== '') return;
+    if (container.innerHTML !== '' && !container.querySelector('p')) return;
     
     container.innerHTML = '<p>Memuat buku...</p>';
     errorEl.style.display = 'none';
