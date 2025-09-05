@@ -12,6 +12,13 @@
   
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
+
+  <!-- Override kecil agar slash pre-order terlihat saat aktif -->
+  <style>
+    /* Box sedikit off-white saat aktif agar slash putih kontras */
+    .nav-item.active[data-mode="preorder"] svg { color: #EEF3FF; }
+    .nav-item.active[data-mode="preorder"] .pre-slash { fill: #fff; }
+  </style>
 </head>
 <body>
 
@@ -321,16 +328,19 @@
     </div>
   </div>
 
-  <!-- ===================== SVG SPRITE (super premium minimalis modern) ===================== -->
+  <!-- ===================== SVG SPRITE (slash pre-order putih) ===================== -->
   <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
     <!-- HOME -->
     <symbol id="ic-home" viewBox="0 0 24 24">
       <path d="M12 3l7 6v8.2A3.8 3.8 0 0 1 15.2 21H8.8A3.8 3.8 0 0 1 5 17.2V9l7-6z"/>
     </symbol>
-    <!-- PRE ORDER -->
+    <!-- PRE ORDER (slash putih) -->
     <symbol id="ic-preorder" viewBox="0 0 24 24">
+      <!-- box ikut currentColor -->
       <rect x="4" y="4" width="16" height="16" rx="3.5"/>
-      <rect x="6.6" y="13" width="14" height="3" rx="1.5" transform="rotate(-45 13.6 14.5)"/>
+      <!-- slash selalu putih -->
+      <rect class="pre-slash" x="6.6" y="13" width="14" height="3" rx="1.5"
+            transform="rotate(-45 13.6 14.5)" fill="#fff"/>
     </symbol>
     <!-- AKUN GAME -->
     <symbol id="ic-accounts" viewBox="0 0 24 24">
@@ -348,7 +358,7 @@
       <path d="M6.2 7.2h3.6l-.9 1.6H5.3l.9-1.6zm4.8 0h3.6l-.9 1.6h-3.6l.9-1.6z"/>
     </symbol>
   </svg>
-  <!-- ======================================================================================= -->
+  <!-- ============================================================================ -->
 
 </body>
 </html>
