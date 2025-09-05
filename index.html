@@ -12,34 +12,6 @@
   
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
-
-  <!-- State warna slash Pre-Order: normal putih, aktif hitam -->
-  <style>
-    /* Ikon sidebar dasar (opsional, contoh) */
-    :root{
-      --icon:24px;
-      --gap-icon-text:12px;
-      --radius-pill:14px;
-      --ink-passive:#8b94a8;
-      --ink-active:#ffffff;
-      --pill-active:#5f79c8;
-    }
-    .sidebar .nav-item{
-      display:flex; align-items:center; gap:var(--gap-icon-text);
-      color:var(--ink-passive); border-radius:var(--radius-pill);
-      padding:.8rem 1rem; transition:background .15s ease, color .15s ease, transform .15s ease;
-    }
-    .sidebar .nav-item svg{ width:var(--icon); height:var(--icon); flex:0 0 var(--icon); }
-    .sidebar .nav-item.active{ background:var(--pill-active); color:var(--ink-active); }
-
-    /* PRE-ORDER: default slash putih */
-    .nav-item[data-mode="preorder"] svg { color: currentColor; }   /* kotak ikut currentColor */
-    .nav-item[data-mode="preorder"] .pre-slash { fill: #fff; }     /* slash putih saat normal */
-
-    /* PRE-ORDER aktif: kotak off-white agar kontras, slash hitam */
-    .nav-item.active[data-mode="preorder"] svg { color: #EEF3FF; }  /* box nyaris putih */
-    .nav-item.active[data-mode="preorder"] .pre-slash { fill: #000; }
-  </style>
 </head>
 <body>
 
@@ -67,65 +39,73 @@
       <div class="sidebar-action-item">
         <span>Ganti Tema</span>
         <button class="icon-btn theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Ganti tema">
-            <!-- tetap outline untuk kontrol tema -->
-            <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <!-- Sun (filled) -->
+          <svg class="icon icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M6.76 4.84 5.34 3.42 3.92 4.84l1.42 1.42 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm8.66-1.58-1.42 1.42 1.42 1.42 1.42-1.42-1.42-1.42zM17.24 19.16l1.42 1.42 1.42-1.42-1.42-1.42-1.42 1.42zM20 13h3v-2h-3v2zM11 23h2v-3h-2v3zM3.34 18.66l1.42-1.42L3.34 15.8l-1.42 1.42 1.42 1.42zM12 6a6 6 0 100 12 6 6 0 000-12z"/>
+          </svg>
+          <!-- Moon (filled) -->
+          <svg class="icon icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12.76 3a9 9 0 108.24 12.65A8 8 0 117.35 3.99 9.06 9.06 0 0012.76 3z"/>
+          </svg>
         </button>
       </div>
       
       <div class="nav-divider"></div>
   
-      <!-- HOME -->
-      <a href="#" class="nav-item active" data-mode="home" aria-current="page">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <use href="#ic-home"></use>
+      <a href="#" class="nav-item active" data-mode="home">
+        <!-- Home (filled) -->
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3z"/>
         </svg>
         <span>Home</span>
       </a>
 
-      <!-- PRE ORDER -->
       <a href="#" class="nav-item" data-mode="preorder">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <use href="#ic-preorder"></use>
+        <!-- Pre Order (tag filled) -->
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M21.41 11.41 12 2H4a2 2 0 0 0-2 2v8l9.41 9.41a2 2 0 0 0 2.83 0l7.17-7.17a2 2 0 0 0 0-2.83zM6 7a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
         </svg>
         <span>Pre Order</span>
       </a>
 
-      <!-- AKUN GAME -->
       <a href="#" class="nav-item" data-mode="accounts">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <use href="#ic-accounts"></use>
+        <!-- Akun Game (account circle filled) -->
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/>
         </svg>
         <span>Akun Game</span>
       </a>
 
-      <!-- PERPUSTAKAAN -->
       <a href="#" class="nav-item" data-mode="perpustakaan">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <use href="#ic-library"></use>
+        <!-- Perpustakaan (menu_book filled) -->
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.54 0-3.04.26-4.5.77-1.46-.51-2.96-.77-4.5-.77C6.33 4.5 5.11 4.65 4 5v14c1.11-.35 2.33-.5 3.5-.5 1.54 0 3.04.26 4.5.77 1.46-.51 2.96-.77 4.5-.77 1.17 0 2.39.15 3.5.5V5zM7.5 6.5c1.2 0 2.4.18 3.5.54v9.92c-1.1-.36-2.3-.54-3.5-.54-1.02 0-2.03.11-3 .33V6.83c.97-.22 1.98-.33 3-.33zm9 0c1.02 0 2.03.11 3 .33v9.92a16 16 0 0 0-3-.33c-1.2 0-2.4.18-3.5.54V7.04c1.1-.36 2.3-.54 3.5-.54z"/>
         </svg>
         <span>Perpustakaan</span>
       </a>
 
-      <!-- FILM -->
       <a href="#" class="nav-item" data-mode="film">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <use href="#ic-film"></use>
+        <!-- Film (movie filled) -->
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M18 4l2 3h-3l-2-3h-2l2 3h-4l-2-3H7l2 3H6L4 4H2v16h20V4h-4zM8 18H4v-4h4v4zm0-5H4V9h4v4zm6 5h-4v-4h4v4zm0-5h-4V9h4v4zm6 5h-4v-4h4v4zm0-5h-4V9h4v4z"/>
         </svg>
         <span>Film</span>
       </a>
       
       <div class="nav-divider"></div>
 
-      <!-- Komunitas (sudah fill bawaan) -->
       <a href="https://chat.whatsapp.com/B8P0L2ExsreGFI6iMPDYnc?mode=ems_copy_c" target="_blank" rel="noopener" class="nav-item">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <!-- Komunitas (sudah filled) -->
+        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor" aria-hidden="true">
+          <path d="M0 0h24v24H0V0z" fill="none"/><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+        </svg>
         <span>Komunitas</span>
       </a>
-
-      <!-- Donasi (sudah fill bawaan) -->
       <a href="#" class="nav-item" data-mode="donasi">
-        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor" aria-hidden="true"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <!-- Donasi (sudah filled) -->
+        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="currentColor" aria-hidden="true">
+          <path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        </svg>
         <span>Donasi</span>
       </a>
     </nav>
@@ -146,7 +126,10 @@
               <div class="custom-select-wrapper" id="homeCustomSelectWrapper">
                 <button class="custom-select-btn" id="homeCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                   <span id="homeCustomSelectValue">Pilih Kategori</span>
-                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                  <!-- Chevron down (filled) -->
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 10.96l3.71-3.73a.75.75 0 1 1 1.08 1.04l-4.25 4.28a.75.75 0 0 1-1.08 0L5.25 8.27a.75.75 0 0 1-.02-1.06z" clip-rule="evenodd"/>
+                  </svg>
                 </button>
                 <div class="custom-select-options" id="homeCustomSelectOptions" role="listbox"></div>
               </div>
@@ -154,7 +137,10 @@
           </div>
           <div class="search-row" data-rail>
             <div class="search-wrap">
-              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <!-- Search (filled) -->
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
               <input id="homeSearchInput" class="search-input" type="search" placeholder="Cari item..." aria-label="Cari">
             </div>
           </div>
@@ -174,7 +160,10 @@
               <div class="custom-select-wrapper" id="preorderCustomSelectWrapper">
                 <button class="custom-select-btn" id="preorderCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                   <span id="preorderCustomSelectValue">Starlight Member</span>
-                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                  <!-- Chevron down (filled) -->
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd"/>
+                  </svg>
                 </button>
                 <div class="custom-select-options" id="preorderCustomSelectOptions" role="listbox">
                   <div class="custom-select-option selected" data-value="0">Starlight Member</div>
@@ -184,7 +173,10 @@
           </div>
           <div class="search-row" data-rail>
             <div class="search-wrap">
-              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <!-- Search (filled) -->
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
               <input id="preorderSearchInput" type="search" class="search-input" placeholder="Cari nama / ID Server..." />
             </div>
           </div>
@@ -192,7 +184,10 @@
             <div class="custom-select-wrapper" id="preorderStatusCustomSelectWrapper">
               <button class="custom-select-btn" id="preorderStatusCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                 <span id="preorderStatusCustomSelectValue">Semua Status</span>
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                <!-- Chevron down (filled) -->
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd"/>
+                </svg>
               </button>
               <div class="custom-select-options" id="preorderStatusCustomSelectOptions" role="listbox">
                 <div class="custom-select-option selected" data-value="all">Semua Status</div>
@@ -214,7 +209,7 @@
         </div>
         <div class="container">
           <main id="preorderListContainer" class="card-grid" aria-live="polite" data-rail></main>
-          <nav class="pagination" aria-label="Pagination" data-rail>
+          <nav class="pagination" aria-label="Pagination" data-ail>
             <button id="preorderPrevBtn" class="pagination-btn" disabled>Sebelumnya</button>
             <div id="preorderPageInfo" class="pagination-info"></div>
             <button id="preorderNextBtn" class="pagination-btn" disabled>Selanjutnya</button>
@@ -232,7 +227,10 @@
                 <div class="custom-select-wrapper" id="accountCustomSelectWrapper">
                   <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                     <span id="accountCustomSelectValue">Memuat akun...</span>
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                    <!-- Chevron down (filled) -->
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd"/>
+                    </svg>
                   </button>
                   <div class="custom-select-options" id="accountCustomSelectOptions" role="listbox"></div>
                 </div>
@@ -242,11 +240,13 @@
         <div id="accountDisplay" class="account-display-card" style="display: none;" data-rail>
           <div class="carousel-container">
             <div id="carouselTrack" class="carousel-track"></div>
+            <!-- Prev (chevron left filled) -->
             <button id="carouselPrevBtn" class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59z"/></svg>
             </button>
+            <!-- Next (chevron right filled) -->
             <button id="carouselNextBtn" class="carousel-btn next" type="button" aria-label="Gambar selanjutnya">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
             </button>
             <div id="carouselIndicators" class="carousel-indicators"></div>
           </div>
@@ -255,8 +255,9 @@
               <h2 id="accountPrice" class="account-price"></h2>
               <div class="account-header-right">
                 <span id="accountStatus" class="account-status-badge"></span>
+                <!-- Expand indicator (chevron down filled) -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator">
-                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd" />
                 </svg>
               </div>
             </div>
@@ -271,8 +272,9 @@
         </div>
         <div id="accountEmpty" class="empty" data-rail>
           <div class="empty-content">
-            <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            <!-- Info (filled) -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M11 7h2V5h-2v2zm1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6z"/>
             </svg>
             <p>Pilih akun dari daftar di atas untuk melihat detail.</p>
           </div>
@@ -348,43 +350,6 @@
       </div>
     </div>
   </div>
-
-  <!-- ===================== SVG SPRITE ===================== -->
-  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
-    <!-- HOME -->
-    <symbol id="ic-home" viewBox="0 0 24 24">
-      <path d="M12 3l7 6v8.2A3.8 3.8 0 0 1 15.2 21H8.8A3.8 3.8 0 0 1 5 17.2V9l7-6z"/>
-    </symbol>
-
-    <!-- PRE ORDER (slash normal putih, aktif hitam via CSS) -->
-    <symbol id="ic-preorder" viewBox="0 0 24 24">
-      <!-- box ikut currentColor -->
-      <rect x="4" y="4" width="16" height="16" rx="3.5"/>
-      <!-- slash tanpa fill inline; dikendalikan CSS -->
-      <rect class="pre-slash"
-            x="6.6" y="13" width="14" height="3" rx="1.5"
-            transform="rotate(-45 13.6 14.5)"/>
-    </symbol>
-
-    <!-- AKUN GAME -->
-    <symbol id="ic-accounts" viewBox="0 0 24 24">
-      <circle cx="12" cy="6.8" r="3.1"/>
-      <path d="M6.5 11.8h11A3.5 3.5 0 0 1 21 15.3v1.8A3.5 3.5 0 0 1 17.5 20h-11A3.5 3.5 0 0 1 3 17.1v-1.8a3.5 3.5 0 0 1 3.5-3.5zM8.2 19.2h7.6c1 0 1.9-.55 2.3-1.4.3-.66-.2-1.3-.9-1.3H6.8c-.7 0-1.2.64-.9 1.3.4.85 1.3 1.4 2.3 1.4z"/>
-    </symbol>
-
-    <!-- PERPUSTAKAAN -->
-    <symbol id="ic-library" viewBox="0 0 24 24">
-      <path d="M12 6.2c-2.4-1.7-5-2.1-7.4-1.3A2.8 2.8 0 0 0 3 7.6V17c0 1.9 1.8 3.3 3.6 2.9 2.4-.6 4.3-.6 5.4-.6V6.2zM12 6.2c2.4-1.7 5-2.1 7.4-1.3A2.8 2.8 0 0 1 21 7.6V17c0 1.9-1.8 3.3-3.6 2.9-2.4-.6-4.3-.6-5.4-.6V6.2z"/>
-    </symbol>
-
-    <!-- FILM -->
-    <symbol id="ic-film" viewBox="0 0 24 24">
-      <rect x="3" y="10.2" width="18" height="9.8" rx="2"/>
-      <path d="M4 5h11.2c.6 0 1.1.3 1.4.8L18.7 9H4V5z"/>
-      <path d="M6.2 7.2h3.6l-.9 1.6H5.3l.9-1.6zm4.8 0h3.6l-.9 1.6h-3.6l.9-1.6z"/>
-    </symbol>
-  </svg>
-  <!-- ====================================================== -->
 
 </body>
 </html>
