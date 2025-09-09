@@ -11,11 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="style.css">
-  <!-- Tambahan CSS Testimoni -->
-  <link rel="stylesheet" href="testimoni.css">
-
   <script src="script.js" defer></script>
-  <!-- Tambahan JS Testimoni -->
+  <!-- JS Testimoni -->
   <script src="testimoni.js" defer></script>
 </head>
 <body>
@@ -79,7 +76,7 @@
         <span>Perpustakaan</span>
       </a>
 
-      <!-- Menu Testimoni -->
+      <!-- Tambahan: Menu Testimoni -->
       <a href="#" class="nav-item" data-mode="testimoni">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
              width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
@@ -88,7 +85,7 @@
         </svg>
         <span>Testimoni</span>
       </a>
-      <!-- /Menu Testimoni -->
+      <!-- Akhir menu Testimoni -->
 
       <a href="#" class="nav-item" data-mode="film">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -257,14 +254,6 @@
             </div>
           </div>
         </div>
-        <div id="accountEmpty" class="empty" data-rail>
-          <div class="empty-content">
-            <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-            <p>Pilih akun dari daftar di atas untuk melihat detail.</p>
-          </div>
-        </div>
         <section id="accountError" class="err" style="display:none" data-rail></section>
       </section>
 
@@ -277,14 +266,14 @@
         <div id="libraryError" class="err" style="display:none"></div>
       </section>
 
-      <!-- Section Testimoni -->
+      <!-- Section Testimoni (pakai mesin Perpustakaan) -->
       <section id="viewTestimoni" class="view-section" aria-label="Testimoni">
         <header class="page-title-header">
           <h1>Testimoni</h1>
           <p class="page-subtitle">Screenshot bukti transaksi pelanggan.</p>
         </header>
-        <div id="testimonialGrid" class="testi-grid"></div>
-        <section id="testimonialError" class="err" style="display:none"></section>
+        <div id="testimonialGrid" class="library-grid"></div>
+        <div id="testimonialError" class="err" style="display:none"></div>
       </section>
       <!-- /Section Testimoni -->
 
