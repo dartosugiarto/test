@@ -1,0 +1,36 @@
+/* TESTIMONI (minimal & aman: semua pakai fallback var) */
+.testi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--sp-fib-5, 16px);
+  padding: var(--sp-fib-4, 12px) 0;
+}
+
+.testi-card {
+  background: var(--surface-primary, #fff);
+  border: 1px solid var(--separator, rgba(0,0,0,0.08));
+  border-radius: var(--radius-fib-large, 16px);
+  padding: var(--sp-fib-4, 12px);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.04));
+}
+
+.testi-media {
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-secondary, #f6f7f9);
+}
+
+.testi-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;       /* pas untuk screenshot chat di HP */
+  object-fit: cover;
+}
+
+.testi-caption {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-tertiary, #6b7280);
+}
