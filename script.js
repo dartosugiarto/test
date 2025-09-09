@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.1.0 (Refactored Home View)
+ * @version 4.2.0 (+Testimoni view)
  */
 
 (function () {
@@ -13,6 +13,7 @@
       katalog: { name: 'Sheet3' },
       preorder: { name1: 'Sheet1', name2: 'Sheet2' },
       accounts: { name: 'Sheet5' },
+      testimonials: { name: 'Sheet7' } // ← tambahkan: A=Nama, B=MediaURL, (opsional C=Teks)
     },
     waNumber: '6285877001999',
     waGreeting: '*Detail pesanan:*',
@@ -35,24 +36,12 @@
 
   const state = {
     home: { activeCategory: '', searchQuery: '' },
-    preorder: {
-      initialized: false,
-      allData: [],
-      currentPage: 1,
-      perPage: 15,
-      displayMode: 'detailed',
-    },
-    accounts: {
-      initialized: false,
-      data: [],
-      currentIndex: 0,
-      currentAccount: null,
-    },
+    preorder: { initialized: false, allData: [], currentPage: 1, perPage: 15, displayMode: 'detailed' },
+    accounts: { initialized: false, data: [], currentIndex: 0, currentAccount: null },
+    testimonials: { initialized: false }
   };
 
-  function getElement(id) {
-    return document.getElementById(id);
-  }
+  function getElement(id) { return document.getElementById(id); }
 
   const elements = {
     sidebar: {
@@ -66,6 +55,7 @@
     viewPreorder: getElement('viewPreorder'),
     viewAccounts: getElement('viewAccounts'),
     viewPerpustakaan: getElement('viewPerpustakaan'),
+    viewTestimoni: getElement('viewTestimoni'),     // ← view baru
     viewFilm: getElement('viewFilm'),
     home: {
       listContainer: getElement('homeListContainer'),
@@ -137,9 +127,7 @@
     },
   };
 
-  /**
-   * Main application entry point.
-   */
+  /** Entry point */
   function initializeApp() {
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
@@ -163,8 +151,8 @@
       toggleCustomSelect(elements.preorder.customSelect.wrapper);
     });
     elements.preorder.customStatusSelect.btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleCustomSelect(elements.preorder.customStatusSelect.wrapper);
+      e.stopPropagation();
+      toggleCustomSelect(elements.preorder.customStatusSelect.wrapper);
     });
     elements.accounts.customSelect.btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -183,9 +171,7 @@
     document.addEventListener('click', () => {
       toggleCustomSelect(elements.home.customSelect.wrapper, false);
       toggleCustomSelect(elements.preorder.customSelect.wrapper, false);
-      if (elements.preorder.customStatusSelect.wrapper) {
-        toggleCustomSelect(elements.preorder.customStatusSelect.wrapper, false);
-      }
+      toggleCustomSelect(elements.preorder.customStatusSelect.wrapper, false);
       toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
     });
 
@@ -228,7 +214,7 @@
             e.preventDefault();
             if (e.key === 'ArrowDown') {
                 focusIndex = Math.min(focusIndex + 1, options.length - 1);
-            } else { // ArrowUp
+            } else {
                 focusIndex = Math.max(focusIndex - 1, 0);
             }
             options[focusIndex]?.focus();
@@ -243,7 +229,13 @@
   }
 
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
-  function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
+  function getSheetUrl(sheetName, format = 'json') {
+    const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`;
+    const encodedSheetName = encodeURIComponent(sheetName);
+    return format === 'csv'
+      ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}`
+      : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`;
+  }
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
   function applyTheme(theme) { document.body.classList.toggle('dark-mode', theme === 'dark'); }
   function initTheme() { const savedTheme = localStorage.getItem('theme'); const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light'); applyTheme(currentTheme); }
@@ -260,6 +252,7 @@
       preorder: elements.viewPreorder,
       accounts: elements.viewAccounts,
       perpustakaan: elements.viewPerpustakaan,
+      testimoni: elements.viewTestimoni,   // ← map baru
       film: elements.viewFilm,
     };
     const nextView = viewMap[nextMode];
@@ -275,7 +268,8 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
     if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
-  }
+    if (nextMode === 'testimoni' && !state.testimonials.initialized) initializeTestimonials();
+  };
 
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
@@ -463,72 +457,44 @@
     state.preorder.initialized = true;
   }
 
-  function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
-  async function parseAccountsSheet(text) { const rows = robustCsvParser(text); rows.shift(); return rows.filter(row => row && row.length >= 5 && row[0]).map(row => ({ title: row[0] || 'Tanpa Judul', price: Number(row[1]) || 0, status: row[2] || 'Tersedia', description: row[3] || 'Tidak ada deskripsi.', images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean), })); }
-  function populateAccountSelect() { const { customSelect, empty } = elements.accounts; const { options, value } = customSelect; options.innerHTML = ''; if (state.accounts.data.length === 0) { value.textContent = 'Tidak ada akun'; empty.style.display = 'block'; return; } value.textContent = 'Pilih Akun'; state.accounts.data.forEach((acc, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = acc.title; el.dataset.value = index; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); el.addEventListener('click', () => { value.textContent = acc.title; document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(customSelect.wrapper, false); renderAccount(index); }); options.appendChild(el); }); }
-  function renderAccount(index) { const { display, empty, price, description, status: statusEl } = elements.accounts; const account = state.accounts.data[index]; state.accounts.currentAccount = account; if (!account) { display.style.display = 'none'; empty.style.display = 'block'; return; } display.classList.remove('expanded'); price.textContent = formatToIdr(account.price); description.textContent = account.description; statusEl.textContent = account.status; statusEl.className = 'account-status-badge'; statusEl.classList.add(account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'); const { track, indicators } = elements.accounts.carousel; track.innerHTML = ''; indicators.innerHTML = ''; if (account.images && account.images.length > 0) { account.images.forEach((src, i) => { track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><img src="${src}" alt="Gambar untuk ${account.title}" loading="lazy"></div>`); indicators.insertAdjacentHTML('beforeend', `<button class="indicator-dot" data-index="${i}"></button>`); }); } else { track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><div style="display:flex;align-items:center;justify-content:center;height:100%;aspect-ratio:16/9;background-color:var(--surface-secondary);color:var(--text-tertiary);">Gambar tidak tersedia</div></div>`); } indicators.querySelectorAll('.indicator-dot').forEach(dot => { dot.addEventListener('click', e => { e.stopPropagation(); state.accounts.currentIndex = parseInt(e.target.dataset.index); updateCarousel(); }); }); state.accounts.currentIndex = 0; updateCarousel(); empty.style.display = 'none'; display.style.display = 'block'; }
-  function updateCarousel() { const account = state.accounts.currentAccount; if (!account) return; const { track, prevBtn, nextBtn, indicators } = elements.accounts.carousel; const totalSlides = account.images.length || 1; track.style.transform = `translateX(-${state.accounts.currentIndex * 100}%)`; prevBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex === 0; nextBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex >= totalSlides - 1; indicators.querySelectorAll('.indicator-dot').forEach((dot, i) => { dot.classList.toggle('active', i === state.accounts.currentIndex); }); }
-  function initializeCarousel() { const { prevBtn, nextBtn, track } = elements.accounts.carousel; prevBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentIndex > 0) { state.accounts.currentIndex--; updateCarousel(); } }); nextBtn.addEventListener('click', e => { e.stopPropagation(); const account = state.accounts.currentAccount; if (!account) return; if (state.accounts.currentIndex < account.images.length - 1) { state.accounts.currentIndex++; updateCarousel(); } }); let touchStartX = 0; track.addEventListener('touchstart', e => { e.stopPropagation(); touchStartX = e.changedTouches[0].screenX; }, { passive: true }); track.addEventListener('touchend', e => { e.stopPropagation(); const touchEndX = e.changedTouches[0].screenX; if (touchEndX < touchStartX - 50) nextBtn.click(); if (touchEndX > touchStartX + 50) prevBtn.click(); }, { passive: true }); }
-  
-  async function initializeAccounts() { 
-    if (state.accounts.initialized) return; 
-    if (accountsFetchController) accountsFetchController.abort();
-    accountsFetchController = new AbortController();
-
-    const { customSelect, error, empty, display, buyBtn, offerBtn } = elements.accounts; 
-    error.style.display = 'none'; 
-    try { 
-      const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      
-      const text = await res.text(); 
-      state.accounts.data = await parseAccountsSheet(text); 
-      populateAccountSelect(); 
-    } catch (err) { 
-      if (err.name === 'AbortError') { return; }
-      console.error('Fetch Accounts failed:', err); 
-      error.textContent = 'Gagal memuat data akun. Coba lagi nanti.'; 
-      error.style.display = 'block'; 
-      empty.style.display = 'none'; 
-      customSelect.value.textContent = 'Gagal memuat'; 
-    } 
-    
-    display.addEventListener('click', e => { if (!e.target.closest('.action-btn, .carousel-btn, .indicator-dot')) display.classList.toggle('expanded'); }); 
-    buyBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { openPaymentModal({ title: state.accounts.currentAccount.title, price: state.accounts.currentAccount.price, catLabel: 'Akun Game' }); } }); 
-    offerBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { const text = `Halo, saya tertarik untuk menawar Akun Game: ${state.accounts.currentAccount.title}`; window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`, '_blank', 'noopener'); } }); 
-    
-    initializeCarousel(); 
-    state.accounts.initialized = true; 
+  // --- CSV utils (dipakai Library & Testimoni) ---
+  function robustCsvParser(text) {
+    const normalizedText = text.trim().replace(/\r\n/g, '\n');
+    const rows = [];
+    let currentRow = [], currentField = '', inQuotedField = false;
+    for (let i = 0; i < normalizedText.length; i++) {
+      const char = normalizedText[i];
+      if (inQuotedField) {
+        if (char === '"') {
+          if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; }
+          else { inQuotedField = false; }
+        } else currentField += char;
+      } else {
+        if (char === '"') inQuotedField = true;
+        else if (char === ',') { currentRow.push(currentField); currentField = ''; }
+        else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; }
+        else currentField += char;
+      }
+    }
+    currentRow.push(currentField); rows.push(currentRow);
+    return rows;
   }
 
-  // --- START: Library Functions ---
-
+  // --- Library ---
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
-    
     container.innerHTML = '<p>Memuat buku...</p>';
     errorEl.style.display = 'none';
 
     try {
-      const sheetName = 'Sheet6'; 
-      const res = await fetch(getSheetUrl(sheetName, 'csv'));
+      const res = await fetch(getSheetUrl('Sheet6', 'csv'));
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
-      
       const text = await res.text();
       const rows = robustCsvParser(text);
-      rows.shift(); 
-      
-      const books = rows
-        .filter(row => row && row[0]) 
-        .map(row => ({
-          title: row[0],
-          coverUrl: row[1],
-          bookUrl: row[2]
-        }));
-      
+      rows.shift();
+      const books = rows.filter(r => r && r[0]).map(r => ({ title: r[0], coverUrl: r[1], bookUrl: r[2] }));
       renderLibraryGrid(books);
-
     } catch (err) {
       console.error('Failed to load library:', err);
       container.innerHTML = '';
@@ -536,16 +502,11 @@
       errorEl.style.display = 'block';
     }
   }
-
   function renderLibraryGrid(books) {
     const container = getElement('libraryGridContainer');
-    if (!books || books.length === 0) {
-      container.innerHTML = '<div class="empty">Belum ada buku yang ditambahkan.</div>';
-      return;
-    }
-
+    if (!books || books.length === 0) { container.innerHTML = '<div class="empty">Belum ada buku yang ditambahkan.</div>'; return; }
     container.innerHTML = '';
-    const fragment = document.createDocumentFragment();
+    const frag = document.createDocumentFragment();
     books.forEach(book => {
       const card = document.createElement('a');
       card.className = 'book-card';
@@ -557,20 +518,80 @@
         <div class="overlay"></div>
         <div class="title">${book.title}</div>
       `;
-      fragment.appendChild(card);
+      frag.appendChild(card);
     });
-    container.appendChild(fragment);
+    container.appendChild(frag);
   }
-  
-  // --- END: Library Functions ---
 
-  // Panggil fungsi initializeLibrary saat menu perpustakaan diklik
+  // --- Testimonials (identik dengan Library) ---
+  async function initializeTestimonials() {
+    if (state.testimonials.initialized) return;
+    state.testimonials.initialized = true;
+
+    const container = getElement('testimonialGrid');
+    const errorEl   = getElement('testimonialError');
+    if (!container) return;
+
+    container.innerHTML = '<p>Memuat testimoni...</p>';
+    errorEl.style.display = 'none';
+
+    try {
+      const res = await fetch(getSheetUrl(config.sheets.testimonials.name, 'csv'));
+      if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
+      const text = await res.text();
+
+      const rows = robustCsvParser(text);
+      rows.shift(); // header: Nama | MediaURL | (Teks)
+
+      const items = rows
+        .filter(r => r && (r[1] || r[0]))
+        .map(r => ({
+          title: (r[2] || r[0] || 'Testimoni').trim(),
+          coverUrl: (r[1] || '').trim(),
+          linkUrl: (r[1] || '').trim(),
+        }))
+        .filter(x => x.coverUrl);
+
+      renderTestimonialGrid(items);
+    } catch (err) {
+      console.error('Failed to load testimonials:', err);
+      container.innerHTML = '';
+      errorEl.textContent = 'Gagal memuat testimoni. Coba lagi nanti.';
+      errorEl.style.display = 'block';
+    }
+  }
+  function renderTestimonialGrid(items) {
+    const container = getElement('testimonialGrid');
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div class="empty">Belum ada testimoni.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    items.forEach(x => {
+      const card = document.createElement('a');
+      card.className = 'book-card';
+      card.href = x.linkUrl;
+      card.target = '_blank';
+      card.rel = 'noopener';
+      card.innerHTML = `
+        <img src="${x.coverUrl}" alt="${x.title}" class="cover" loading="lazy"
+             referrerpolicy="no-referrer" crossorigin="anonymous"
+             onerror="this.onerror=null; this.src='logo.jpeg'; this.style.objectFit='contain';">
+        <div class="overlay"></div>
+        <div class="title">${x.title}</div>
+      `;
+      frag.appendChild(card);
+    });
+    container.appendChild(frag);
+  }
+
+  // Hook: panggil loader saat mode perpustakaan / testimoni dipilih
   const originalSetMode = setMode;
   setMode = function(nextMode) {
-    originalSetMode(nextMode); 
-    if (nextMode === 'perpustakaan') {
-      initializeLibrary();
-    }
+    originalSetMode(nextMode);
+    if (nextMode === 'perpustakaan') initializeLibrary();
+    if (nextMode === 'testimoni') initializeTestimonials();
   };
   
   document.addEventListener('DOMContentLoaded', initializeApp);
