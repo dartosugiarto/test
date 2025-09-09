@@ -1,99 +1,77 @@
-/* ==== TESTIMONI (Ultra-Minimal + no-referrer patch) ==== */
+/* Testimoni: pakai mesin yang sama dengan Perpustakaan (getSheetUrl + robustCsvParser) */
 (function () {
   'use strict';
 
-  const SHEET_NAME = 'Sheet7';   // A: Nama, B: MediaURL, (opsional C: Teks)
-  let loaded = false;
+  const SHEET_NAME = 'Sheet7'; // A: Nama, B: MediaURL, (opsional C: Teks/komentar)
+  let testiLoaded = false;
 
-  // URL CSV dari Google Sheet yang sama (gunakan helper getSheetUrl dari script.js jika ada)
-  function getCsvUrl() {
-    if (typeof getSheetUrl === 'function') return getSheetUrl(SHEET_NAME, 'csv');
-    const cfg = window.config || {};
-    const id = cfg.sheetId; // script.js kamu sudah mendefinisikan ini
-    const s = encodeURIComponent(SHEET_NAME);
-    return `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&sheet=${s}`;
-  }
+  async function initializeTestimonials() {
+    if (testiLoaded) return;
+    testiLoaded = true;
 
-  // Parser CSV sederhana
-  function parseCsv(text) {
-    const rows=[]; let row=[], cur='', q=false;
-    for (let i=0;i<text.length;i++){
-      const c=text[i], n=text[i+1];
-      if (c === '"'){ if (q && n === '"'){cur+='"'; i++;} else { q=!q; } }
-      else if (c === ',' && !q){ row.push(cur); cur=''; }
-      else if ((c === '\n' || c === '\r') && !q){ if (cur!=='' || row.length){ row.push(cur); rows.push(row); row=[]; cur=''; } }
-      else { cur+=c; }
-    }
-    if (cur!=='' || row.length){ row.push(cur); rows.push(row); }
-    return rows;
-  }
+    const container = document.getElementById('testimonialGrid');
+    const errorEl   = document.getElementById('testimonialError');
+    if (!container) return;
 
-  // Normalisasi link Drive ke direct (aman kalau bukan Drive)
-  function normalizeMediaUrl(u) {
-    if (!u) return '';
-    try {
-      const url = new URL(u);
-      if (url.hostname.includes('drive.google.com')) {
-        const m = u.match(/\/file\/d\/([^/]+)/);
-        const id = m ? m[1] : url.searchParams.get('id');
-        if (id) return `https://drive.google.com/uc?export=view&id=${id}`;
-      }
-    } catch (_) {}
-    return u;
-  }
-
-  async function loadTestimonials() {
-    if (loaded) return;
-    loaded = true;
-
-    const grid = document.getElementById('testimonialGrid');
-    const err  = document.getElementById('testimonialError');
-    if (!grid) return;
-
-    grid.innerHTML = '<div class="testi-card">Memuat…</div>';
+    container.innerHTML = '<div class="empty">Memuat…</div>';
+    if (errorEl) errorEl.style.display = 'none';
 
     try {
-      const res = await fetch(getCsvUrl(), { cache: 'no-store' });
+      const res = await fetch(getSheetUrl(SHEET_NAME, 'csv'));
+      if (!res.ok) throw new Error(res.statusText);
       const text = await res.text();
-      const rows = parseCsv(text);
+
+      // gunakan parser yang sama dengan Perpustakaan
+      const rows = robustCsvParser(text);
       rows.shift(); // header
 
+      // mapping ke struktur "book-card" Perpustakaan
       const items = rows
-        .map(r => ({ name: (r[0]||'').trim(), media: normalizeMediaUrl((r[1]||'').trim()), text: (r[2]||'').trim() }))
-        .filter(x => x.media);
+        .filter(r => r && (r[1] || r[0]))
+        .map(r => ({
+          title: (r[2] || r[0] || 'Testimoni').trim(), // pakai komentar jika ada, else nama
+          coverUrl: (r[1] || '').trim(),               // gambar screenshot
+          linkUrl: (r[1] || '').trim(),                // klik = buka gambar
+        }))
+        .filter(x => x.coverUrl);
 
+      renderTestimonialGrid(items);
+    } catch (err) {
+      console.error('Failed to load testimonials:', err);
+      container.innerHTML = '';
+      if (errorEl) {
+        errorEl.textContent = 'Gagal memuat testimoni. Coba lagi nanti.';
+        errorEl.style.display = 'block';
+      }
+    }
+
+    function renderTestimonialGrid(items) {
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div class="empty">Belum ada testimoni.</div>';
+        return;
+      }
+      container.innerHTML = '';
       const frag = document.createDocumentFragment();
       items.forEach(x => {
-        const fig = document.createElement('figure');
-        fig.className = 'testi-card';
-        fig.innerHTML = `
-          <a class="testi-media" href="${x.media}" target="_blank" rel="noopener">
-            <img
-              src="${x.media}"
-              alt="${x.name ? 'Testimoni - ' + x.name : 'Testimoni'}"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-              crossorigin="anonymous"
-              onerror="this.onerror=null; this.src='logo.jpeg'; this.style.objectFit='contain';"
-            >
-          </a>
-          ${x.text ? `<figcaption class="testi-caption">${x.text}</figcaption>` : ''}
+        const card = document.createElement('a');
+        card.className = 'book-card';   // kelas yang dipakai Perpustakaan
+        card.href = x.linkUrl;
+        card.target = '_blank';
+        card.rel = 'noopener';
+        card.innerHTML = `
+          <img src="${x.coverUrl}" alt="${x.title}" class="cover" loading="lazy"
+               referrerpolicy="no-referrer" crossorigin="anonymous"
+               onerror="this.onerror=null; this.src='logo.jpeg'; this.style.objectFit='contain';">
+          <div class="overlay"></div>
+          <div class="title">${x.title}</div>
         `;
-        frag.appendChild(fig);
+        frag.appendChild(card);
       });
-
-      grid.innerHTML = '';
-      if (items.length) grid.appendChild(frag);
-      else grid.innerHTML = '<div class="testi-card">Belum ada testimoni.</div>';
-      if (err) err.style.display = 'none';
-    } catch (e) {
-      console.error('Gagal memuat testimoni:', e);
-      grid.innerHTML = '';
-      if (err) { err.textContent = 'Gagal memuat testimoni.'; err.style.display = 'block'; }
+      container.appendChild(frag);
     }
   }
 
-  // Aktifkan view & load saat pilih menu Testimoni
+  // Aktifkan view Testimoni & load saat dipilih
   function activateTestimoniView() {
     const current = document.querySelector('.view-section.active');
     const next = document.getElementById('viewTestimoni');
@@ -110,7 +88,7 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Hook ke setMode dari script.js tanpa mengubah file aslinya
+  // Hook ke setMode yang sudah ada di script.js
   const originalSetMode = window.setMode;
   window.setMode = function(nextMode) {
     if (typeof originalSetMode === 'function') {
@@ -118,11 +96,11 @@
     }
     if (nextMode === 'testimoni') {
       activateTestimoniView();
-      loadTestimonials();
+      initializeTestimonials();
     }
   };
 
-  // Klik langsung di menu Testimoni (kalau dipanggil sebelum setMode siap)
+  // Listener klik langsung pada item menu Testimoni
   document.addEventListener('click', function(e){
     const link = e.target.closest('.sidebar-nav .nav-item[data-mode="testimoni"]');
     if (!link) return;
