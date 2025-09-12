@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 4.1.0 (Refactored Home View)
+ * @version 5.0.0 (Refactored Accounts View with Category Filter)
  */
 
 (function () {
@@ -45,9 +45,9 @@
     },
     accounts: {
       initialized: false,
-      data: [],
-      currentIndex: 0,
+      allData: [],
       currentAccount: null,
+      activeCategory: 'Semua Kategori',
     },
   };
 
@@ -115,6 +115,7 @@
       }
     },
     accounts: {
+      listContainer: getElement('accountListContainer'),
       display: getElement('accountDisplay'),
       empty: getElement('accountEmpty'),
       error: getElement('accountError'),
@@ -463,38 +464,186 @@
     fetchPreorderData(config.sheets.preorder.name1);
     state.preorder.initialized = true;
   }
+  
+  // --- AKUN GAME FUNCTIONS (NEW LOGIC) ---
 
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
-  async function parseAccountsSheet(text) { const rows = robustCsvParser(text); rows.shift(); return rows.filter(row => row && row.length >= 5 && row[0]).map(row => ({ title: row[0] || 'Tanpa Judul', price: Number(row[1]) || 0, status: row[2] || 'Tersedia', description: row[3] || 'Tidak ada deskripsi.', images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean), })); }
-  function populateAccountSelect() { const { customSelect, empty } = elements.accounts; const { options, value } = customSelect; options.innerHTML = ''; if (state.accounts.data.length === 0) { value.textContent = 'Tidak ada akun'; empty.style.display = 'block'; return; } value.textContent = 'Pilih Akun'; state.accounts.data.forEach((acc, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = acc.title; el.dataset.value = index; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); el.addEventListener('click', () => { value.textContent = acc.title; document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(customSelect.wrapper, false); renderAccount(index); }); options.appendChild(el); }); }
-  function renderAccount(index) { const { display, empty, price, description, status: statusEl } = elements.accounts; const account = state.accounts.data[index]; state.accounts.currentAccount = account; if (!account) { display.style.display = 'none'; empty.style.display = 'block'; return; } display.classList.remove('expanded'); price.textContent = formatToIdr(account.price); description.textContent = account.description; statusEl.textContent = account.status; statusEl.className = 'account-status-badge'; statusEl.classList.add(account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'); const { track, indicators } = elements.accounts.carousel; track.innerHTML = ''; indicators.innerHTML = ''; if (account.images && account.images.length > 0) { account.images.forEach((src, i) => { track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><img src="${src}" alt="Gambar untuk ${account.title}" decoding="async" loading="lazy"></div>`); indicators.insertAdjacentHTML('beforeend', `<button class="indicator-dot" data-index="${i}"></button>`); }); } else { track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><div style="display:flex;align-items:center;justify-content:center;height:100%;aspect-ratio:16/9;background-color:var(--surface-secondary);color:var(--text-tertiary);">Gambar tidak tersedia</div></div>`); } indicators.querySelectorAll('.indicator-dot').forEach(dot => { dot.addEventListener('click', e => { e.stopPropagation(); state.accounts.currentIndex = parseInt(e.target.dataset.index); updateCarousel(); }); }); state.accounts.currentIndex = 0; updateCarousel(); empty.style.display = 'none'; display.style.display = 'block'; }
-  function updateCarousel() { const account = state.accounts.currentAccount; if (!account) return; const { track, prevBtn, nextBtn, indicators } = elements.accounts.carousel; const totalSlides = account.images.length || 1; track.style.transform = `translateX(-${state.accounts.currentIndex * 100}%)`; prevBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex === 0; nextBtn.disabled = totalSlides <= 1 || state.accounts.currentIndex >= totalSlides - 1; indicators.querySelectorAll('.indicator-dot').forEach((dot, i) => { dot.classList.toggle('active', i === state.accounts.currentIndex); }); }
-  function initializeCarousel() { const { prevBtn, nextBtn, track } = elements.accounts.carousel; prevBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentIndex > 0) { state.accounts.currentIndex--; updateCarousel(); } }); nextBtn.addEventListener('click', e => { e.stopPropagation(); const account = state.accounts.currentAccount; if (!account) return; if (state.accounts.currentIndex < account.images.length - 1) { state.accounts.currentIndex++; updateCarousel(); } }); let touchStartX = 0; track.addEventListener('touchstart', e => { e.stopPropagation(); touchStartX = e.changedTouches[0].screenX; }, { passive: true }); track.addEventListener('touchend', e => { e.stopPropagation(); const touchEndX = e.changedTouches[0].screenX; if (touchEndX < touchStartX - 50) nextBtn.click(); if (touchEndX > touchStartX + 50) prevBtn.click(); }, { passive: true }); }
   
+  // NEW: Parses Sheet5 based on the new structure (A:Category, B:Title, C:Price, etc.)
+  async function parseAccountsSheet(text) {
+    const rows = robustCsvParser(text);
+    rows.shift(); // Remove header row
+    return rows
+      .filter(row => row && row.length >= 6 && row[0] && row[1]) // Ensure category and title exist
+      .map(row => ({
+        category: row[0].trim() || 'Lainnya',
+        title: row[1].trim() || 'Tanpa Judul',
+        price: Number(row[2]) || 0,
+        status: row[3].trim() || 'Tersedia',
+        description: row[4].trim() || 'Tidak ada deskripsi.',
+        images: (row[5] || '').split(',').map(url => url.trim()).filter(Boolean),
+      }));
+  }
+
+  // NEW: Populates the dropdown with static categories
+  function populateAccountCategorySelect() {
+    const { customSelect } = elements.accounts;
+    const { options, value } = customSelect;
+    const categories = ['Semua Kategori', 'Mobile Legends', 'Free Fire', 'Roblox', 'PUBG Mobile', 'Clash Of Clans', 'Lainnya'];
+    
+    options.innerHTML = '';
+    value.textContent = state.accounts.activeCategory;
+
+    categories.forEach((cat, index) => {
+      const el = document.createElement('div');
+      el.className = 'custom-select-option';
+      el.textContent = cat;
+      el.dataset.value = cat;
+      el.setAttribute('role', 'option');
+      el.setAttribute('tabindex', '-1');
+      if (cat === state.accounts.activeCategory) {
+        el.classList.add('selected');
+      }
+      el.addEventListener('click', () => {
+        value.textContent = cat;
+        document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+        el.classList.add('selected');
+        toggleCustomSelect(customSelect.wrapper, false);
+        state.accounts.activeCategory = cat;
+        renderAccountList(); // Re-render the list with the new category
+      });
+      options.appendChild(el);
+    });
+  }
+
+  // NEW: Renders the list of accounts based on the selected category
+  function renderAccountList() {
+    const { listContainer, display, empty } = elements.accounts;
+    const { activeCategory } = state.accounts;
+    
+    // Hide details view when filtering
+    display.style.display = 'none';
+    
+    const filteredAccounts = state.accounts.allData.filter(acc => 
+        activeCategory === 'Semua Kategori' || acc.category === activeCategory
+    );
+    
+    listContainer.innerHTML = '';
+    
+    if (filteredAccounts.length === 0) {
+      empty.style.display = 'flex';
+      return;
+    }
+    
+    empty.style.display = 'none';
+    const fragment = document.createDocumentFragment();
+    filteredAccounts.forEach(account => {
+      const clone = elements.itemTemplate.content.cloneNode(true);
+      const buttonEl = clone.querySelector('.list-item');
+      buttonEl.querySelector('.title').textContent = account.title;
+      buttonEl.querySelector('.price').textContent = formatToIdr(account.price);
+      buttonEl.addEventListener('click', () => {
+        displayAccountDetails(account);
+        window.scrollTo({ top: display.offsetTop - 80, behavior: 'smooth' });
+      });
+      fragment.appendChild(clone);
+    });
+    listContainer.appendChild(fragment);
+  }
+
+  // UPDATED: Displays details for a specific account object
+  function displayAccountDetails(account) {
+    const { display, price, description, status: statusEl } = elements.accounts;
+    state.accounts.currentAccount = account;
+    if (!account) return;
+
+    display.classList.remove('expanded');
+    price.textContent = formatToIdr(account.price);
+    description.textContent = account.description;
+    statusEl.textContent = account.status;
+    statusEl.className = 'account-status-badge';
+    statusEl.classList.add(account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold');
+    
+    const { track, indicators } = elements.accounts.carousel;
+    track.innerHTML = '';
+    indicators.innerHTML = '';
+    if (account.images && account.images.length > 0) {
+      account.images.forEach((src, i) => {
+        track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><img src="${src}" alt="Gambar untuk ${account.title}" decoding="async" loading="lazy"></div>`);
+        indicators.insertAdjacentHTML('beforeend', `<button class="indicator-dot" data-index="${i}"></button>`);
+      });
+    } else {
+      track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><div style="display:flex;align-items:center;justify-content:center;height:100%;aspect-ratio:16/9;background-color:var(--surface-secondary);color:var(--text-tertiary);">Gambar tidak tersedia</div></div>`);
+    }
+    
+    indicators.querySelectorAll('.indicator-dot').forEach(dot => {
+      dot.addEventListener('click', e => {
+        e.stopPropagation();
+        state.accounts.carouselIndex = parseInt(e.target.dataset.index);
+        updateAccountCarousel();
+      });
+    });
+    
+    state.accounts.carouselIndex = 0;
+    updateAccountCarousel();
+    display.style.display = 'block';
+  }
+
+  function updateAccountCarousel() {
+    const account = state.accounts.currentAccount;
+    if (!account) return;
+    const { track, prevBtn, nextBtn, indicators } = elements.accounts.carousel;
+    const totalSlides = (account.images && account.images.length > 0) ? account.images.length : 1;
+    track.style.transform = `translateX(-${state.accounts.carouselIndex * 100}%)`;
+    prevBtn.disabled = totalSlides <= 1 || state.accounts.carouselIndex === 0;
+    nextBtn.disabled = totalSlides <= 1 || state.accounts.carouselIndex >= totalSlides - 1;
+    indicators.querySelectorAll('.indicator-dot').forEach((dot, i) => {
+      dot.classList.toggle('active', i === state.accounts.carouselIndex);
+    });
+  }
+  
+  function initializeCarousel() {
+    const { prevBtn, nextBtn, track } = elements.accounts.carousel;
+    prevBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.carouselIndex > 0) { state.accounts.carouselIndex--; updateAccountCarousel(); } });
+    nextBtn.addEventListener('click', e => { e.stopPropagation(); const account = state.accounts.currentAccount; if (!account) return; if (state.accounts.carouselIndex < account.images.length - 1) { state.accounts.carouselIndex++; updateAccountCarousel(); } });
+    let touchStartX = 0;
+    track.addEventListener('touchstart', e => { e.stopPropagation(); touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    track.addEventListener('touchend', e => { e.stopPropagation(); const touchEndX = e.changedTouches[0].screenX; if (touchEndX < touchStartX - 50) nextBtn.click(); if (touchEndX > touchStartX + 50) prevBtn.click(); }, { passive: true });
+  }
+
   async function initializeAccounts() { 
     if (state.accounts.initialized) return; 
     if (accountsFetchController) accountsFetchController.abort();
     accountsFetchController = new AbortController();
 
-    const { customSelect, error, empty, display, buyBtn, offerBtn } = elements.accounts; 
+    const { error, buyBtn, offerBtn, display } = elements.accounts; 
     error.style.display = 'none'; 
+    showSkeleton(elements.accounts.listContainer, elements.skeletonItemTemplate, 4);
+
     try { 
       const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
       
       const text = await res.text(); 
-      state.accounts.data = await parseAccountsSheet(text); 
-      populateAccountSelect(); 
+      state.accounts.allData = await parseAccountsSheet(text); 
+      populateAccountCategorySelect();
+      renderAccountList();
     } catch (err) { 
       if (err.name === 'AbortError') { return; }
       console.error('Fetch Accounts failed:', err); 
       error.textContent = 'Gagal memuat data akun. Coba lagi nanti.'; 
       error.style.display = 'block'; 
-      empty.style.display = 'none'; 
-      customSelect.value.textContent = 'Gagal memuat'; 
+      elements.accounts.listContainer.innerHTML = '';
     } 
     
-    display.addEventListener('click', e => { if (!e.target.closest('.action-btn, .carousel-btn, .indicator-dot')) display.classList.toggle('expanded'); }); 
+    // Use the details section as the expand/collapse trigger
+    const accountDetails = display.querySelector('.account-details');
+    accountDetails.addEventListener('click', e => {
+      if (!e.target.closest('.action-btn')) {
+        display.classList.toggle('expanded');
+      }
+    });
+
     buyBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { openPaymentModal({ title: state.accounts.currentAccount.title, price: state.accounts.currentAccount.price, catLabel: 'Akun Game' }); } }); 
     offerBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { const text = `Halo, saya tertarik untuk menawar Akun Game: ${state.accounts.currentAccount.title}`; window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`, '_blank', 'noopener'); } }); 
     
@@ -641,9 +790,8 @@ async function loadTestimonials() {
     track.appendChild(pp_makeNodes(items));
     track.appendChild(pp_makeNodes(items)); // duplicate for seamless loop
 
-    // ----- Motion engine (manual drag + auto) -----
-    let pos = 0;                         // current translateX
-    let speed = 85;                      // px/s (faster than before)
+    let pos = 0;
+    let speed = 85;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const marquee = section.querySelector('.testi-marquee');
     let halfWidth = 0;
@@ -653,18 +801,15 @@ async function loadTestimonials() {
     let rafId = null, lastTs = 0;
 
     function measure() {
-      // track.scrollWidth is total length; duplicated list => half of it
       halfWidth = Math.max(1, Math.round(track.scrollWidth / 2));
     }
     measure();
-    // recalc after images load
     Array.from(track.querySelectorAll('img')).forEach(img => {
       img.addEventListener('load', measure, { once: true });
       img.addEventListener('error', measure, { once: true });
     });
 
     function applyTransform() {
-      // keep pos within [-halfWidth, 0]
       while (pos <= -halfWidth) pos += halfWidth;
       while (pos > 0) pos -= halfWidth;
       track.style.transform = 'translateX(' + pos + 'px)';
@@ -680,13 +825,19 @@ async function loadTestimonials() {
       }
       rafId = requestAnimationFrame(step);
     }
-    cancelAnimationFrame(rafId); rafId = requestAnimationFrame(step);
 
-    // Hover pause (desktop)
+    // Auto-scroll logic is now handled in JS instead of CSS animation
+    const autoScrollInterval = setInterval(() => {
+        if (!dragging && !pausedByHover && !reduceMotion) {
+            pos -= speed / 60; // Approximate step for 60fps
+            applyTransform();
+        }
+    }, 1000 / 60);
+
+
     marquee.addEventListener('mouseenter', () => { pausedByHover = true; });
     marquee.addEventListener('mouseleave', () => { pausedByHover = false; });
 
-    // Pointer-based dragging (works for mouse & touch in modern browsers)
     function onPointerDown(e) {
       dragging = true;
       track.classList.add('dragging');
@@ -707,12 +858,10 @@ async function loadTestimonials() {
       marquee.releasePointerCapture && marquee.releasePointerCapture(e.pointerId || 1);
     }
 
-    // Register events (Pointer + Touch fallback)
     marquee.addEventListener('pointerdown', onPointerDown, { passive: false });
     window.addEventListener('pointermove', onPointerMove, { passive: false });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
 
-    // iOS 12 fallback: touch events
     marquee.addEventListener('touchstart', onPointerDown, { passive: false });
     window.addEventListener('touchmove', onPointerMove, { passive: false });
     window.addEventListener('touchend', onPointerUp, { passive: true });
