@@ -756,15 +756,6 @@ body.dark-mode .skeleton::after {
     transform: translateX(100%);
   }
 }
-.expand-indicator {
-  width: 20px;
-  height: 20px;
-  color: var(--text-tertiary);
-  transition: transform var(--duration-natural) var(--ease-natural);
-}
-.account-card.expanded .expand-indicator {
-  transform: rotate(180deg);
-}
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -955,104 +946,7 @@ body.sidebar-open .sidebar {
 .home-banner-container { margin-top: var(--sp-fib-5); margin-bottom: var(--sp-fib-5); border-radius: var(--radius-fib-medium); overflow: hidden; box-shadow: var(--shadow-sm); line-height: 0; }
 .home-banner-img { width: 100%; height: auto; display: block; }
 
-/* ===== OLD: Akun Game Card Styling (Bisa dihapus jika tidak terpakai lagi) ===== */
-.account-card-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--sp-fib-5);
-  margin-top: var(--sp-fib-5);
-}
-@media(min-width: 769px) {
-  .account-card-grid {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  }
-}
-.account-card {
-  background: var(--surface-primary);
-  border: 1px solid var(--separator);
-  border-radius: var(--radius-fib-medium);
-  box-shadow: var(--shadow-sm);
-  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
-  overflow: hidden;
-}
-.account-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 21px rgba(48, 57, 82, 0.12);
-}
-.account-card-main-content {
-  padding: var(--sp-fib-4);
-  cursor: pointer;
-  display: grid;
-  grid-template-columns: 80px 1fr auto;
-  align-items: center;
-  gap: var(--sp-fib-4);
-}
-.account-card-image-wrapper {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-fib-small);
-  overflow: hidden;
-  background-color: var(--surface-secondary);
-}
-.account-card-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.account-card-info h3 {
-  margin: 0;
-  font-size: var(--font-size-body);
-  font-weight: 800;
-  color: var(--brand-blue);
-  letter-spacing: -0.01em;
-}
-.account-card-info .category-name {
-  font-size: 14px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-.account-status-badge {
-  flex-shrink: 0;
-  display: inline-block;
-  padding: var(--sp-fib-2) var(--sp-fib-4);
-  border: 1px solid transparent;
-  border-radius: 9999px;
-  font-size: var(--font-size-caption);
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-left: auto;
-}
-.account-status-badge.available { background-color: #DCFCE7; border-color: #86EFAC; color: #166534; }
-.account-status-badge.sold { background-color: var(--surface-secondary); border-color: var(--separator); color: var(--text-secondary); }
-
-.account-card-details-wrapper {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height var(--duration-natural) var(--ease-natural);
-}
-.account-card.expanded .account-card-details-wrapper {
-  max-height: 2000px; /* Large enough value */
-}
-.account-card-details-content {
-  border-top: 1px solid var(--separator);
-}
-.account-card-details-content p {
-  padding: var(--sp-fib-4) var(--sp-fib-5) 0;
-  margin: 0;
-  white-space: pre-wrap;
-  color: var(--text-secondary);
-}
-.account-card-details-content .account-actions {
-  display: flex;
-  gap: var(--sp-fib-4);
-  padding: var(--sp-fib-5);
-}
-.action-btn { flex-grow: 1; padding: var(--sp-fib-4); border: none; border-radius: var(--radius-fib-small); font-size: 15px; font-weight: 700; cursor: pointer; transition: transform var(--duration-fast), opacity var(--duration-fast); }
-.action-btn:hover { transform: scale(1.03); }
-.action-btn.buy { background-color: var(--brand-blue); color: #fff; }
-.action-btn.offer { background-color: var(--surface-secondary); color: var(--text-primary); }
-
+/* ===== Carousel Styling (Shared) ===== */
 .carousel-container { position: relative; width: 100%; overflow: hidden; user-select: none; }
 .carousel-container:active { cursor: grabbing; }
 .carousel-track { display: flex; transition: transform var(--duration-natural) var(--ease-natural); }
@@ -1070,37 +964,45 @@ body.sidebar-open .sidebar {
 .indicator-dot { width: 10px; height: 10px; padding: 0; border-radius: 50%; background-color: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 0, 0, 0.1); cursor: pointer; transition: background-color 0.3s, transform 0.3s; }
 .indicator-dot.active { background-color: #fff; transform: scale(1.2); }
 
-/* ===== GAYA BARU: Kartu Akun Game (Sesuai Screenshot) ===== */
-
-/* Menghilangkan hover-effect dan shadow lama jika tidak diinginkan */
-.account-card:hover {
-  transform: none;
-  box-shadow: var(--shadow-sm);
+/* ===== GAYA BARU: KARTU AKUN GAME (Dropdown Version) ===== */
+.account-card-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-fib-5);
+  margin-top: var(--sp-fib-5);
 }
-
-/* Mengatur padding dan layout utama kartu */
+@media(min-width: 769px) {
+  .account-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
 .account-card {
+  background: var(--surface-primary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-fib-medium);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration-fast);
+  overflow: hidden;
   padding: var(--sp-fib-4);
   display: flex;
   flex-direction: column;
   gap: var(--sp-fib-4);
 }
-
-/* Wrapper untuk carousel agar sudutnya membulat */
+.account-card:hover {
+  box-shadow: 0 8px 21px rgba(48, 57, 82, 0.12);
+}
 .account-card-carousel-wrapper {
   border-radius: var(--radius-fib-small);
   overflow: hidden;
   line-height: 0;
 }
-
-/* Layout untuk baris Harga dan Status */
 .account-card-main-info {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: var(--sp-fib-4);
+  cursor: pointer;
 }
-
 .account-card-main-info h3 {
   margin: 0;
   font-size: var(--font-size-h1);
@@ -1108,13 +1010,44 @@ body.sidebar-open .sidebar {
   font-weight: 800;
   letter-spacing: -0.02em;
 }
-
-/* Menghilangkan expand indicator yang lama */
-.account-card .expand-indicator {
-  display: none;
+.status-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-fib-3);
 }
-
-/* Styling untuk list spesifikasi */
+.account-status-badge {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: var(--sp-fib-2) var(--sp-fib-4);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  font-size: var(--font-size-caption);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.account-status-badge.available { background-color: #DCFCE7; border-color: #86EFAC; color: #166534; }
+.account-status-badge.sold { background-color: var(--surface-secondary); border-color: var(--separator); color: var(--text-secondary); }
+.expand-indicator {
+  width: 20px;
+  height: 20px;
+  color: var(--text-tertiary);
+  transition: transform var(--duration-natural) var(--ease-natural);
+}
+.account-card.expanded .expand-indicator {
+  transform: rotate(180deg);
+}
+.account-card-details-wrapper {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.5s var(--ease-natural), opacity 0.3s var(--ease-natural), margin-top 0.5s var(--ease-natural);
+}
+.account-card.expanded .account-card-details-wrapper {
+  max-height: 2000px;
+  opacity: 1;
+  margin-top: var(--sp-fib-4);
+}
 .account-card-specs .specs-list {
   list-style: none;
   padding: 0;
@@ -1123,29 +1056,34 @@ body.sidebar-open .sidebar {
   color: var(--text-secondary);
   line-height: 1.7;
 }
-
 .account-card-specs .spec-item {
   margin-bottom: var(--sp-fib-2);
 }
-
 .account-card-specs .spec-title {
   font-weight: 700;
   color: var(--text-primary);
   margin-top: var(--sp-fib-3);
   margin-bottom: var(--sp-fib-3);
 }
-
 .account-card-specs .spec-divider {
   height: var(--sp-fib-4);
 }
-
-/* Layout untuk tombol Aksi */
 .account-card-actions {
   display: flex;
   gap: var(--sp-fib-4);
   margin-top: var(--sp-fib-4);
 }
-
-.account-card-actions .action-btn {
-  flex-grow: 1;
+.action-btn { 
+  flex-grow: 1; 
+  padding: var(--sp-fib-4); 
+  border: none; 
+  border-radius: var(--radius-fib-small); 
+  font-size: 15px; 
+  font-weight: 700; 
+  cursor: pointer; 
+  transition: transform var(--duration-fast), opacity var(--duration-fast); 
 }
+.action-btn:hover { transform: scale(1.03); }
+.action-btn.buy { background-color: var(--brand-blue); color: #fff; }
+.action-btn.offer { background-color: var(--surface-secondary); color: var(--text-primary); }
+
