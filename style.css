@@ -1339,15 +1339,16 @@ body.sidebar-open .sidebar {
 
 /* -- Home Banner Styling -- */
 .home-banner-container {
-  margin-bottom: var(--sp-fib-5); /* Memberi jarak ke elemen di bawahnya */
-  border-radius: var(--radius-fib-large); /* Membuat sudut banner tumpul, sesuai tema */
-  overflow: hidden; /* Memastikan gambar tidak keluar dari container */
+  margin-top: var(--sp-fib-6);
+  margin-bottom: var(--sp-fib-5);
+  border-radius: var(--radius-fib-large);
+  overflow: hidden;
   box-shadow: var(--shadow-sm);
-  line-height: 0; /* Menghilangkan spasi ekstra di bawah gambar */
+  line-height: 0;
 }
 
 .home-banner-img {
-  width: 100%; /* Membuat gambar memenuhi lebar container */
+  width: 100%;
   height: auto;
-  display: block; /* Menghilangkan spasi ekstra di bawah gambar */
+  display: block;
 }
