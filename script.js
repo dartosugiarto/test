@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 5.0.0 (Refactored Accounts View with Category Filter)
+ * @version 7.0.0 (Final - Implemented Visual Expandable Card List for Accounts)
  */
 
 (function () {
@@ -46,7 +46,6 @@
     accounts: {
       initialized: false,
       allData: [],
-      currentAccount: null,
       activeCategory: 'Semua Kategori',
     },
   };
@@ -115,21 +114,10 @@
       }
     },
     accounts: {
-      listContainer: getElement('accountListContainer'),
-      display: getElement('accountDisplay'),
+      cardGrid: getElement('accountCardGrid'),
+      cardTemplate: getElement('accountCardTemplate'),
       empty: getElement('accountEmpty'),
       error: getElement('accountError'),
-      carousel: {
-        track: getElement('carouselTrack'),
-        prevBtn: getElement('carouselPrevBtn'),
-        nextBtn: getElement('carouselNextBtn'),
-        indicators: getElement('carouselIndicators'),
-      },
-      price: getElement('accountPrice'),
-      status: getElement('accountStatus'),
-      description: getElement('accountDescription'),
-      buyBtn: getElement('buyAccountBtn'),
-      offerBtn: getElement('offerAccountBtn'),
       customSelect: {
         wrapper: getElement('accountCustomSelectWrapper'),
         btn: getElement('accountCustomSelectBtn'),
@@ -464,28 +452,31 @@
     fetchPreorderData(config.sheets.preorder.name1);
     state.preorder.initialized = true;
   }
-  
-  // --- AKUN GAME FUNCTIONS (NEW LOGIC) ---
+
+  // --- AKUN GAME FUNCTIONS ---
 
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
   
-  // NEW: Parses Sheet5 based on the new structure (A:Category, B:Title, C:Price, etc.)
   async function parseAccountsSheet(text) {
     const rows = robustCsvParser(text);
-    rows.shift(); // Remove header row
+    rows.shift();
     return rows
-      .filter(row => row && row.length >= 6 && row[0] && row[1]) // Ensure category and title exist
-      .map(row => ({
-        category: row[0].trim() || 'Lainnya',
-        title: row[1].trim() || 'Tanpa Judul',
-        price: Number(row[2]) || 0,
-        status: row[3].trim() || 'Tersedia',
-        description: row[4].trim() || 'Tidak ada deskripsi.',
-        images: (row[5] || '').split(',').map(url => url.trim()).filter(Boolean),
-      }));
+      .filter(row => row && row.length >= 5 && row[0])
+      .map(row => {
+          const price = Number(row[1]) || 0;
+          const title = `${row[0] || 'Akun'} (${formatToIdr(price)})`;
+          return {
+              id: `acc_${Date.now()}_${Math.random()}`,
+              title: title,
+              category: row[0] || 'Lainnya',
+              price: price,
+              status: row[2] || 'Tersedia',
+              description: row[3] || 'Tidak ada deskripsi.',
+              images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean),
+          };
+      });
   }
 
-  // NEW: Populates the dropdown with static categories
   function populateAccountCategorySelect() {
     const { customSelect } = elements.accounts;
     const { options, value } = customSelect;
@@ -494,41 +485,34 @@
     options.innerHTML = '';
     value.textContent = state.accounts.activeCategory;
 
-    categories.forEach((cat, index) => {
+    categories.forEach((cat) => {
       const el = document.createElement('div');
       el.className = 'custom-select-option';
       el.textContent = cat;
       el.dataset.value = cat;
-      el.setAttribute('role', 'option');
-      el.setAttribute('tabindex', '-1');
-      if (cat === state.accounts.activeCategory) {
-        el.classList.add('selected');
-      }
+      if (cat === state.accounts.activeCategory) el.classList.add('selected');
+      
       el.addEventListener('click', () => {
         value.textContent = cat;
         document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         el.classList.add('selected');
         toggleCustomSelect(customSelect.wrapper, false);
         state.accounts.activeCategory = cat;
-        renderAccountList(); // Re-render the list with the new category
+        renderAccountCards();
       });
       options.appendChild(el);
     });
   }
 
-  // NEW: Renders the list of accounts based on the selected category
-  function renderAccountList() {
-    const { listContainer, display, empty } = elements.accounts;
+  function renderAccountCards() {
+    const { cardGrid, cardTemplate, empty } = elements.accounts;
     const { activeCategory } = state.accounts;
-    
-    // Hide details view when filtering
-    display.style.display = 'none';
     
     const filteredAccounts = state.accounts.allData.filter(acc => 
         activeCategory === 'Semua Kategori' || acc.category === activeCategory
     );
     
-    listContainer.innerHTML = '';
+    cardGrid.innerHTML = '';
     
     if (filteredAccounts.length === 0) {
       empty.style.display = 'flex';
@@ -538,77 +522,103 @@
     empty.style.display = 'none';
     const fragment = document.createDocumentFragment();
     filteredAccounts.forEach(account => {
-      const clone = elements.itemTemplate.content.cloneNode(true);
-      const buttonEl = clone.querySelector('.list-item');
-      buttonEl.querySelector('.title').textContent = account.title;
-      buttonEl.querySelector('.price').textContent = formatToIdr(account.price);
-      buttonEl.addEventListener('click', () => {
-        displayAccountDetails(account);
-        window.scrollTo({ top: display.offsetTop - 80, behavior: 'smooth' });
+      const cardClone = cardTemplate.content.cloneNode(true);
+      const cardElement = cardClone.querySelector('.account-card');
+      const mainContent = cardElement.querySelector('.account-card-main-content');
+      
+      mainContent.innerHTML = `
+        <div class="account-card-image-wrapper">
+          <img src="${account.images[0] || ''}" alt="Gambar ${account.category}" class="account-card-image" loading="lazy">
+        </div>
+        <div class="account-card-info">
+          <span class="category-name">${account.category}</span>
+          <h3>${formatToIdr(account.price)}</h3>
+        </div>
+        <div class="status-badge-wrapper">
+          <span class="account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}">${account.status}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator">
+            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      `;
+      
+      mainContent.addEventListener('click', () => {
+        const isExpanded = cardElement.classList.toggle('expanded');
+        if (isExpanded) {
+          buildAndInjectDetails(cardElement, account);
+        }
       });
-      fragment.appendChild(clone);
+      
+      fragment.appendChild(cardElement);
     });
-    listContainer.appendChild(fragment);
+    cardGrid.appendChild(fragment);
   }
 
-  // UPDATED: Displays details for a specific account object
-  function displayAccountDetails(account) {
-    const { display, price, description, status: statusEl } = elements.accounts;
-    state.accounts.currentAccount = account;
-    if (!account) return;
+  function buildAndInjectDetails(cardElement, account) {
+    const detailsWrapper = cardElement.querySelector('.account-card-details-wrapper');
+    if (detailsWrapper.innerHTML !== '') return; // Already built
 
-    display.classList.remove('expanded');
-    price.textContent = formatToIdr(account.price);
-    description.textContent = account.description;
-    statusEl.textContent = account.status;
-    statusEl.className = 'account-status-badge';
-    statusEl.classList.add(account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold');
+    const detailsContent = document.createElement('div');
+    detailsContent.className = 'account-card-details-content';
     
-    const { track, indicators } = elements.accounts.carousel;
-    track.innerHTML = '';
-    indicators.innerHTML = '';
+    let carouselHtml = '';
     if (account.images && account.images.length > 0) {
-      account.images.forEach((src, i) => {
-        track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><img src="${src}" alt="Gambar untuk ${account.title}" decoding="async" loading="lazy"></div>`);
-        indicators.insertAdjacentHTML('beforeend', `<button class="indicator-dot" data-index="${i}"></button>`);
-      });
-    } else {
-      track.insertAdjacentHTML('beforeend', `<div class="carousel-slide"><div style="display:flex;align-items:center;justify-content:center;height:100%;aspect-ratio:16/9;background-color:var(--surface-secondary);color:var(--text-tertiary);">Gambar tidak tersedia</div></div>`);
+      const slides = account.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar detail untuk ${account.category}" loading="lazy"></div>`).join('');
+      const indicators = account.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
+      carouselHtml = `
+        <div class="carousel-container">
+          <div class="carousel-track">${slides}</div>
+          <button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+          </button>
+          <button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          </button>
+          <div class="carousel-indicators">${indicators}</div>
+        </div>
+      `;
     }
+
+    detailsContent.innerHTML = `
+      ${carouselHtml}
+      <p>${account.description}</p>
+      <div class="account-actions">
+        <button type="button" class="action-btn buy">Beli Sekarang</button>
+        <button type="button" class="action-btn offer">Tawar Harga</button>
+      </div>
+    `;
+    detailsWrapper.appendChild(detailsContent);
     
-    indicators.querySelectorAll('.indicator-dot').forEach(dot => {
-      dot.addEventListener('click', e => {
-        e.stopPropagation();
-        state.accounts.carouselIndex = parseInt(e.target.dataset.index);
-        updateAccountCarousel();
-      });
-    });
+    // Attach event listeners for this specific card
+    const buyBtn = detailsContent.querySelector('.buy');
+    const offerBtn = detailsContent.querySelector('.offer');
+    buyBtn.addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
+    offerBtn.addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
     
-    state.accounts.carouselIndex = 0;
-    updateAccountCarousel();
-    display.style.display = 'block';
+    if (account.images && account.images.length > 1) {
+      initializeCardCarousel(detailsContent.querySelector('.carousel-container'), account.images.length);
+    }
   }
 
-  function updateAccountCarousel() {
-    const account = state.accounts.currentAccount;
-    if (!account) return;
-    const { track, prevBtn, nextBtn, indicators } = elements.accounts.carousel;
-    const totalSlides = (account.images && account.images.length > 0) ? account.images.length : 1;
-    track.style.transform = `translateX(-${state.accounts.carouselIndex * 100}%)`;
-    prevBtn.disabled = totalSlides <= 1 || state.accounts.carouselIndex === 0;
-    nextBtn.disabled = totalSlides <= 1 || state.accounts.carouselIndex >= totalSlides - 1;
-    indicators.querySelectorAll('.indicator-dot').forEach((dot, i) => {
-      dot.classList.toggle('active', i === state.accounts.carouselIndex);
-    });
-  }
-  
-  function initializeCarousel() {
-    const { prevBtn, nextBtn, track } = elements.accounts.carousel;
-    prevBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.carouselIndex > 0) { state.accounts.carouselIndex--; updateAccountCarousel(); } });
-    nextBtn.addEventListener('click', e => { e.stopPropagation(); const account = state.accounts.currentAccount; if (!account) return; if (state.accounts.carouselIndex < account.images.length - 1) { state.accounts.carouselIndex++; updateAccountCarousel(); } });
-    let touchStartX = 0;
-    track.addEventListener('touchstart', e => { e.stopPropagation(); touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-    track.addEventListener('touchend', e => { e.stopPropagation(); const touchEndX = e.changedTouches[0].screenX; if (touchEndX < touchStartX - 50) nextBtn.click(); if (touchEndX > touchStartX + 50) prevBtn.click(); }, { passive: true });
+  function initializeCardCarousel(carouselContainer, imageCount) {
+    const track = carouselContainer.querySelector('.carousel-track');
+    const prevBtn = carouselContainer.querySelector('.prev');
+    const nextBtn = carouselContainer.querySelector('.next');
+    const indicators = carouselContainer.querySelectorAll('.indicator-dot');
+    let currentIndex = 0;
+
+    const update = () => {
+      track.style.transform = `translateX(-${currentIndex * 100}%)`;
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex >= imageCount - 1;
+      indicators.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+    };
+
+    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex < imageCount - 1) { currentIndex++; update(); } });
+    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex > 0) { currentIndex--; update(); } });
+    indicators.forEach(dot => dot.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = parseInt(e.target.dataset.index, 10); update(); }));
+    
+    update();
   }
 
   async function initializeAccounts() { 
@@ -616,10 +626,11 @@
     if (accountsFetchController) accountsFetchController.abort();
     accountsFetchController = new AbortController();
 
-    const { error, buyBtn, offerBtn, display } = elements.accounts; 
+    const { cardGrid, error, empty } = elements.accounts; 
     error.style.display = 'none'; 
-    showSkeleton(elements.accounts.listContainer, elements.skeletonItemTemplate, 4);
-
+    empty.style.display = 'none';
+    cardGrid.innerHTML = ''; // Clear previous content
+    
     try { 
       const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
@@ -627,27 +638,16 @@
       const text = await res.text(); 
       state.accounts.allData = await parseAccountsSheet(text); 
       populateAccountCategorySelect();
-      renderAccountList();
+      renderAccountCards();
     } catch (err) { 
       if (err.name === 'AbortError') { return; }
       console.error('Fetch Accounts failed:', err); 
       error.textContent = 'Gagal memuat data akun. Coba lagi nanti.'; 
       error.style.display = 'block'; 
-      elements.accounts.listContainer.innerHTML = '';
+      cardGrid.innerHTML = '';
+      empty.style.display = 'none';
     } 
     
-    // Use the details section as the expand/collapse trigger
-    const accountDetails = display.querySelector('.account-details');
-    accountDetails.addEventListener('click', e => {
-      if (!e.target.closest('.action-btn')) {
-        display.classList.toggle('expanded');
-      }
-    });
-
-    buyBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { openPaymentModal({ title: state.accounts.currentAccount.title, price: state.accounts.currentAccount.price, catLabel: 'Akun Game' }); } }); 
-    offerBtn.addEventListener('click', e => { e.stopPropagation(); if (state.accounts.currentAccount) { const text = `Halo, saya tertarik untuk menawar Akun Game: ${state.accounts.currentAccount.title}`; window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`, '_blank', 'noopener'); } }); 
-    
-    initializeCarousel(); 
     state.accounts.initialized = true; 
   }
 
@@ -656,32 +656,17 @@
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
-    
-    container.innerHTML = '<p>Memuat buku...</p>';
-    errorEl.style.display = 'none';
-
+    container.innerHTML = ''; errorEl.style.display = 'none';
     try {
-      const sheetName = 'Sheet6'; 
-      const res = await fetch(getSheetUrl(sheetName, 'csv'));
+      const res = await fetch(getSheetUrl('Sheet6', 'csv'));
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
-      
       const text = await res.text();
       const rows = robustCsvParser(text);
       rows.shift(); 
-      
-      const books = rows
-        .filter(row => row && row[0]) 
-        .map(row => ({
-          title: row[0],
-          coverUrl: row[1],
-          bookUrl: row[2]
-        }));
-      
+      const books = rows.filter(r => r && r[0]).map(r => ({ title: r[0], coverUrl: r[1], bookUrl: r[2] }));
       renderLibraryGrid(books);
-
     } catch (err) {
       console.error('Failed to load library:', err);
-      container.innerHTML = '';
       errorEl.textContent = 'Gagal memuat perpustakaan. Coba lagi nanti.';
       errorEl.style.display = 'block';
     }
@@ -693,7 +678,6 @@
       container.innerHTML = '<div class="empty">Belum ada buku yang ditambahkan.</div>';
       return;
     }
-
     container.innerHTML = '';
     const fragment = document.createDocumentFragment();
     books.forEach(book => {
@@ -702,11 +686,7 @@
       card.href = book.bookUrl;
       card.target = '_blank';
       card.rel = 'noopener';
-      card.innerHTML = `
-        <img src="${book.coverUrl}" alt="${book.title}" class="cover" decoding="async" loading="lazy">
-        <div class="overlay"></div>
-        <div class="title">${book.title}</div>
-      `;
+      card.innerHTML = `<img src="${book.coverUrl}" alt="${book.title}" class="cover" decoding="async" loading="lazy"><div class="overlay"></div><div class="title">${book.title}</div>`;
       fragment.appendChild(card);
     });
     container.appendChild(fragment);
@@ -714,7 +694,6 @@
   
   // --- END: Library Functions ---
 
-  // Panggil fungsi initializeLibrary saat menu perpustakaan diklik
   const originalSetMode = setMode;
   setMode = function(nextMode) {
     originalSetMode(nextMode); 
@@ -725,7 +704,7 @@
   
   document.addEventListener('DOMContentLoaded', initializeApp);
 
-  // ===== BEGIN: Testimonials (Sheet7: Nama | MediaURL) — v2 with manual drag + auto scroll =====
+  // ===== BEGIN: Testimonials (Sheet7: Nama | MediaURL) =====
 function pp_csvParse(text) {
   const rows = []; let row = []; let cur = ''; let inQuotes = false;
   for (let i=0; i<text.length; i++) {
@@ -756,10 +735,7 @@ function pp_makeNodes(list) {
   list.forEach(({ name, url }) => {
     const li = document.createElement('li');
     li.className = 'testi-item';
-    li.innerHTML = '<figure class="testi-fig">\
-      <img src="' + url + '" alt="Testimoni ' + name.replace(/"/g,'&quot;') + '" decoding="async" loading="lazy" referrerpolicy="no-referrer">\
-    </figure>\
-    <figcaption class="testi-caption">— ' + name.replace(/</g,'&lt;') + '</figcaption>';
+    li.innerHTML = `<figure class="testi-fig"><img src="${url}" alt="Testimoni ${name.replace(/"/g,'&quot;')}" decoding="async" loading="lazy" referrerpolicy="no-referrer"></figure><figcaption class="testi-caption">— ${name.replace(/</g,'&lt;')}</figcaption>`;
     frag.appendChild(li);
   });
   return frag;
@@ -788,7 +764,7 @@ async function loadTestimonials() {
 
     track.innerHTML = '';
     track.appendChild(pp_makeNodes(items));
-    track.appendChild(pp_makeNodes(items)); // duplicate for seamless loop
+    track.appendChild(pp_makeNodes(items));
 
     let pos = 0;
     let speed = 85;
@@ -800,9 +776,7 @@ async function loadTestimonials() {
     let pausedByHover = false;
     let rafId = null, lastTs = 0;
 
-    function measure() {
-      halfWidth = Math.max(1, Math.round(track.scrollWidth / 2));
-    }
+    function measure() { halfWidth = Math.max(1, Math.round(track.scrollWidth / 2)); }
     measure();
     Array.from(track.querySelectorAll('img')).forEach(img => {
       img.addEventListener('load', measure, { once: true });
@@ -812,7 +786,7 @@ async function loadTestimonials() {
     function applyTransform() {
       while (pos <= -halfWidth) pos += halfWidth;
       while (pos > 0) pos -= halfWidth;
-      track.style.transform = 'translateX(' + pos + 'px)';
+      track.style.transform = `translateX(${pos}px)`;
     }
 
     function step(ts) {
@@ -825,43 +799,18 @@ async function loadTestimonials() {
       }
       rafId = requestAnimationFrame(step);
     }
-
-    // Auto-scroll logic is now handled in JS instead of CSS animation
-    const autoScrollInterval = setInterval(() => {
-        if (!dragging && !pausedByHover && !reduceMotion) {
-            pos -= speed / 60; // Approximate step for 60fps
-            applyTransform();
-        }
-    }, 1000 / 60);
-
+    cancelAnimationFrame(rafId); rafId = requestAnimationFrame(step);
 
     marquee.addEventListener('mouseenter', () => { pausedByHover = true; });
     marquee.addEventListener('mouseleave', () => { pausedByHover = false; });
-
-    function onPointerDown(e) {
-      dragging = true;
-      track.classList.add('dragging');
-      startX = (e.touches ? e.touches[0].clientX : e.clientX);
-      startPos = pos;
-      marquee.setPointerCapture && marquee.setPointerCapture(e.pointerId || 1);
-      e.preventDefault();
-    }
-    function onPointerMove(e) {
-      if (!dragging) return;
-      const x = (e.touches ? e.touches[0].clientX : e.clientX);
-      pos = startPos + (x - startX);
-      applyTransform();
-    }
-    function onPointerUp(e) {
-      dragging = false;
-      track.classList.remove('dragging');
-      marquee.releasePointerCapture && marquee.releasePointerCapture(e.pointerId || 1);
-    }
+    
+    const onPointerDown = (e) => { dragging = true; track.classList.add('dragging'); startX = (e.touches ? e.touches[0].clientX : e.clientX); startPos = pos; marquee.setPointerCapture && marquee.setPointerCapture(e.pointerId || 1); e.preventDefault(); };
+    const onPointerMove = (e) => { if (!dragging) return; const x = (e.touches ? e.touches[0].clientX : e.clientX); pos = startPos + (x - startX); applyTransform(); };
+    const onPointerUp = (e) => { dragging = false; track.classList.remove('dragging'); marquee.releasePointerCapture && marquee.releasePointerCapture(e.pointerId || 1); };
 
     marquee.addEventListener('pointerdown', onPointerDown, { passive: false });
     window.addEventListener('pointermove', onPointerMove, { passive: false });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
-
     marquee.addEventListener('touchstart', onPointerDown, { passive: false });
     window.addEventListener('touchmove', onPointerMove, { passive: false });
     window.addEventListener('touchend', onPointerUp, { passive: true });
@@ -894,6 +843,5 @@ async function loadTestimonials() {
   }
   document.addEventListener('keydown', __ppEscHandler);
 document.addEventListener('DOMContentLoaded', loadTestimonials);
-// ===== END: Testimonials =====
 
 })();
