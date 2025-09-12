@@ -108,7 +108,7 @@
 
       <section id="viewHome" class="view-section active" aria-label="Home">
         <div class="home-banner-container">
-          <img src="home-banner.jpg" alt="PlayPal.ID Banner" class="home-banner-img">
+          <img src="home-banner.webp" alt="PlayPal.ID Banner" class="home-banner-img">
         </div>
         <div class="head-block" data-rail>
           <div class="topbar" data-rail>
@@ -201,7 +201,7 @@
             <div class="topbar-grid" style="grid-template-columns: 1fr;">
                 <div class="custom-select-wrapper" id="accountCustomSelectWrapper">
                   <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                    <span id="accountCustomSelectValue">Memuat akun...</span>
+                    <span id="accountCustomSelectValue">Pilih Kategori Akun</span>
                     <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                   </button>
                   <div class="custom-select-options" id="accountCustomSelectOptions" role="listbox"></div>
@@ -209,6 +209,8 @@
             </div>
         </div>
         
+        <div id="accountListContainer" class="list-container" data-rail></div>
+
         <div id="accountDisplay" class="account-display-card" style="display: none;" data-rail>
           <div class="carousel-container">
             <div id="carouselTrack" class="carousel-track"></div>
@@ -239,13 +241,14 @@
             </div>
           </div>
         </div>
-        <div id="accountEmpty" class="empty" data-rail>
-          <div class="empty-content">
-            <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-            </svg>
-            <p>Pilih akun dari daftar di atas untuk melihat detail.</p>
-          </div>
+
+        <div id="accountEmpty" class="empty" style="display: none;" data-rail>
+            <div class="empty-content">
+              <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <p>Tidak ada akun dalam kategori ini atau data sedang dimuat.</p>
+            </div>
         </div>
         <section id="accountError" class="err" style="display:none" data-rail></section>
       </section>
@@ -321,7 +324,7 @@
 
 
   <section id="testimonialSection" class="testi-wrap" aria-label="Testimoni pelanggan">
-    <h2 class="testi-title">Apa kata mereka</h2>
+    <h2 class="testi-title">2.137 Ulasan Terverifikasi. — 4,8/5</h2>
     <div class="testi-marquee" aria-live="off">
       <ul id="testiTrack" class="testi-track" aria-hidden="true"></ul>
     </div>
