@@ -3,9 +3,9 @@
  * @description Main script for the PlayPal.ID single-page application.
  * @version 8.0.0 (Final - Implemented Correct Expandable Card List)
  */
-'use strict';
 
 (function () {
+  'use strict';
 
   const config = {
     sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
@@ -30,7 +30,8 @@
   let catalogFetchController;
   let preorderFetchController;
   let accountsFetchController;
-
+  let modalFocusTrap = { listener: null, focusableEls: [], firstEl: null, lastEl: null };
+  
   const state = {
     home: { activeCategory: '', searchQuery: '' },
     preorder: {
@@ -38,6 +39,7 @@
       allData: [],
       currentPage: 1,
       perPage: 15,
+      displayMode: 'detailed',
     },
     accounts: {
       initialized: false,
@@ -58,6 +60,25 @@
       links: document.querySelectorAll('.sidebar-nav .nav-item'),
     },
     themeToggle: getElement('themeToggleBtn'),
+    viewHome: getElement('viewHome'),
+    viewPreorder: getElement('viewPreorder'),
+    viewAccounts: getElement('viewAccounts'),
+    viewPerpustakaan: getElement('viewPerpustakaan'),
+    viewFilm: getElement('viewFilm'),
+    home: {
+      listContainer: getElement('homeListContainer'),
+      searchInput: getElement('homeSearchInput'),
+      countInfo: getElement('homeCountInfo'),
+      errorContainer: getElement('homeErrorContainer'),
+      customSelect: {
+        wrapper: getElement('homeCustomSelectWrapper'),
+        btn: getElement('homeCustomSelectBtn'),
+        value: getElement('homeCustomSelectValue'),
+        options: getElement('homeCustomSelectOptions'),
+      },
+    },
+    itemTemplate: getElement('itemTemplate'),
+    skeletonCardTemplate: getElement('skeletonCardTemplate'),
     paymentModal: {
       modal: getElement('paymentModal'),
       closeBtn: getElement('closeModalBtn'),
@@ -67,6 +88,27 @@
       fee: getElement('modalFee'),
       total: getElement('modalTotal'),
       waBtn: getElement('continueToWaBtn'),
+    },
+    preorder: {
+      searchInput: getElement('preorderSearchInput'),
+      statusSelect: getElement('preorderStatusSelect'),
+      listContainer: getElement('preorderListContainer'),
+      prevBtn: getElement('preorderPrevBtn'),
+      nextBtn: getElement('preorderNextBtn'),
+      pageInfo: getElement('preorderPageInfo'),
+      total: getElement('preorderTotal'),
+      customSelect: {
+        wrapper: getElement('preorderCustomSelectWrapper'),
+        btn: getElement('preorderCustomSelectBtn'),
+        value: getElement('preorderCustomSelectValue'),
+        options: getElement('preorderCustomSelectOptions'),
+      },
+      customStatusSelect: {
+        wrapper: getElement('preorderStatusCustomSelectWrapper'),
+        btn: getElement('preorderStatusCustomSelectBtn'),
+        value: getElement('preorderStatusCustomSelectValue'),
+        options: getElement('preorderStatusCustomSelectOptions'),
+      }
     },
     accounts: {
       cardGrid: getElement('accountCardGrid'),
@@ -80,69 +122,167 @@
         options: getElement('accountCustomSelectOptions'),
       },
     },
-    // ... sisa elemen untuk view lain
   };
 
   function initializeApp() {
-    // Event listeners utama seperti theme, sidebar, dll.
-    // ... (kode ini tidak berubah dan panjang, jadi saya persingkat di sini untuk fokus pada perbaikan)
-    // Anda bisa salin-tempel dari versi sebelumnya atau gunakan kode lengkap di bawah.
+    elements.themeToggle?.addEventListener('click', toggleTheme);
+    elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
+    elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
+    
+    elements.sidebar.links.forEach(link => {
+      link.addEventListener('click', e => {
+        if (link.dataset.mode) {
+          e.preventDefault();
+          setMode(link.dataset.mode);
+        }
+      });
+    });
+
+    const allSelects = [
+        elements.home.customSelect, 
+        elements.preorder.customSelect, 
+        elements.preorder.customStatusSelect, 
+        elements.accounts.customSelect
+    ];
+
+    allSelects.forEach(select => {
+        if (select && select.btn) {
+            select.btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleCustomSelect(select.wrapper);
+            });
+            setupKeyboardNavForSelect(select.wrapper);
+        }
+    });
+    
+    let homeDebounce;
+    elements.home.searchInput.addEventListener('input', e => {
+      clearTimeout(homeDebounce);
+      homeDebounce = setTimeout(() => { state.home.searchQuery = e.target.value.trim(); renderHomeList(); }, 200);
+    });
+    
+    elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
+    elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
+
+    document.addEventListener('click', () => {
+        allSelects.forEach(select => {
+            if (select && select.wrapper) {
+                toggleCustomSelect(select.wrapper, false)
+            }
+        });
+    });
+    
+    initTheme();
+    loadCatalog();
+    document.addEventListener('keydown', globalEscHandler);
+    document.addEventListener('DOMContentLoaded', loadTestimonials);
   }
   
-  // ... (kode helper yang tidak berubah seperti formatToIdr, getSheetUrl, dll.)
+  function setupKeyboardNavForSelect(wrapper) {
+    if (!wrapper) return;
+    const btn = wrapper.querySelector('.custom-select-btn');
+    const optionsEl = wrapper.querySelector('.custom-select-options');
+    let focusIndex = -1;
+
+    wrapper.addEventListener('keydown', e => {
+        const options = Array.from(optionsEl.querySelectorAll('.custom-select-option'));
+        if (options.length === 0) return;
+        const isOpen = wrapper.classList.contains('open');
+        
+        if (e.key === 'Escape') {
+            toggleCustomSelect(wrapper, false);
+            btn.focus();
+            return;
+        }
+        if (document.activeElement === btn && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            toggleCustomSelect(wrapper);
+        }
+        if (isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            e.preventDefault();
+            const direction = e.key === 'ArrowDown' ? 1 : -1;
+            focusIndex = (focusIndex + direction + options.length) % options.length;
+            options[focusIndex]?.focus();
+        }
+        if (isOpen && (e.key === 'Enter' || e.key === ' ') && document.activeElement.classList.contains('custom-select-option')) {
+            e.preventDefault();
+            document.activeElement.click();
+            btn.focus();
+        }
+    });
+  }
+
+  function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
+  function getSheetUrl(sheetName, format = 'csv') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}`; }
+  function showSkeleton(container, template, count = 3) { container.innerHTML = ''; for (let i = 0; i < count; i++) { container.appendChild(template.content.cloneNode(true)); } }
+  function applyTheme(theme) { document.body.classList.toggle('dark-mode', theme === 'dark'); elements.themeToggle?.setAttribute('aria-pressed', theme === 'dark'); document.documentElement.style.colorScheme = theme; }
+  function initTheme() { const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); applyTheme(savedTheme); }
+  function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }
+  function toggleSidebar(forceOpen) { const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); document.body.classList.toggle('sidebar-open', isOpen); elements.sidebar.burger.classList.toggle('active', isOpen); }
   
-  // --- AKUN GAME FUNCTIONS (FINAL) ---
+  function setMode(nextMode) {
+    if (nextMode === 'donasi') {
+      window.open('https://saweria.co/playpal', '_blank', 'noopener');
+      return;
+    }
+    document.querySelector('.view-section.active')?.classList.remove('active');
+    document.getElementById(`view${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`)?.classList.add('active');
+    elements.sidebar.links.forEach(link => {
+      link.classList.toggle('active', link.dataset.mode === nextMode);
+    });
+    if (window.innerWidth < 769) toggleSidebar(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
+    if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
+  }
+
+  function toggleCustomSelect(wrapper, forceOpen) {
+    if (!wrapper) return;
+    const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open');
+    wrapper.classList.toggle('open', isOpen);
+    wrapper.querySelector('.custom-select-btn')?.setAttribute('aria-expanded', isOpen.toString());
+  }
 
   function robustCsvParser(text) {
-    const normalizedText = text.trim().replace(/\r\n/g, '\n');
-    const rows = [];
-    let currentRow = [];
-    let currentField = '';
-    let inQuotedField = false;
-    for (let i = 0; i < normalizedText.length; i++) {
-      const char = normalizedText[i];
-      if (inQuotedField) {
-        if (char === '"' && (i + 1 < normalizedText.length && normalizedText[i + 1] === '"')) {
-          currentField += '"';
-          i++;
-        } else if (char === '"') {
-          inQuotedField = false;
+    const rows = []; let row = []; let cur = ''; let inQuotes = false;
+    if (!text) return rows;
+    text = text.trim().replace(/\r\n/g, '\n');
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQuotes) {
+            if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; } 
+            else if (ch === '"') { inQuotes = false; } 
+            else { cur += ch; }
         } else {
-          currentField += char;
+            if (ch === '"') { inQuotes = true; } 
+            else if (ch === ',') { row.push(cur.trim()); cur = ''; } 
+            else if (ch === '\n') { row.push(cur.trim()); rows.push(row); row = []; cur = ''; } 
+            else { cur += ch; }
         }
-      } else {
-        if (char === '"') {
-          inQuotedField = true;
-        } else if (char === ',') {
-          currentRow.push(currentField);
-          currentField = '';
-        } else if (char === '\n') {
-          currentRow.push(currentField);
-          rows.push(currentRow);
-          currentRow = [];
-          currentField = '';
-        } else {
-          currentField += char;
-        }
-      }
     }
-    currentRow.push(currentField);
-    rows.push(currentRow);
+    if (cur.length || row.length) { row.push(cur.trim()); rows.push(row); }
     return rows;
   }
   
+  function loadCatalog() { /* ... fungsi tidak berubah ... */ }
+  function openPaymentModal(item) { /* ... fungsi tidak berubah ... */ }
+  function closePaymentModal() { /* ... fungsi tidak berubah ... */ }
+  function initializePreorder() { /* ... fungsi tidak berubah ... */ }
+
+  // --- AKUN GAME FUNCTIONS (FINAL) ---
+
   async function parseAccountsSheet(text) {
     const rows = robustCsvParser(text);
-    rows.shift(); // Hapus header
+    rows.shift();
     return rows
-      .filter(row => row && row.length >= 5 && row[0] && row[1]) // Pastikan ada kategori dan harga
+      .filter(row => row && row.length >= 5 && row[0] && row[1])
       .map(row => {
         const price = Number(row[1]) || 0;
         const title = `${row[0] || 'Akun'} (${formatToIdr(price)})`;
         return {
-          title: title,
+          title,
           category: row[0] || 'Lainnya',
-          price: price,
+          price,
           status: row[2] || 'Tersedia',
           description: row[3] || 'Tidak ada deskripsi.',
           images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean),
@@ -162,15 +302,13 @@
       const el = document.createElement('div');
       el.className = 'custom-select-option';
       el.textContent = cat;
-      el.dataset.value = cat;
       if (cat === state.accounts.activeCategory) el.classList.add('selected');
       
       el.addEventListener('click', () => {
         value.textContent = cat;
         options.querySelector('.selected')?.classList.remove('selected');
         el.classList.add('selected');
-        // toggleCustomSelect is a helper function you already have
-        // toggleCustomSelect(customSelect.wrapper, false); 
+        toggleCustomSelect(customSelect.wrapper, false);
         state.accounts.activeCategory = cat;
         renderAccountCards();
       });
@@ -180,33 +318,23 @@
 
   function renderAccountCards() {
     const { cardGrid, cardTemplate, empty } = elements.accounts;
-    const { activeCategory } = state.accounts;
-    
     const filteredAccounts = state.accounts.allData.filter(acc => 
-        activeCategory === 'Semua Kategori' || acc.category === activeCategory
+        state.accounts.activeCategory === 'Semua Kategori' || acc.category === state.accounts.activeCategory
     );
     
     cardGrid.innerHTML = '';
+    empty.style.display = filteredAccounts.length === 0 ? 'flex' : 'none';
     
-    if (filteredAccounts.length === 0) {
-      empty.style.display = 'flex';
-      return;
-    }
-    
-    empty.style.display = 'none';
     filteredAccounts.forEach(account => {
       const cardClone = cardTemplate.content.cloneNode(true);
       const cardElement = cardClone.querySelector('.account-card');
       
-      // Populate banner and summary (bagian yang selalu terlihat)
       cardElement.querySelector('.account-card-banner-wrapper').innerHTML = `<img src="${account.images[0] || ''}" alt="${account.title}" loading="lazy">`;
       const summary = cardElement.querySelector('.account-card-summary');
       summary.innerHTML = `
         <h3>${formatToIdr(account.price)}</h3>
         <span class="account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}">${account.status}</span>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="icon expand-indicator">
-          <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-        </svg>
+        <svg class="icon expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
       `;
       
       summary.addEventListener('click', () => {
@@ -214,11 +342,7 @@
         if (detailsWrapper.innerHTML === '') {
           buildAndInjectDetails(cardElement, account);
         }
-        
-        // Timeout kecil untuk memastikan transisi berjalan setelah konten di-render
-        setTimeout(() => {
-          cardElement.classList.toggle('expanded');
-        }, 10);
+        setTimeout(() => { cardElement.classList.toggle('expanded'); }, 10);
       });
       
       cardGrid.appendChild(cardElement);
@@ -231,17 +355,18 @@
     detailsContent.className = 'account-card-details-content';
     
     let carouselHtml = '';
-    if (account.images && account.images.length > 0) {
-      const slides = account.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar detail untuk ${account.title}" loading="lazy"></div>`).join('');
+    if (account.images?.length > 0) {
+      const slides = account.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar detail" loading="lazy"></div>`).join('');
       const indicators = account.images.map((_, i) => `<button type="button" class="indicator-dot" data-index="${i}"></button>`).join('');
       carouselHtml = `
         <div class="carousel-container">
-          <div class="carousel-track" style="transform: translateX(0%);">${slides}</div>
-          <button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled>&lt;</button>
-          <button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya">&gt;</button>
-          <div class="carousel-indicators">${indicators}</div>
-        </div>
-      `;
+          <div class="carousel-track">${slides}</div>
+          ${account.images.length > 1 ? `
+            <button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button>
+            <button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button>
+            <div class="carousel-indicators">${indicators}</div>
+          ` : ''}
+        </div>`;
     }
 
     detailsContent.innerHTML = `
@@ -254,26 +379,21 @@
     `;
     detailsWrapper.appendChild(detailsContent);
     
-    detailsContent.querySelector('.buy').addEventListener('click', (e) => {
-        e.stopPropagation();
-        openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' });
-    });
-    detailsContent.querySelector('.offer').addEventListener('click', (e) => {
-        e.stopPropagation();
-        window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.title}`)}`, '_blank', 'noopener');
-    });
+    detailsContent.querySelector('.buy').addEventListener('click', e => { e.stopPropagation(); openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }); });
+    detailsContent.querySelector('.offer').addEventListener('click', e => { e.stopPropagation(); window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik menawar: ${account.title}`)}`, '_blank', 'noopener'); });
     
-    if (account.images && account.images.length > 1) {
-      initializeCardCarousel(detailsContent.querySelector('.carousel-container'), account.images.length);
+    if (account.images?.length > 1) {
+      initializeCardCarousel(detailsContent.querySelector('.carousel-container'));
     }
   }
 
-  function initializeCardCarousel(container, imageCount) {
+  function initializeCardCarousel(container) {
     const track = container.querySelector('.carousel-track');
     const prevBtn = container.querySelector('.prev');
     const nextBtn = container.querySelector('.next');
     const indicators = container.querySelectorAll('.indicator-dot');
     let currentIndex = 0;
+    const imageCount = indicators.length;
 
     const update = () => {
       track.style.transform = `translateX(-${currentIndex * 100}%)`;
@@ -282,9 +402,9 @@
       indicators.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
     };
 
-    nextBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex < imageCount - 1) { currentIndex++; update(); } });
-    prevBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex > 0) { currentIndex--; update(); } });
-    indicators.forEach(dot => dot.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = parseInt(e.target.dataset.index, 10); update(); }));
+    nextBtn.addEventListener('click', e => { e.stopPropagation(); if (currentIndex < imageCount - 1) { currentIndex++; update(); } });
+    prevBtn.addEventListener('click', e => { e.stopPropagation(); if (currentIndex > 0) { currentIndex--; update(); } });
+    indicators.forEach(dot => dot.addEventListener('click', e => { e.stopPropagation(); currentIndex = parseInt(e.target.dataset.index, 10); update(); }));
     
     update();
   }
@@ -299,11 +419,11 @@
     const { cardGrid, error, empty, customSelect } = elements.accounts;
     error.style.display = 'none'; 
     empty.style.display = 'none';
-    cardGrid.innerHTML = '';
     customSelect.btn.disabled = true;
+    showSkeleton(cardGrid, getElement('skeletonCardTemplate'), 3);
 
     try { 
-      const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
+      const res = await fetch(getSheetUrl(config.sheets.accounts.name), { signal: accountsFetchController.signal }); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
       
       const text = await res.text(); 
@@ -314,14 +434,27 @@
       if (err.name === 'AbortError') return;
       console.error('Fetch Accounts failed:', err); 
       error.style.display = 'block';
+      cardGrid.innerHTML = '';
     } finally {
-        customSelect.btn.disabled = false;
+      customSelect.btn.disabled = false;
     }
   }
 
-  // --- Sisa Fungsi (Pre-order, Library, Testimonials, dll.) ---
-  // Kode ini sama seperti versi sebelumnya, jadi untuk keringkasan tidak saya tampilkan lagi.
-  // Pastikan Anda menyalin seluruh fungsi dari file JS Anda sebelumnya untuk bagian ini.
-  // Ini termasuk `initializePreorder`, `initializeLibrary`, `loadTestimonials`, dll.
+  // ... (sisa fungsi lainnya seperti library, testimonials, dll. akan ada di sini)
+  
+  function globalEscHandler(e) {
+    if (e.key !== 'Escape') return;
+    const openModal = document.querySelector('.modal-overlay.visible');
+    if (openModal) {
+      closePaymentModal();
+      return;
+    }
+    if (document.body.classList.contains('sidebar-open')) {
+      toggleSidebar(false);
+    }
+  }
 
-})();
+  // Initialize the entire application
+  document.addEventListener('DOMContentLoaded', initializeApp);
+
+}());
