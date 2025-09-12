@@ -209,45 +209,14 @@
             </div>
         </div>
         
-        <div id="accountListContainer" class="list-container" data-rail></div>
-
-        <div id="accountDisplay" class="account-display-card" style="display: none;" data-rail>
-          <div class="carousel-container">
-            <div id="carouselTrack" class="carousel-track"></div>
-            <button id="carouselPrevBtn" class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-            </button>
-            <button id="carouselNextBtn" class="carousel-btn next" type="button" aria-label="Gambar selanjutnya">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-            </button>
-            <div id="carouselIndicators" class="carousel-indicators"></div>
-          </div>
-          <div class="account-details">
-            <div class="account-header">
-              <h2 id="accountPrice" class="account-price"></h2>
-              <div class="account-header-right">
-                <span id="accountStatus" class="account-status-badge"></span>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator">
-                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div id="accountDescriptionContainer" class="account-description-container">
-               <p id="accountDescription"></p>
-               <div class="account-actions">
-                  <button id="buyAccountBtn" type="button" class="action-btn buy">Beli Sekarang</button>
-                  <button id="offerAccountBtn" type="button" class="action-btn offer">Tawar Harga</button>
-               </div>
-            </div>
-          </div>
-        </div>
-
+        <div id="accountCardGrid" class="account-card-grid" data-rail></div>
+        
         <div id="accountEmpty" class="empty" style="display: none;" data-rail>
             <div class="empty-content">
               <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>
-              <p>Tidak ada akun dalam kategori ini atau data sedang dimuat.</p>
+              <p>Tidak ada akun dalam kategori ini.</p>
             </div>
         </div>
         <section id="accountError" class="err" style="display:none" data-rail></section>
@@ -298,6 +267,15 @@
       <div class="skeleton-text" style="width: 65%; height: 12px; margin-top: 10px;"></div>
     </div>
   </template>
+
+  <template id="accountCardTemplate">
+    <article class="account-card" tabindex="0">
+      <div class="account-card-main-content">
+        </div>
+      <div class="account-card-details-wrapper">
+        </div>
+    </article>
+  </template>
   
   <div id="paymentModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
@@ -329,7 +307,6 @@
       <ul id="testiTrack" class="testi-track" aria-hidden="true"></ul>
     </div>
   </section>
-
 
 </body>
 </html>
