@@ -484,6 +484,7 @@ body.dark-mode .icon-moon {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: var(--sp-fib-5);
+  margin-top: var(--sp-fib-5);
 }
 .list-item {
   display: flex;
@@ -690,10 +691,9 @@ body.dark-mode .icon-moon {
   border: 1px solid var(--separator);
   border-radius: var(--radius-fib-large);
   box-shadow: var(--shadow-sm);
-  cursor: pointer;
   transition: transform var(--duration-fast), box-shadow var(--duration-fast);
 }
-.account-display-card:hover {
+.account-display-card:not(.no-hover):hover {
   box-shadow: 0 8px 21px rgba(48, 57, 82, 0.12);
   transform: translateY(-5px);
 }
@@ -795,6 +795,7 @@ body.dark-mode .icon-moon {
 }
 .account-details {
   padding: var(--sp-fib-5);
+  cursor: pointer;
 }
 .account-header {
   display: flex;
@@ -883,6 +884,7 @@ body.dark-mode .icon-moon {
   border: 1px dashed var(--separator);
   border-radius: var(--radius-fib-large);
   text-align: center;
+  margin-top: var(--sp-fib-5);
 }
 .empty-content {
   display: flex;
@@ -1277,6 +1279,7 @@ body.sidebar-open .sidebar {
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.02em;
+  text-align: center;
 }
 .testi-marquee {
   position: relative;
@@ -1287,21 +1290,17 @@ body.sidebar-open .sidebar {
 .testi-track {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   list-style: none;
   padding: 0;
   margin: 0;
-  animation: testi-scroll 45s linear infinite;
   will-change: transform;
 }
 .testi-track:hover { animation-play-state: paused; }
-@keyframes testi-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); } /* duplicate content for loop */
-}
+
 .testi-item {
   flex: 0 0 auto;
-  width: clamp(220px, 30vw, 360px);
+  width: clamp(85px, 23vw, 320px);
   display: grid;
   gap: 8px;
 }
@@ -1332,16 +1331,13 @@ body.sidebar-open .sidebar {
   -webkit-user-select: none; user-select: none;
   touch-action: pan-y; /* allow vertical scroll, we handle horizontal drag */
 }
-.testi-track { 
-  animation: none !important; /* JS controls motion now */
-}
 .testi-track.dragging { cursor: grabbing; }
 
 /* -- Home Banner Styling -- */
 .home-banner-container {
   margin-top: var(--sp-fib-5);
   margin-bottom: var(--sp-fib-5);
-  border-radius: var(--radius-fib-large);
+  border-radius: var(--radius-fib-medium);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   line-height: 0;
