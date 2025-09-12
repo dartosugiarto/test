@@ -1339,7 +1339,7 @@ body.sidebar-open .sidebar {
 
 /* -- Home Banner Styling -- */
 .home-banner-container {
-  margin-top: var(--sp-fib-6);
+  margin-top: var(--sp-fib-5);
   margin-bottom: var(--sp-fib-5);
   border-radius: var(--radius-fib-large);
   overflow: hidden;
