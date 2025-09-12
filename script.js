@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 7.0.0 (Final - Implemented Visual Expandable Card List for Accounts)
+ * @version 7.1.0 (Fixed - Expandable card animation)
  */
 
 (function () {
@@ -466,7 +466,6 @@
           const price = Number(row[1]) || 0;
           const title = `${row[0] || 'Akun'} (${formatToIdr(price)})`;
           return {
-              id: `acc_${Date.now()}_${Math.random()}`,
               title: title,
               category: row[0] || 'Lainnya',
               price: price,
@@ -542,11 +541,18 @@
         </div>
       `;
       
+      // FIXED: Click listener logic
       mainContent.addEventListener('click', () => {
-        const isExpanded = cardElement.classList.toggle('expanded');
-        if (isExpanded) {
+        const detailsWrapper = cardElement.querySelector('.account-card-details-wrapper');
+        // Build details only on the first click
+        if (detailsWrapper.innerHTML === '') {
           buildAndInjectDetails(cardElement, account);
         }
+        // Use a small timeout to allow the browser to render the new content
+        // before adding the 'expanded' class, ensuring the transition works.
+        setTimeout(() => {
+          cardElement.classList.toggle('expanded');
+        }, 10);
       });
       
       fragment.appendChild(cardElement);
@@ -629,7 +635,7 @@
     const { cardGrid, error, empty } = elements.accounts; 
     error.style.display = 'none'; 
     empty.style.display = 'none';
-    cardGrid.innerHTML = ''; // Clear previous content
+    cardGrid.innerHTML = '';
     
     try { 
       const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
