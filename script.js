@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 7.0.0 (Final - Implemented Visual Expandable Card List for Accounts)
+ * @version 8.0.0 (Final - Implemented Accordion Card for Accounts)
  */
 
 (function () {
@@ -577,6 +577,19 @@
       // Menambahkan event listener untuk tombol
       cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
       cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
+
+      // Tambahkan event listener untuk toggle dropdown
+      const trigger = cardElement.querySelector('.account-card-main-info');
+      trigger.addEventListener('click', () => {
+        cardElement.classList.toggle('expanded');
+      });
+      // Tambahkan event listener untuk keyboard (aksesibilitas)
+      trigger.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          cardElement.classList.toggle('expanded');
+        }
+      });
 
       fragment.appendChild(cardElement);
     });
