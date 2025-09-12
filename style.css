@@ -1336,3 +1336,18 @@ body.sidebar-open .sidebar {
   animation: none !important; /* JS controls motion now */
 }
 .testi-track.dragging { cursor: grabbing; }
+
+/* -- Home Banner Styling -- */
+.home-banner-container {
+  margin-bottom: var(--sp-fib-5); /* Memberi jarak ke elemen di bawahnya */
+  border-radius: var(--radius-fib-large); /* Membuat sudut banner tumpul, sesuai tema */
+  overflow: hidden; /* Memastikan gambar tidak keluar dari container */
+  box-shadow: var(--shadow-sm);
+  line-height: 0; /* Menghilangkan spasi ekstra di bawah gambar */
+}
+
+.home-banner-img {
+  width: 100%; /* Membuat gambar memenuhi lebar container */
+  height: auto;
+  display: block; /* Menghilangkan spasi ekstra di bawah gambar */
+}
