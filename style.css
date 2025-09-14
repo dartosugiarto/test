@@ -1086,4 +1086,3 @@ body.sidebar-open .sidebar {
 .action-btn:hover { transform: scale(1.03); }
 .action-btn.buy { background-color: var(--brand-blue); color: #fff; }
 .action-btn.offer { background-color: var(--surface-secondary); color: var(--text-primary); }
-
