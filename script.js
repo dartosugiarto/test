@@ -243,12 +243,11 @@
     const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); 
     document.body.classList.toggle('sidebar-open', isOpen); 
     elements.sidebar.burger.classList.toggle('active', isOpen); 
-    // --- PENYEMPURNAAN: Fokus otomatis pada sidebar ---
     if (isOpen) {
       setTimeout(() => {
         const firstFocusableEl = elements.sidebar.nav.querySelector('button, [href]');
         firstFocusableEl?.focus();
-      }, 350); // Sesuaikan dengan durasi transisi CSS
+      }, 350); 
     }
   }
   
@@ -291,14 +290,13 @@
       return; 
     } 
     const fragment = document.createDocumentFragment(); 
-    items.forEach((item, index) => { // --- PENYEMPURNAAN: Tambahkan index untuk delay
+    items.forEach((item, index) => {
       const clone = elements.itemTemplate.content.cloneNode(true); 
       const buttonEl = clone.querySelector('.list-item'); 
       buttonEl.querySelector('.title').textContent = item.title; 
       buttonEl.querySelector('.price').textContent = formatToIdr(item.price); 
       buttonEl.addEventListener('click', () => openPaymentModal(item)); 
       
-      // --- PENYEMPURNAAN: Terapkan animation delay ---
       buttonEl.style.animationDelay = `${index * 50}ms`;
 
       fragment.appendChild(clone); 
@@ -379,7 +377,6 @@
     };
     modal.addEventListener('keydown', modalFocusTrap.listener);
     
-    // --- PENYEMPURNAAN: Fokus otomatis pada modal ---
     setTimeout(() => closeBtn.focus(), 100);
   }
 
@@ -566,7 +563,6 @@
       const cardClone = cardTemplate.content.cloneNode(true);
       const cardElement = cardClone.querySelector('.account-card');
       
-      // Mengisi Carousel
       const carouselWrapper = cardElement.querySelector('.account-card-carousel-wrapper');
       if (account.images && account.images.length > 0) {
         const carouselContainer = document.createElement('div');
@@ -589,14 +585,12 @@
         carouselWrapper.appendChild(carouselContainer);
       }
 
-      // Mengisi Info Utama (Harga & Status)
       cardElement.querySelector('h3').textContent = formatToIdr(account.price);
       const statusBadge = cardElement.querySelector('.account-status-badge');
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
 
-      // --- PENYEMPURNAAN: Mengisi Spesifikasi dengan wrapper baru untuk transisi grid ---
-      const specsContainer = cardElement.querySelector('.account-card-details-inner');
+      const detailsInnerContainer = cardElement.querySelector('.account-card-details-inner');
       const specsList = document.createElement('ul');
       specsList.className = 'specs-list';
       const specs = account.description.split('\n');
@@ -617,14 +611,12 @@
         <button type="button" class="action-btn offer">Tawar Harga</button>
       `;
       
-      specsContainer.appendChild(specsList);
-      specsContainer.appendChild(actionsDiv);
+      detailsInnerContainer.appendChild(specsList);
+      detailsInnerContainer.appendChild(actionsDiv);
 
-      // Menambahkan event listener untuk tombol
-      specsContainer.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
-      specsContainer.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
+      detailsInnerContainer.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
+      detailsInnerContainer.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
 
-      // Tambahkan event listener untuk toggle dropdown
       const trigger = cardElement.querySelector('.account-card-main-info');
       trigger.addEventListener('click', () => {
         cardElement.classList.toggle('expanded');
@@ -641,7 +633,6 @@
 
     cardGrid.appendChild(fragment);
 
-    // Inisialisasi semua carousel setelah ditambahkan ke DOM
     cardGrid.querySelectorAll('.carousel-container').forEach(carouselContainer => {
       const imageCount = carouselContainer.querySelectorAll('.carousel-slide').length;
       if (imageCount > 1) {
@@ -697,8 +688,6 @@
     state.accounts.initialized = true; 
   }
 
-  // --- START: Library Functions ---
-
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
@@ -738,8 +727,6 @@
     container.appendChild(fragment);
   }
   
-  // --- END: Library Functions ---
-
   const originalSetMode = setMode;
   setMode = function(nextMode) {
     originalSetMode(nextMode); 
@@ -750,7 +737,6 @@
   
   document.addEventListener('DOMContentLoaded', initializeApp);
 
-  // ===== BEGIN: Testimonials (Sheet7: Nama | MediaURL) =====
 function pp_csvParse(text) {
   const rows = []; let row = []; let cur = ''; let inQuotes = false;
   for (let i=0; i<text.length; i++) {
