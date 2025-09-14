@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 8.0.0 (Final - Implemented Accordion Card for Accounts)
+ * @version 8.1.0 (Final - Implemented UI/UX Detail Enhancements)
  */
 
 (function () {
@@ -238,7 +238,19 @@
   function applyTheme(theme) { document.body.classList.toggle('dark-mode', theme === 'dark'); const btn = elements.themeToggle; if (btn) btn.setAttribute('aria-pressed', theme === 'dark'); document.documentElement.style.colorScheme = (theme === 'dark') ? 'dark' : 'light'; }
   function initTheme() { const savedTheme = localStorage.getItem('theme'); const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light'); applyTheme(currentTheme); }
   function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }
-  function toggleSidebar(forceOpen) { const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); document.body.classList.toggle('sidebar-open', isOpen); elements.sidebar.burger.classList.toggle('active', isOpen); }
+  
+  function toggleSidebar(forceOpen) { 
+    const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); 
+    document.body.classList.toggle('sidebar-open', isOpen); 
+    elements.sidebar.burger.classList.toggle('active', isOpen); 
+    // --- PENYEMPURNAAN: Fokus otomatis pada sidebar ---
+    if (isOpen) {
+      setTimeout(() => {
+        const firstFocusableEl = elements.sidebar.nav.querySelector('button, [href]');
+        firstFocusableEl?.focus();
+      }, 350); // Sesuaikan dengan durasi transisi CSS
+    }
+  }
   
   let setMode = function(nextMode) {
     if (nextMode === 'donasi') {
@@ -270,7 +282,31 @@
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
   function buildHomeCategorySelect(catalogData) { const { options, value } = elements.home.customSelect; const categoryMap = new Map(); catalogData.forEach(item => { if (!categoryMap.has(item.catKey)) { categoryMap.set(item.catKey, item.catLabel); } }); const categories = [...categoryMap].map(([key, label]) => ({ key, label })); options.innerHTML = ''; categories.forEach((cat, index) => { const el = document.createElement('div'); el.className = 'custom-select-option'; el.textContent = cat.label; el.dataset.value = cat.key; el.setAttribute('role', 'option'); el.setAttribute('tabindex', '-1'); if (index === 0) el.classList.add('selected'); el.addEventListener('click', () => { state.home.activeCategory = cat.key; value.textContent = cat.label; document.querySelector('#homeCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected'); el.classList.add('selected'); toggleCustomSelect(elements.home.customSelect.wrapper, false); renderHomeList(); }); options.appendChild(el); }); if (categories.length > 0) { state.home.activeCategory = categories[0].key; value.textContent = categories[0].label; } else { value.textContent = 'Data tidak tersedia'; } }
-  function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
+  
+  function renderList(container, countInfoEl, items, emptyText) { 
+    container.innerHTML = ''; 
+    if (items.length === 0) { 
+      container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; 
+      countInfoEl.textContent = ''; 
+      return; 
+    } 
+    const fragment = document.createDocumentFragment(); 
+    items.forEach((item, index) => { // --- PENYEMPURNAAN: Tambahkan index untuk delay
+      const clone = elements.itemTemplate.content.cloneNode(true); 
+      const buttonEl = clone.querySelector('.list-item'); 
+      buttonEl.querySelector('.title').textContent = item.title; 
+      buttonEl.querySelector('.price').textContent = formatToIdr(item.price); 
+      buttonEl.addEventListener('click', () => openPaymentModal(item)); 
+      
+      // --- PENYEMPURNAAN: Terapkan animation delay ---
+      buttonEl.style.animationDelay = `${index * 50}ms`;
+
+      fragment.appendChild(clone); 
+    });
+    container.appendChild(fragment); 
+    countInfoEl.textContent = `${items.length} item ditemukan`; 
+  }
+  
   function renderHomeList() { const { activeCategory, searchQuery } = state.home; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada item ditemukan.'); }
   
   async function loadCatalog() { 
@@ -304,10 +340,12 @@
   function updatePriceDetails() { const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value; if (!selectedOptionId) return; const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId); if (!currentSelectedItem || !selectedOption) return; const price = currentSelectedItem.price; const fee = calculateFee(price, selectedOption); const total = price + fee; elements.paymentModal.fee.textContent = formatToIdr(fee); elements.paymentModal.total.textContent = formatToIdr(total); updateWaLink(selectedOption, fee, total); }
   function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `› Tipe: ${catLabel}`, `› Item: ${title}`, `› Pembayaran: ${option.name}`, `› Harga: ${formatToIdr(price)}`, `› Fee: ${formatToIdr(fee)}`, `› Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
   
-  function openPaymentModal(item) { document.documentElement.style.overflow = "hidden"; document.body.style.overflow = "hidden";
+  function openPaymentModal(item) { 
+    document.documentElement.style.overflow = "hidden"; 
+    document.body.style.overflow = "hidden";
     elementToFocusOnModalClose = document.activeElement;
     currentSelectedItem = item;
-    const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal;
+    const { modal, itemName, itemPrice, optionsContainer, closeBtn } = elements.paymentModal;
     itemName.textContent = item.title;
     itemPrice.textContent = formatToIdr(item.price);
     optionsContainer.innerHTML = '';
@@ -340,7 +378,9 @@
       }
     };
     modal.addEventListener('keydown', modalFocusTrap.listener);
-    setTimeout(() => modalFocusTrap.firstEl.focus(), 100);
+    
+    // --- PENYEMPURNAAN: Fokus otomatis pada modal ---
+    setTimeout(() => closeBtn.focus(), 100);
   }
 
   function closePaymentModal() { document.documentElement.style.overflow = ""; document.body.style.overflow = "";
@@ -555,35 +595,40 @@
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
 
-      // Mengisi Spesifikasi
-      const specsContainer = cardElement.querySelector('.account-card-specs');
+      // --- PENYEMPURNAAN: Mengisi Spesifikasi dengan wrapper baru untuk transisi grid ---
+      const specsContainer = cardElement.querySelector('.account-card-details-inner');
       const specsList = document.createElement('ul');
       specsList.className = 'specs-list';
-      // Memecah deskripsi dari Google Sheet menggunakan baris baru ('\n')
       const specs = account.description.split('\n');
       specs.forEach(spec => {
         const trimmedSpec = spec.trim();
         if (trimmedSpec === '') {
-          // Jika item kosong (hasil dari baris baru ganda), buat sebagai pemisah
           specsList.innerHTML += `<li class="spec-divider"></li>`;
         } else {
-          // Cek apakah item adalah judul 
           const isTitle = ['Spesifikasi Akun', 'Pengaturan Akun', 'Kontak Penjual'].some(title => trimmedSpec.startsWith(title));
           specsList.innerHTML += `<li class="${isTitle ? 'spec-title' : 'spec-item'}">${trimmedSpec}</li>`;
         }
       });
+
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'account-card-actions';
+      actionsDiv.innerHTML = `
+        <button type="button" class="action-btn buy">Beli Sekarang</button>
+        <button type="button" class="action-btn offer">Tawar Harga</button>
+      `;
+      
       specsContainer.appendChild(specsList);
+      specsContainer.appendChild(actionsDiv);
 
       // Menambahkan event listener untuk tombol
-      cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
-      cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
+      specsContainer.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
+      specsContainer.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
 
       // Tambahkan event listener untuk toggle dropdown
       const trigger = cardElement.querySelector('.account-card-main-info');
       trigger.addEventListener('click', () => {
         cardElement.classList.toggle('expanded');
       });
-      // Tambahkan event listener untuk keyboard (aksesibilitas)
       trigger.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -600,7 +645,6 @@
     cardGrid.querySelectorAll('.carousel-container').forEach(carouselContainer => {
       const imageCount = carouselContainer.querySelectorAll('.carousel-slide').length;
       if (imageCount > 1) {
-        // Logika inisialisasi carousel
         const track = carouselContainer.querySelector('.carousel-track');
         const prevBtn = carouselContainer.querySelector('.prev');
         const nextBtn = carouselContainer.querySelector('.next');
@@ -631,7 +675,7 @@
     const { cardGrid, error, empty } = elements.accounts; 
     error.style.display = 'none'; 
     empty.style.display = 'none';
-    cardGrid.innerHTML = ''; // Clear previous content
+    cardGrid.innerHTML = '';
     
     try { 
       const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
