@@ -39,7 +39,6 @@
   --duration-fast: 0.21s;
   --duration-natural: 0.34s;
   --duration-smooth: 0.55s;
-  /* --- PENYEMPURNAAN: Easing functions baru --- */
   --ease-natural: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-in-quad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
@@ -115,7 +114,6 @@ p {
   border-right: none;
   padding: var(--sp-fib-5);
   transform: translateX(100%);
-  /* --- PENYEMPURNAAN: Gunakan easing baru --- */
   transition: transform var(--duration-natural) var(--ease-out-quad);
   display: flex;
   flex-direction: column;
@@ -422,7 +420,6 @@ body.dark-mode .icon-moon {
   transform: translateY(calc(-1 * var(--sp-fib-3)));
   transition: opacity var(--duration-fast) var(--ease-natural), transform var(--duration-fast) var(--ease-natural);
 }
-/* --- PENYEMPURNAAN: Scrollbar kustom --- */
 .custom-select-options::-webkit-scrollbar {
   width: 8px;
 }
@@ -501,7 +498,6 @@ body.dark-mode .icon-moon {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: var(--sp-fib-5);
 }
-/* --- PENYEMPURNAAN: Staggered Animation --- */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -528,8 +524,7 @@ body.dark-mode .icon-moon {
   text-decoration: none;
   cursor: pointer;
   transition: transform var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast);
-  /* properti untuk staggered animation */
-  opacity: 0; /* Mulai dari tidak terlihat */
+  opacity: 0;
   animation: fadeInUp 0.5s var(--ease-out-quad) forwards;
   will-change: transform, opacity;
 }
@@ -580,7 +575,6 @@ body.dark-mode .icon-moon {
   box-shadow: var(--shadow-sm);
   transform: translateY(-5px);
 }
-/* --- PENYEMPURNAAN: Umpan balik klik --- */
 #viewPreorder .card.clickable:active {
   transform: translateY(-2px) scale(0.99);
   box-shadow: none;
@@ -808,7 +802,6 @@ body.dark-mode .skeleton::after {
   -webkit-backdrop-filter: blur(8px);
   opacity: 0;
   pointer-events: none;
-  /* --- PENYEMPURNAAN: Gunakan easing baru --- */
   transition: opacity var(--duration-fast) var(--ease-natural);
 }
 .modal-overlay.visible {
@@ -823,7 +816,6 @@ body.dark-mode .skeleton::after {
   border-radius: var(--radius-fib-large);
   box-shadow: 0 8px 34px rgba(0, 0, 0, 0.15);
   transform: scale(0.95);
-  /* --- PENYEMPURNAAN: Gunakan easing baru --- */
   transition: transform var(--duration-natural) var(--ease-out-quad);
 }
 .modal-overlay.visible .modal-content {
@@ -940,14 +932,11 @@ body.sidebar-open .sidebar {
   box-shadow: var(--shadow-focus);
   border-color: var(--brand-blue);
 }
-
-/* -- Library Grid Styling -- */
 .library-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--sp-fib-4);
 }
-
 .book-card {
   position: relative;
   background: var(--surface-secondary);
@@ -959,15 +948,11 @@ body.sidebar-open .sidebar {
   aspect-ratio: 3 / 4;
   transition: transform var(--duration-fast) ease-in-out;
 }
-
 .book-card:hover { transform: scale(1.05); }
 .book-card .cover { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); }
 .book-card .overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 70%; background: linear-gradient(to top, rgba(0,0,0,0.85), transparent); border-radius: 0 0 var(--radius-fib-medium) var(--radius-fib-medium); }
 .book-card .title { position: absolute; bottom: var(--sp-fib-4); left: var(--sp-fib-4); right: var(--sp-fib-4); font-weight: 700; font-size: 14px; color: #fff; line-height: 1.4; text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 #viewPerpustakaan { padding-top: var(--sp-fib-5); }
-
-
-/* ===== PENYEMPURNAAN: Testimonial Styling dengan Design System ===== */
 .testi-wrap { 
   margin: var(--sp-fib-6) auto; 
   background: var(--surface-primary); 
@@ -1037,12 +1022,8 @@ body.sidebar-open .sidebar {
 .testi-track.dragging { 
   cursor: grabbing; 
 }
-
-/* -- Home Banner Styling -- */
 .home-banner-container { margin-top: var(--sp-fib-5); margin-bottom: var(--sp-fib-5); border-radius: var(--radius-fib-medium); overflow: hidden; box-shadow: var(--shadow-sm); line-height: 0; }
 .home-banner-img { width: 100%; height: auto; display: block; }
-
-/* ===== Carousel Styling (Shared) ===== */
 .carousel-container { position: relative; width: 100%; overflow: hidden; user-select: none; }
 .carousel-container:active { cursor: grabbing; }
 .carousel-track { display: flex; transition: transform var(--duration-natural) var(--ease-natural); }
@@ -1051,7 +1032,6 @@ body.sidebar-open .sidebar {
 .carousel-btn { position: absolute; top: 50%; z-index: 2; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; background-color: rgba(0, 0, 0, 0.35); color: white; opacity: 0; cursor: pointer; transform: translateY(-50%); transition: background-color var(--duration-fast), opacity var(--duration-fast); }
 .carousel-btn svg { width: 24px; height: 24px; }
 .carousel-container:hover .carousel-btn, .carousel-container:focus-within .carousel-btn { opacity: 1; }
-/* --- PENYEMPURNAAN: Afordansi Carousel Mobile --- */
 @media (hover: none) and (pointer: coarse) { .carousel-btn { opacity: 0.7; } }
 .carousel-btn.prev { left: var(--sp-fib-4); }
 .carousel-btn.next { right: var(--sp-fib-4); }
@@ -1060,8 +1040,6 @@ body.sidebar-open .sidebar {
 .carousel-indicators { position: absolute; bottom: var(--sp-fib-4); left: 50%; transform: translateX(-50%); display: flex; gap: var(--sp-fib-3); z-index: 3; }
 .indicator-dot { width: 10px; height: 10px; padding: 0; border-radius: 50%; background-color: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 0, 0, 0.1); cursor: pointer; transition: background-color 0.3s, transform 0.3s; }
 .indicator-dot.active { background-color: #fff; transform: scale(1.2); }
-
-/* ===== PENYEMPURNAAN: KARTU AKUN GAME (Grid Transition Version) ===== */
 .account-card-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -1136,14 +1114,13 @@ body.sidebar-open .sidebar {
 }
 .account-card-details-wrapper {
   display: grid;
-  grid-template-rows: 0fr; /* Awalnya 0fr (tidak terlihat) */
+  grid-template-rows: 0fr;
   transition: grid-template-rows var(--duration-smooth) var(--ease-natural);
 }
 .account-card.expanded .account-card-details-wrapper {
-  grid-template-rows: 1fr; /* Menjadi 1fr saat expanded (terlihat penuh) */
+  grid-template-rows: 1fr;
   margin-top: var(--sp-fib-4);
 }
-/* Wrapper tambahan di dalam wrapper grid untuk mencegah konten 'bleed' saat animasi */
 .account-card-details-inner {
     overflow: hidden;
 }
@@ -1185,4 +1162,3 @@ body.sidebar-open .sidebar {
 .action-btn:hover { transform: scale(1.03); }
 .action-btn.buy { background-color: var(--brand-blue); color: #fff; }
 .action-btn.offer { background-color: var(--surface-secondary); color: var(--text-primary); }
-
