@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 8.0.0 (Final - Implemented Accordion Card for Accounts)
+ * @version 8.1.0 (Final - Implemented Client-Side Routing)
  */
 
 (function () {
@@ -138,12 +138,8 @@
     elements.sidebar.links.forEach(link => {
       link.addEventListener('click', e => {
         if (link.dataset.mode) {
-          // Allow default to update the hash; the router will handle rendering.
-          // Prevent default only if href is missing (legacy)
-          if (!link.getAttribute('href') || link.getAttribute('href') === '#') {
-            e.preventDefault();
-            location.hash = `#/${link.dataset.mode}`;
-          }
+          e.preventDefault();
+          setMode(link.dataset.mode);
         }
       });
     });
@@ -188,8 +184,32 @@
     setupKeyboardNavForSelect(elements.preorder.customStatusSelect.wrapper);
     setupKeyboardNavForSelect(elements.accounts.customSelect.wrapper);
     
-    \1handleRouteChange();
-}
+    initTheme();
+    loadCatalog();
+    
+    // START: ROUTING CHANGE - Handle back/forward browser buttons
+    window.addEventListener('popstate', (event) => {
+        if (event.state && event.state.mode) {
+            setMode(event.state.mode, true); // true indicates this is from a popstate event
+        }
+    });
+    // END: ROUTING CHANGE
+
+    // START: ROUTING CHANGE - Handle initial page load based on URL
+    const handleInitialLoad = () => {
+        const path = window.location.pathname;
+        const potentialMode = path.substring(1).toLowerCase() || 'home';
+        const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'film'];
+
+        if (validModes.includes(potentialMode)) {
+            setMode(potentialMode, true); // Set initial view without pushing to history
+        } else {
+            setMode('home', true); // Default to home for invalid paths
+        }
+    };
+    handleInitialLoad();
+    // END: ROUTING CHANGE
+  }
   
   function setupKeyboardNavForSelect(wrapper) {
     if (!wrapper) return;
@@ -243,45 +263,13 @@
   function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }
   function toggleSidebar(forceOpen) { const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); document.body.classList.toggle('sidebar-open', isOpen); elements.sidebar.burger.classList.toggle('active', isOpen); }
   
-  
-// ======== HASH ROUTER (added) ========
-const ROUTES = new Map([
-  ['#/home', 'home'],
-  ['#/preorder', 'preorder'],
-  ['#/accounts', 'accounts'],
-  ['#/perpustakaan', 'perpustakaan'],
-  ['#/film', 'film'],
-]);
-
-function getModeFromHash() {
-  const hash = (location.hash || '#/home').split('?')[0];
-  return ROUTES.get(hash) || 'home';
-}
-
-function handleRouteChange() {
-  const mode = getModeFromHash();
-  // Avoid duplicate work if already active
-  const id = `#view${mode.charAt(0).toUpperCase()+mode.slice(1)}`;
-  const view = document.querySelector(id);
-  if (view && !view.classList.contains('active')) {
-    setMode(mode);
-  } else if (!view) {
-    setMode('home');
-  }
-}
-window.addEventListener('hashchange', handleRouteChange);
-// =====================================
-let setMode = function(nextMode) {
-    // Sync URL hash with mode
-    const targetHash = [...ROUTES.entries()].find(([, m]) => m === nextMode)?.[0] || '#/home';
-    if (location.hash !== targetHash) {
-      location.hash = targetHash; // Will trigger handleRouteChange()
-      return;
-    }
+  // START: ROUTING CHANGE - Modified setMode function
+  let setMode = function(nextMode, fromPopState = false) {
     if (nextMode === 'donasi') {
       window.open('https://saweria.co/playpal', '_blank', 'noopener');
       return;
     }
+
     const viewMap = {
       home: elements.viewHome,
       preorder: elements.viewPreorder,
@@ -291,18 +279,34 @@ let setMode = function(nextMode) {
     };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
+
+    // Update URL and History if it's a direct navigation
+    if (!fromPopState) {
+      const path = nextMode === 'home' ? '/' : `/${nextMode}`;
+      const title = `PlayPal.ID - ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`;
+      history.pushState({ mode: nextMode }, title, path);
+      document.title = title;
+    } else {
+      // Just update title on popstate
+      const title = `PlayPal.ID - ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`;
+      document.title = title;
+    }
+    
     document.querySelector('.view-section.active')?.classList.remove('active');
     nextView.classList.add('active');
     elements.sidebar.links.forEach(link => {
       link.classList.toggle('active', link.dataset.mode === nextMode);
     });
+
     if (window.innerWidth < 769) {
       toggleSidebar(false);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
     if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
     if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
   }
+  // END: ROUTING CHANGE
 
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
@@ -734,8 +738,8 @@ let setMode = function(nextMode) {
   // --- END: Library Functions ---
 
   const originalSetMode = setMode;
-  setMode = function(nextMode) {
-    originalSetMode(nextMode); 
+  setMode = function(nextMode, fromPopState = false) { // ROUTING CHANGE: Propagate fromPopState
+    originalSetMode(nextMode, fromPopState); 
     if (nextMode === 'perpustakaan') {
       initializeLibrary();
     }
@@ -861,8 +865,8 @@ async function loadTestimonials() {
 }
 
   const originalSetMode2 = setMode;
-  setMode = function(nextMode) {
-    originalSetMode2(nextMode);
+  setMode = function(nextMode, fromPopState = false) { // ROUTING CHANGE: Propagate fromPopState
+    originalSetMode2(nextMode, fromPopState);
     elements.sidebar.links.forEach(link => {
       const active = link.dataset.mode === nextMode;
       if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
