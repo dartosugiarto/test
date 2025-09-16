@@ -80,6 +80,7 @@ body {
 /* Kunci scroll body saat sidebar terbuka */
 body.sidebar-open {
   overflow: hidden;
+  overscroll-behavior-y: contain;
 }
 
 h1 {
@@ -161,10 +162,11 @@ body.sidebar-open .sidebar-overlay {
 }
 
 .page-container {
-  /* Pastikan halaman utama tidak bergeser */
+  /* Halaman utama tidak bergeser */
   transition: none; 
 }
 /* --- AKHIR STYLING BARU --- */
+
 
 .sidebar-nav {
   display: flex;
@@ -202,6 +204,9 @@ body.sidebar-open .sidebar-overlay {
   height: 1px;
   background: var(--separator);
   margin: var(--sp-fib-4) 0;
+}
+.page-container {
+  transition: transform var(--duration-natural) var(--ease-natural);
 }
 @media (min-width: 769px) {
   #burgerBtn {
