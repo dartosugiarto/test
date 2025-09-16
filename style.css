@@ -101,7 +101,7 @@ p {
   }
 }
 
-/* --- STYLING BARU UNTUK HEADER & SIDEBAR --- */
+/* --- STYLING HEADER & SIDEBAR --- */
 
 .main-header {
   position: sticky;
@@ -124,7 +124,7 @@ body.dark-mode .main-header {
   top: var(--header-height); /* Mulai di bawah header */
   left: 0; 
   z-index: 1005; /* Di bawah header */
-  width: var(--sidebar-width); /* Lebar sidebar yang diinginkan */
+  width: 100%; /* Lebar sidebar penuh */
   height: calc(100vh - var(--header-height)); /* Tinggi sisa layar */
   background-color: var(--surface-primary);
   padding: var(--sp-fib-5);
@@ -148,7 +148,7 @@ body.sidebar-open .sidebar {
 }
 
 body.sidebar-open .page-container {
-  transform: translateX(var(--sidebar-width));
+  transform: translateX(100%); /* Dorong sejauh 100% */
 }
 
 /* --- AKHIR STYLING BARU --- */
@@ -157,7 +157,6 @@ body.sidebar-open .page-container {
   display: flex;
   flex-direction: column;
   gap: var(--sp-fib-3);
-  margin-top: 0; /* Dihapus karena tidak ada header di sidebar */
 }
 .nav-item {
   display: flex;
@@ -192,15 +191,6 @@ body.sidebar-open .page-container {
 }
 
 @media (min-width: 769px) {
-  .page-container {
-    margin-left: 0;
-  }
-  .sidebar {
-    transform: translateX(-100%); /* Sembunyikan di desktop */
-  }
-  body.sidebar-open .sidebar {
-    transform: translateX(0); /* Tampilkan jika dibuka */
-  }
   #burgerBtn {
     display: block; /* Selalu tampilkan burger */
   }
@@ -239,7 +229,6 @@ body.sidebar-open .page-container {
   margin: 0;
   padding: 0;
 }
-
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -892,9 +881,6 @@ body.dark-mode .skeleton::after {
 }
 .wa-button:hover {
   transform: scale(1.02);
-}
-body.sidebar-open .sidebar {
-  transform: translateX(0);
 }
 .view-section:not(#viewHome) .page-title-header {
   display: none;
