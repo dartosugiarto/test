@@ -15,6 +15,7 @@
   --surface-secondary: #e9e9e9;
   --surface-tertiary: #dedede;
   --separator: rgba(48, 57, 82, 0.1);
+  --header-height: 65px; /* Definisikan tinggi header */
   --sp-fib-1: 3px;
   --sp-fib-2: 5px;
   --sp-fib-3: 8px;
@@ -40,6 +41,7 @@
   --duration-natural: 0.34s;
   --duration-smooth: 0.55s;
   --ease-natural: cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-width: 300px;
 }
 body.dark-mode {
   --bg-primary: #303952;
@@ -56,8 +58,10 @@ body.dark-mode {
 * {
   box-sizing: border-box;
 }
-html {
+html, body {
+  height: 100%;
   overflow-x: hidden;
+  touch-action: manipulation;
 }
 body {
   margin: 0;
@@ -71,7 +75,6 @@ body {
   transition: background var(--duration-natural) var(--ease-natural), color var(--duration-natural) var(--ease-natural);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden; /* Mencegah scrollbar horizontal saat animasi */
 }
 h1 {
   font-size: var(--font-size-h1);
@@ -98,66 +101,63 @@ p {
   }
 }
 
-/* --- STYLING BARU UNTUK EFEK PUSH --- */
+/* --- STYLING BARU UNTUK HEADER & SIDEBAR --- */
 
-.page-wrapper {
-  position: relative;
-  background: var(--bg-primary);
-  width: 100%;
-  transition: transform var(--duration-natural) var(--ease-natural);
+.main-header {
+  position: sticky;
+  top: 0;
+  z-index: 1010; /* Z-index lebih tinggi dari sidebar */
+  height: var(--header-height);
+  padding: var(--sp-fib-4) 0;
+  background: rgba(var(--bg-primary-rgb), 0.8);
+  backdrop-filter: blur(21px);
+  -webkit-backdrop-filter: blur(21px);
+  border-bottom: 1px solid var(--separator);
+  will-change: transform;
+}
+body.dark-mode .main-header {
+  background: rgba(var(--bg-primary-rgb), 0.75);
 }
 
 .sidebar {
   position: fixed;
-  top: 0;
+  top: var(--header-height); /* Mulai di bawah header */
   left: 0; 
-  z-index: 1100;
-  width: 100%; 
-  height: 100%;
+  z-index: 1005; /* Di bawah header */
+  width: var(--sidebar-width); /* Lebar sidebar yang diinginkan */
+  height: calc(100vh - var(--header-height)); /* Tinggi sisa layar */
   background-color: var(--surface-primary);
   padding: var(--sp-fib-5);
-  transform: translateX(-100%); 
+  border-right: 1px solid var(--separator);
+  transform: translateX(-100%);
   transition: transform var(--duration-natural) var(--ease-natural);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
 }
 
+.page-container {
+  transition: transform var(--duration-natural) var(--ease-natural);
+  background: var(--bg-primary);
+  position: relative;
+  z-index: 1;
+}
+
 body.sidebar-open .sidebar {
-  transform: translateX(0); 
+  transform: translateX(0);
 }
 
-body.sidebar-open .page-wrapper {
-  transform: translateX(100%); 
+body.sidebar-open .page-container {
+  transform: translateX(var(--sidebar-width));
 }
 
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: var(--sp-fib-4);
-  margin-bottom: var(--sp-fib-4);
-  border-bottom: 1px solid var(--separator);
-}
-
-.sidebar-header .burger.active span:nth-child(1) {
-  transform: translateY(8.5px) rotate(45deg);
-}
-.sidebar-header .burger.active span:nth-child(2) {
-  opacity: 0;
-  transform: scaleX(0.5);
-}
-.sidebar-header .burger.active span:nth-child(3) {
-  transform: translateY(-8.5px) rotate(-45deg);
-}
-
-/* --- AKHIR DARI STYLING BARU --- */
+/* --- AKHIR STYLING BARU --- */
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: var(--sp-fib-3);
-  /* Hapus margin-top, karena sudah ada header */
+  margin-top: 0; /* Dihapus karena tidak ada header di sidebar */
 }
 .nav-item {
   display: flex;
@@ -191,8 +191,20 @@ body.sidebar-open .page-wrapper {
   margin: var(--sp-fib-4) 0;
 }
 
-/* Hapus semua styling untuk .sidebar-overlay */
-
+@media (min-width: 769px) {
+  .page-container {
+    margin-left: 0;
+  }
+  .sidebar {
+    transform: translateX(-100%); /* Sembunyikan di desktop */
+  }
+  body.sidebar-open .sidebar {
+    transform: translateX(0); /* Tampilkan jika dibuka */
+  }
+  #burgerBtn {
+    display: block; /* Selalu tampilkan burger */
+  }
+}
 .noscript-warning {
   padding: var(--sp-fib-4);
   background: var(--warning);
@@ -227,20 +239,7 @@ body.sidebar-open .page-wrapper {
   margin: 0;
   padding: 0;
 }
-.main-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  padding: var(--sp-fib-4) 0;
-  background: rgba(var(--bg-primary-rgb), 0.8);
-  backdrop-filter: blur(21px);
-  -webkit-backdrop-filter: blur(21px);
-  border-bottom: 1px solid var(--separator);
-  will-change: transform;
-}
-body.dark-mode .main-header {
-  background: rgba(var(--bg-primary-rgb), 0.75);
-}
+
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -373,10 +372,6 @@ body.dark-mode .icon-moon {
 .burger.active span:nth-child(3) {
   transform: translateY(-8.5px) rotate(-45deg);
 }
-
-/* Sisa CSS Anda bisa diletakkan di sini, tidak ada perubahan yang diperlukan */
-/* ... (semua styling lain dari file CSS asli Anda) ... */
-
 .custom-select-wrapper {
   position: relative;
   flex-grow: 1;
@@ -897,6 +892,9 @@ body.dark-mode .skeleton::after {
 }
 .wa-button:hover {
   transform: scale(1.02);
+}
+body.sidebar-open .sidebar {
+  transform: translateX(0);
 }
 .view-section:not(#viewHome) .page-title-header {
   display: none;
