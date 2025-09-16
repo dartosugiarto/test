@@ -15,6 +15,7 @@
   --surface-secondary: #e9e9e9;
   --surface-tertiary: #dedede;
   --separator: rgba(48, 57, 82, 0.1);
+  --header-height: 65px; /* PENTING: Tentukan tinggi header */
   --sp-fib-1: 3px;
   --sp-fib-2: 5px;
   --sp-fib-3: 8px;
@@ -100,16 +101,30 @@ p {
   }
 }
 
-/* --- STYLING SIDEBAR OVERLAY --- */
+/* --- STYLING HEADER & SIDEBAR (HYBRID OVERLAY) --- */
+.main-header {
+  position: sticky;
+  top: 0;
+  z-index: 1010; /* Paling atas */
+  height: var(--header-height);
+  padding: var(--sp-fib-4) 0;
+  background: rgba(var(--bg-primary-rgb), 0.85);
+  backdrop-filter: blur(21px);
+  -webkit-backdrop-filter: blur(21px);
+  border-bottom: 1px solid var(--separator);
+}
+body.dark-mode .main-header {
+  background: rgba(var(--bg-primary-rgb), 0.85);
+}
+
 .sidebar {
   position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1100;
-  width: var(--sidebar-width);
-  height: 100%;
+  top: var(--header-height); /* Mulai di bawah header */
+  left: 0; 
+  z-index: 1100; /* Di atas overlay dan konten */
+  width: 100%; /* Lebar penuh */
+  height: calc(100% - var(--header-height)); /* Tinggi sisa layar */
   background-color: var(--surface-primary);
-  border-right: 1px solid var(--separator);
   padding: var(--sp-fib-5);
   transform: translateX(-100%);
   transition: transform var(--duration-natural) var(--ease-natural);
@@ -123,12 +138,12 @@ body.sidebar-open .sidebar {
 
 .sidebar-overlay {
   position: fixed;
-  top: 0;
+  top: var(--header-height); /* Mulai di bawah header */
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - var(--header-height)); /* Tinggi sisa layar */
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1050;
+  z-index: 1050; /* Di bawah sidebar, di atas konten */
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--duration-natural) var(--ease-natural);
@@ -143,7 +158,7 @@ body.sidebar-open .sidebar-overlay {
   /* Halaman utama tidak bergeser */
   transition: none; 
 }
-/* --- AKHIR STYLING SIDEBAR OVERLAY --- */
+/* --- AKHIR STYLING BARU --- */
 
 
 .sidebar-nav {
@@ -183,6 +198,9 @@ body.sidebar-open .sidebar-overlay {
   background: var(--separator);
   margin: var(--sp-fib-4) 0;
 }
+.page-container {
+  transition: transform var(--duration-natural) var(--ease-natural);
+}
 @media (min-width: 769px) {
   #burgerBtn {
     display: none;
@@ -221,20 +239,6 @@ body.sidebar-open .sidebar-overlay {
   width: 100%;
   margin: 0;
   padding: 0;
-}
-.main-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  padding: var(--sp-fib-4) 0;
-  background: rgba(var(--bg-primary-rgb), 0.8);
-  backdrop-filter: blur(21px);
-  -webkit-backdrop-filter: blur(21px);
-  border-bottom: 1px solid var(--separator);
-  will-change: transform;
-}
-body.dark-mode .main-header {
-  background: rgba(var(--bg-primary-rgb), 0.75);
 }
 .header-content {
   display: flex;
