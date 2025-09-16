@@ -140,7 +140,7 @@ body.sidebar-open .sidebar-overlay {
 }
 
 .page-container {
-  /* Pastikan tidak ada transform di sini agar halaman tetap diam */
+  /* Halaman utama tidak bergeser */
   transition: none; 
 }
 /* --- AKHIR STYLING SIDEBAR OVERLAY --- */
