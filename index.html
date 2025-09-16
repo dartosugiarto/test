@@ -21,15 +21,20 @@
     </div>
   </noscript>
   
-  <aside class="sidebar" id="sidebarNav">
-    <div class="sidebar-header">
+  <header class="main-header">
+    <div class="header-content">
         <a href="#" class="header-logo-link" data-mode="home">
           <img src="logo.jpeg" alt="PlayPal.ID Logo" class="header-logo">
+          <span class="header-title">PlayPal.ID</span>
         </a>
-        <button class="icon-btn burger active" id="closeSidebarBtn" type="button" aria-label="Tutup Menu">
+  
+        <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
             <span></span><span></span><span></span>
         </button>
     </div>
+  </header>
+  
+  <aside class="sidebar" id="sidebarNav">
     <nav class="sidebar-nav">
       <div class="sidebar-action-item">
         <span>Ganti Tema</span>
@@ -96,158 +101,143 @@
       </a>
     </nav>
   </aside>
+  
+  <div class="page-container" id="pageContainer">
+    <main class="wrap">
 
-  <div class="page-wrapper">
-    <header class="main-header">
-      <div class="header-content">
-          <a href="#" class="header-logo-link" data-mode="home">
-            <img src="logo.jpeg" alt="PlayPal.ID Logo" class="header-logo">
-            <span class="header-title">PlayPal.ID</span>
-          </a>
-    
-          <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
-              <span></span><span></span><span></span>
-          </button>
-      </div>
-    </header>
-    
-    <div class="page-container" id="pageContainer">
-      <main class="wrap">
-
-        <section id="viewHome" class="view-section active" aria-label="Home">
-          <div class="home-banner-container">
-            <img src="home-banner.webp" alt="PlayPal.ID Banner" class="home-banner-img">
-          </div>
-          <div class="head-block" data-rail>
-            <div class="topbar" data-rail>
-              <div class="topbar-grid">
-                <div class="custom-select-wrapper" id="homeCustomSelectWrapper">
-                  <button class="custom-select-btn" id="homeCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="homeCustomSelectOptions">
-                    <span id="homeCustomSelectValue">Pilih Kategori</span>
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
-                  </button>
-                  <div class="custom-select-options" id="homeCustomSelectOptions" role="listbox"></div>
-                </div>
-              </div>
-            </div>
-            <div class="search-row" data-rail>
-              <div class="search-wrap">
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                <input id="homeSearchInput" class="search-input" type="search" placeholder="Cari item..." aria-label="Cari">
-              </div>
-            </div>
-            <div id="homeCountInfo" data-rail aria-live="polite"></div>
-          </div>
-          <section id="homeListContainer" class="list-container" aria-live="polite" data-rail></section>
-          <section id="homeErrorContainer" class="err" style="display:none" data-rail></section>
-        </section>
-
-        <section id="viewPreorder" class="view-section" aria-label="Pre-Order">
-          <header class="page-title-header">
-            <h1>Lacak Pre-Order</h1>
-            <p class="page-subtitle">Cek status pesanan Anda di sini.</p>
-          </header>
-          <div class="head-block" data-rail>
-            <div class="topbar-grid" style="grid-template-columns: 1fr;">
-                <div class="custom-select-wrapper" id="preorderCustomSelectWrapper">
-                  <button class="custom-select-btn" id="preorderCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="preorderCustomSelectOptions">
-                    <span id="preorderCustomSelectValue">Starlight Member</span>
-                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
-                  </button>
-                  <div class="custom-select-options" id="preorderCustomSelectOptions" role="listbox">
-                    <div class="custom-select-option selected" data-value="0">Starlight Member</div>
-                    <div class="custom-select-option" data-value="1">Pesanan Umum</div>
-                  </div>
-                </div>
-            </div>
-            <div class="search-row" data-rail>
-              <div class="search-wrap">
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                <input id="preorderSearchInput" type="search" class="search-input" placeholder="Cari nama / ID Server..." />
-              </div>
-            </div>
-            <div class="status-row" data-rail>
-              <div class="custom-select-wrapper" id="preorderStatusCustomSelectWrapper">
-                <button class="custom-select-btn" id="preorderStatusCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                  <span id="preorderStatusCustomSelectValue">Semua Status</span>
+      <section id="viewHome" class="view-section active" aria-label="Home">
+        <div class="home-banner-container">
+          <img src="home-banner.webp" alt="PlayPal.ID Banner" class="home-banner-img">
+        </div>
+        <div class="head-block" data-rail>
+          <div class="topbar" data-rail>
+            <div class="topbar-grid">
+              <div class="custom-select-wrapper" id="homeCustomSelectWrapper">
+                <button class="custom-select-btn" id="homeCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="homeCustomSelectOptions">
+                  <span id="homeCustomSelectValue">Pilih Kategori</span>
                   <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                 </button>
-                <div class="custom-select-options" id="preorderStatusCustomSelectOptions" role="listbox">
-                  <div class="custom-select-option selected" data-value="all">Semua Status</div>
-                  <div class="custom-select-option" data-value="success">Success</div>
-                  <div class="custom-select-option" data-value="progress">Progress</div>
-                  <div class="custom-select-option" data-value="pending">Pending</div>
-                  <div class="custom-select-option" data-value="failed">Gagal</div>
+                <div class="custom-select-options" id="homeCustomSelectOptions" role="listbox"></div>
+              </div>
+            </div>
+          </div>
+          <div class="search-row" data-rail>
+            <div class="search-wrap">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <input id="homeSearchInput" class="search-input" type="search" placeholder="Cari item..." aria-label="Cari">
+            </div>
+          </div>
+          <div id="homeCountInfo" data-rail aria-live="polite"></div>
+        </div>
+        <section id="homeListContainer" class="list-container" aria-live="polite" data-rail></section>
+        <section id="homeErrorContainer" class="err" style="display:none" data-rail></section>
+      </section>
+
+      <section id="viewPreorder" class="view-section" aria-label="Pre-Order">
+        <header class="page-title-header">
+          <h1>Lacak Pre-Order</h1>
+          <p class="page-subtitle">Cek status pesanan Anda di sini.</p>
+        </header>
+        <div class="head-block" data-rail>
+          <div class="topbar-grid" style="grid-template-columns: 1fr;">
+              <div class="custom-select-wrapper" id="preorderCustomSelectWrapper">
+                <button class="custom-select-btn" id="preorderCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="preorderCustomSelectOptions">
+                  <span id="preorderCustomSelectValue">Starlight Member</span>
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                </button>
+                <div class="custom-select-options" id="preorderCustomSelectOptions" role="listbox">
+                  <div class="custom-select-option selected" data-value="0">Starlight Member</div>
+                  <div class="custom-select-option" data-value="1">Pesanan Umum</div>
                 </div>
               </div>
-              <select class="status-select" id="preorderStatusSelect" aria-label="Filter status" style="display: none;">
-                <option value="all">Semua Status</option>
-                <option value="success">Success</option>
-                <option value="progress">Progress</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Gagal</option>
-              </select>
+          </div>
+          <div class="search-row" data-rail>
+            <div class="search-wrap">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <input id="preorderSearchInput" type="search" class="search-input" placeholder="Cari nama / ID Server..." />
             </div>
-            <div id="preorderTotal" class="meta" data-rail></div>
           </div>
-          <div class="container">
-            <main id="preorderListContainer" class="card-grid" aria-live="polite" data-rail></main>
-            <nav class="pagination" aria-label="Pagination" data-rail>
-              <button id="preorderPrevBtn" class="pagination-btn" disabled>Sebelumnya</button>
-              <div id="preorderPageInfo" class="pagination-info"></div>
-              <button id="preorderNextBtn" class="pagination-btn" disabled>Selanjutnya</button>
-            </nav>
-          </div>
-        </section>
-
-        <section id="viewAccounts" class="view-section" aria-label="Akun Game">
-          <header class="page-title-header">
-            <h1>Akun Game</h1>
-            <p class="page-subtitle">Temukan akun game impian Anda dengan penawaran terbaik.</p>
-          </header>
-          <div class="head-block" data-rail>
-              <div class="topbar-grid" style="grid-template-columns: 1fr;">
-                  <div class="custom-select-wrapper" id="accountCustomSelectWrapper">
-                    <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-                      <span id="accountCustomSelectValue">Pilih Kategori Akun</span>
-                      <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
-                    </button>
-                    <div class="custom-select-options" id="accountCustomSelectOptions" role="listbox"></div>
-                  </div>
+          <div class="status-row" data-rail>
+            <div class="custom-select-wrapper" id="preorderStatusCustomSelectWrapper">
+              <button class="custom-select-btn" id="preorderStatusCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span id="preorderStatusCustomSelectValue">Semua Status</span>
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+              </button>
+              <div class="custom-select-options" id="preorderStatusCustomSelectOptions" role="listbox">
+                <div class="custom-select-option selected" data-value="all">Semua Status</div>
+                <div class="custom-select-option" data-value="success">Success</div>
+                <div class="custom-select-option" data-value="progress">Progress</div>
+                <div class="custom-select-option" data-value="pending">Pending</div>
+                <div class="custom-select-option" data-value="failed">Gagal</div>
               </div>
+            </div>
+            <select class="status-select" id="preorderStatusSelect" aria-label="Filter status" style="display: none;">
+              <option value="all">Semua Status</option>
+              <option value="success">Success</option>
+              <option value="progress">Progress</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Gagal</option>
+            </select>
           </div>
-          
-          <div id="accountCardGrid" class="account-card-grid" data-rail></div>
-          
-          <div id="accountEmpty" class="empty" style="display: none;" data-rail>
-              <div class="empty-content">
-                <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                </svg>
-                <p>Tidak ada akun dalam kategori ini.</p>
-              </div>
-          </div>
-          <section id="accountError" class="err" style="display:none" data-rail></section>
-        </section>
+          <div id="preorderTotal" class="meta" data-rail></div>
+        </div>
+        <div class="container">
+          <main id="preorderListContainer" class="card-grid" aria-live="polite" data-rail></main>
+          <nav class="pagination" aria-label="Pagination" data-rail>
+            <button id="preorderPrevBtn" class="pagination-btn" disabled>Sebelumnya</button>
+            <div id="preorderPageInfo" class="pagination-info"></div>
+            <button id="preorderNextBtn" class="pagination-btn" disabled>Selanjutnya</button>
+          </nav>
+        </div>
+      </section>
 
-        <section id="viewPerpustakaan" class="view-section" aria-label="Perpustakaan">
-          <header class="page-title-header">
-            <h1>Perpustakaan Digital</h1>
-            <p class="page-subtitle">Kumpulan tulisan dan cerita pendek.</p>
-          </header>
+      <section id="viewAccounts" class="view-section" aria-label="Akun Game">
+        <header class="page-title-header">
+          <h1>Akun Game</h1>
+          <p class="page-subtitle">Temukan akun game impian Anda dengan penawaran terbaik.</p>
+        </header>
+        <div class="head-block" data-rail>
+            <div class="topbar-grid" style="grid-template-columns: 1fr;">
+                <div class="custom-select-wrapper" id="accountCustomSelectWrapper">
+                  <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="accountCustomSelectValue">Pilih Kategori Akun</span>
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                  </button>
+                  <div class="custom-select-options" id="accountCustomSelectOptions" role="listbox"></div>
+                </div>
+            </div>
+        </div>
         
-          <div id="libraryGridContainer" class="library-grid"></div>
-          <div id="libraryError" class="err" style="display:none"></div>
+        <div id="accountCardGrid" class="account-card-grid" data-rail></div>
         
-        </section>
+        <div id="accountEmpty" class="empty" style="display: none;" data-rail>
+            <div class="empty-content">
+              <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              <p>Tidak ada akun dalam kategori ini.</p>
+            </div>
+        </div>
+        <section id="accountError" class="err" style="display:none" data-rail></section>
+      </section>
 
-        <section id="viewFilm" class="view-section" aria-label="Film">
-          <header class="page-title-header"><h1>Film</h1></header>
-          <div class="empty">Halaman ini sedang dalam pengembangan.</div>
-        </section>
-        
-      </main>
-    </div>
+      <section id="viewPerpustakaan" class="view-section" aria-label="Perpustakaan">
+        <header class="page-title-header">
+          <h1>Perpustakaan Digital</h1>
+          <p class="page-subtitle">Kumpulan tulisan dan cerita pendek.</p>
+        </header>
+      
+        <div id="libraryGridContainer" class="library-grid"></div>
+        <div id="libraryError" class="err" style="display:none"></div>
+      
+      </section>
+
+      <section id="viewFilm" class="view-section" aria-label="Film">
+        <header class="page-title-header"><h1>Film</h1></header>
+        <div class="empty">Halaman ini sedang dalam pengembangan.</div>
+      </section>
+      
+    </main>
   </div>
   
   <template id="itemTemplate">
