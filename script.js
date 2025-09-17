@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 10.0.0 (Final - Fixed Header Push-Under Sidebar)
+ * @version 9.0.0 (Final - Full Client-Side Routing Implemented)
  */
 
 (function () {
@@ -57,6 +57,7 @@
   const elements = {
     sidebar: {
       nav: getElement('sidebarNav'),
+      overlay: getElement('sidebarOverlay'),
       burger: getElement('burgerBtn'),
       links: document.querySelectorAll('.sidebar-nav .nav-item'),
     },
@@ -132,6 +133,7 @@
   function initializeApp() {
     elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
+    elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     
     elements.sidebar.links.forEach(link => {
       link.addEventListener('click', e => {
@@ -185,23 +187,25 @@
     initTheme();
     loadCatalog();
     
+    // Handle back/forward browser buttons
     window.addEventListener('popstate', (event) => {
         const path = window.location.pathname;
         const mode = path.substring(1).toLowerCase() || 'home';
         if (event.state || mode) {
-            setMode(mode, true);
+            setMode(mode, true); // true indicates this is from a popstate event
         }
     });
 
+    // Handle initial page load based on URL
     const handleInitialLoad = () => {
         const path = window.location.pathname;
         const potentialMode = path.substring(1).toLowerCase() || 'home';
         const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'film'];
 
         if (validModes.includes(potentialMode)) {
-            setMode(potentialMode, true);
+            setMode(potentialMode, true); // Set initial view without pushing to history
         } else {
-            setMode('home', true);
+            setMode('home', true); // Default to home for invalid paths
         }
     };
     handleInitialLoad();
@@ -257,11 +261,7 @@
   function applyTheme(theme) { document.body.classList.toggle('dark-mode', theme === 'dark'); const btn = elements.themeToggle; if (btn) btn.setAttribute('aria-pressed', theme === 'dark'); document.documentElement.style.colorScheme = (theme === 'dark') ? 'dark' : 'light'; }
   function initTheme() { const savedTheme = localStorage.getItem('theme'); const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light'); applyTheme(currentTheme); }
   function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }
-  function toggleSidebar(forceOpen) { 
-    const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); 
-    document.body.classList.toggle('sidebar-open', isOpen); 
-    elements.sidebar.burger.classList.toggle('active', isOpen); 
-  }
+  function toggleSidebar(forceOpen) { const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); document.body.classList.toggle('sidebar-open', isOpen); elements.sidebar.burger.classList.toggle('active', isOpen); }
   
   let setMode = function(nextMode, fromPopState = false) {
     if (nextMode === 'donasi') {
@@ -279,8 +279,11 @@
     const nextView = viewMap[nextMode];
     if (!nextView) return;
 
+    // Update URL and History if it's a direct navigation
     if (!fromPopState) {
-        const path = nextMode === 'home' ? '/' : `/${nextMode}`;
+        // Preserve existing search params when changing path
+        const search = window.location.search;
+        const path = nextMode === 'home' ? `/${search}` : `/${nextMode}${search}`;
         const title = `PlayPal.ID - ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`;
         history.pushState({ mode: nextMode }, title, path);
     }
@@ -298,7 +301,7 @@
       toggleSidebar(false);
     }
 
-    if (fromPopState) {
+    if (fromPopState) { // Avoid smooth scroll on back/forward
         window.scrollTo(0, 0);
     } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -322,6 +325,7 @@
     const categories = [...categoryMap].map(([key, label]) => ({ key, label }));
     options.innerHTML = '';
     
+    // Determine active category (could be set by URL handler)
     const activeCategoryKey = state.home.activeCategory || (categories.length > 0 ? categories[0].key : '');
     const activeCategory = categories.find(c => c.key === activeCategoryKey);
     
