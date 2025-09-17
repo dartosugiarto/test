@@ -174,7 +174,7 @@ body.sidebar-open .sidebar-overlay {
   pointer-events: auto;
 }
 
-/* --- KODE EFEK BLUR --- */
+/* --- KODE EFEK BLUR (VERSI FINAL) --- */
 .page-container {
   /* Diubah agar transisi blur menjadi halus */
   transition: transform var(--duration-natural) var(--ease-natural), filter var(--duration-natural) var(--ease-natural);
