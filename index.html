@@ -311,5 +311,25 @@
     </div>
   </section>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const header = document.querySelector('.main-header');
+
+      // Fungsi untuk mengukur tinggi header dan mengupdate variabel CSS
+      function updateHeaderHeight() {
+        if (header) {
+          const headerHeight = header.offsetHeight;
+          document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+        }
+      }
+
+      // Jalankan fungsi saat halaman pertama kali dimuat
+      updateHeaderHeight();
+
+      // Jalankan kembali fungsi jika ukuran jendela berubah (untuk responsivitas)
+      window.addEventListener('resize', updateHeaderHeight);
+    });
+  </script>
+
 </body>
 </html>
