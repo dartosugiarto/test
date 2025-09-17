@@ -173,17 +173,19 @@ body.sidebar-open .sidebar-overlay {
   opacity: 1;
   pointer-events: auto;
 }
+
+/* --- KODE EFEK BLUR --- */
 .page-container {
-  /* MODIFIED */
+  /* Diubah agar transisi blur menjadi halus */
   transition: transform var(--duration-natural) var(--ease-natural), filter var(--duration-natural) var(--ease-natural);
 }
-/* ADDED */
 body.sidebar-open .page-container {
+  /* Menerapkan blur dan skala saat menu terbuka */
   filter: blur(5px);
   transform: scale(0.99);
-  pointer-events: none;
-  user-select: none;
 }
+/* --- AKHIR DARI KODE EFEK BLUR --- */
+
 @media (min-width: 769px) {
   .page-container {
     margin-left: 0;
