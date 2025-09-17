@@ -147,13 +147,6 @@ body.sidebar-open .sidebar {
   background-color: var(--brand-blue);
   color: #fff;
 }
-/* .nav-item svg {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-  } 
-  Kode di atas tidak diperlukan lagi dan bisa dihapus.
-*/
 .nav-divider {
   height: 1px;
   background: var(--separator);
@@ -1080,18 +1073,21 @@ body.sidebar-open .sidebar {
 .action-btn.buy { background-color: var(--brand-blue); color: #fff; }
 .action-btn.offer { background-color: var(--surface-secondary); color: var(--text-primary); }
 
-/* ======================================================= */
-/* ===== KODE BARU UNTUK IKON SIDEBAR (METODE MASK) ====== */
-/* ======================================================= */
-
+/*
+ * Sidebar Icon Styling
+ *
+ * This block replaces the previous '.nav-item svg' styling.
+ * It uses the CSS mask property to allow external SVG files
+ * to be recolored dynamically using 'background-color',
+ * mimicking the behavior of inline SVGs with 'currentColor'.
+*/
 .nav-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
   
-  /* Gunakan gambar sebagai 'cetakan' atau mask */
   mask-image: var(--icon-url);
-  -webkit-mask-image: var(--icon-url); /* Untuk Safari */
+  -webkit-mask-image: var(--icon-url);
   mask-size: contain;
   -webkit-mask-size: contain;
   mask-repeat: no-repeat;
@@ -1099,8 +1095,7 @@ body.sidebar-open .sidebar {
   mask-position: center;
   -webkit-mask-position: center;
 
-  /* Warnai 'cetakan' tersebut dengan background-color */
-  background-color: var(--text-secondary); /* Warna default ikon */
+  background-color: var(--text-secondary);
   transition: background-color var(--duration-fast);
 }
 
@@ -1109,5 +1104,5 @@ body.sidebar-open .sidebar {
 }
 
 .nav-item.active .nav-icon {
-  background-color: #fff; /* Warna ikon saat menu aktif */
+  background-color: #fff;
 }
