@@ -47,38 +47,23 @@
       <div class="nav-divider"></div>
   
       <a href="#" class="nav-item active" data-mode="home">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3 L19 9 V16 c0 3 -2 5 -5 5 H10 c-3 0 -5 -2 -5 -5 V9 L12 3"/>
-        </svg>
+        <div class="nav-icon" style="--icon-url: url('home.svg')"></div>
         <span>Home</span>
       </a>
       <a href="#" class="nav-item" data-mode="preorder">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="4" width="16" height="16" rx="3" />
-          <line x1="8" y1="16" x2="16" y2="8" />
-        </svg>
+        <div class="nav-icon" style="--icon-url: url('preorder.svg')"></div>
         <span>Pre Order</span>
       </a>
       <a href="#" class="nav-item" data-mode="accounts">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="8" r="3" />
-          <path d="M17 11H7c-1.1 0-2 .9-2 2v5c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2v-5c0-1.1-.9-2-2-2z" />
-        </svg>
+        <div class="nav-icon" style="--icon-url: url('game.svg')"></div>
         <span>Akun Game</span>
       </a>
       <a href="#" class="nav-item" data-mode="perpustakaan">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19V6a2 2 0 0 1 2-2h5v15H6a2 2 0 0 1-2-2z"/>
-          <path d="M20 19V6a2 2 0 0 0-2-2h-5v15h5a2 2 0 0 0 2-2z"/>
-        </svg>
+        <div class="nav-icon" style="--icon-url: url('library.svg')"></div>
         <span>Perpustakaan</span>
       </a>
       <a href="#" class="nav-item" data-mode="film">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="8" width="18" height="12" rx="2" />
-          <path d="M3 8L6 3h6l-3 5H3z" />
-          <path d="M9 8l3-5h6l-3 5H9z" />
-        </svg>
+        <div class="nav-icon" style="--icon-url: url('film.svg')"></div>
         <span>Film</span>
       </a>
       
@@ -325,6 +310,26 @@
       <ul id="testiTrack" class="testi-track" aria-hidden="true"></ul>
     </div>
   </section>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const header = document.querySelector('.main-header');
+
+      // Fungsi untuk mengukur tinggi header dan mengupdate variabel CSS
+      function updateHeaderHeight() {
+        if (header) {
+          const headerHeight = header.offsetHeight;
+          document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+        }
+      }
+
+      // Jalankan fungsi saat halaman pertama kali dimuat
+      updateHeaderHeight();
+
+      // Jalankan kembali fungsi jika ukuran jendela berubah (untuk responsivitas)
+      window.addEventListener('resize', updateHeaderHeight);
+    });
+  </script>
 
 </body>
 </html>
