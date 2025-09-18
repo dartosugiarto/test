@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 10.1.0 (Auto-close sidebar on search click)
+ * @version 10.2.0 (Logo navigation enabled)
  */
 
 (function () {
@@ -59,8 +59,8 @@
       nav: getElement('sidebarNav'),
       overlay: getElement('sidebarOverlay'),
       burger: getElement('burgerBtn'),
-      links: document.querySelectorAll('.sidebar-nav .nav-item'),
     },
+    navLinks: document.querySelectorAll('[data-mode]'),
     viewHome: getElement('viewHome'),
     viewPreorder: getElement('viewPreorder'),
     viewAccounts: getElement('viewAccounts'),
@@ -136,7 +136,7 @@
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     
-    elements.sidebar.links.forEach(link => {
+    elements.navLinks.forEach(link => {
       link.addEventListener('click', e => {
         if (link.dataset.mode) {
           e.preventDefault();
@@ -171,7 +171,6 @@
     elements.headerSearch.btn.addEventListener('click', (e) => {
       e.stopPropagation();
       
-      // Cek jika sidebar sedang terbuka, maka tutup.
       if (document.body.classList.contains('sidebar-open')) {
         toggleSidebar(false);
       }
@@ -318,8 +317,9 @@
     
     document.querySelector('.view-section.active')?.classList.remove('active');
     nextView.classList.add('active');
-    elements.sidebar.links.forEach(link => {
-      link.classList.toggle('active', link.dataset.mode === nextMode);
+    
+    document.querySelectorAll('[data-mode]').forEach(link => {
+        link.classList.toggle('active', link.dataset.mode === nextMode);
     });
 
     if (window.innerWidth < 769) {
@@ -906,8 +906,9 @@ async function loadTestimonials() {
 const originalSetMode2 = setMode;
 setMode = function(nextMode, fromPopState = false) {
   originalSetMode2(nextMode, fromPopState);
-  elements.sidebar.links.forEach(link => {
+  elements.navLinks.forEach(link => {
     const active = link.dataset.mode === nextMode;
+    link.classList.toggle('active', active);
     if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   });
 };
