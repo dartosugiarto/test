@@ -168,7 +168,8 @@
       homeDebounce = setTimeout(() => { state.home.searchQuery = e.target.value.trim(); renderHomeList(); }, 200);
     });
 
-    elements.headerSearch.btn.addEventListener('click', () => {
+    elements.headerSearch.btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Mencegah event click menyebar ke document
       const container = elements.headerSearch.container;
       container.classList.toggle('active');
       if (container.classList.contains('active')) {
