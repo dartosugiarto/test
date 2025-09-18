@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 10.0.0 (Refactored Header Search)
+ * @version 10.1.0 (Auto-close sidebar on search click)
  */
 
 (function () {
@@ -169,7 +169,13 @@
     });
 
     elements.headerSearch.btn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Mencegah event click menyebar ke document
+      e.stopPropagation();
+      
+      // Cek jika sidebar sedang terbuka, maka tutup.
+      if (document.body.classList.contains('sidebar-open')) {
+        toggleSidebar(false);
+      }
+
       const container = elements.headerSearch.container;
       container.classList.toggle('active');
       if (container.classList.contains('active')) {
@@ -188,7 +194,6 @@
       }
       toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
 
-      // Close search if clicked outside
       if (!elements.headerSearch.container.contains(e.target)) {
         elements.headerSearch.container.classList.remove('active');
       }
