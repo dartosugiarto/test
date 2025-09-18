@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 9.0.0 (Final - Full Client-Side Routing Implemented)
+ * @version 10.0.0 (Refactored Header Search)
  */
 
 (function () {
@@ -67,7 +67,6 @@
     viewPerpustakaan: getElement('viewPerpustakaan'),
     home: {
       listContainer: getElement('homeListContainer'),
-      searchInput: getElement('homeSearchInput'),
       countInfo: getElement('homeCountInfo'),
       errorContainer: getElement('homeErrorContainer'),
       customSelect: {
@@ -76,6 +75,11 @@
         value: getElement('homeCustomSelectValue'),
         options: getElement('homeCustomSelectOptions'),
       },
+    },
+    headerSearch: {
+        container: getElement('headerSearchContainer'),
+        btn: getElement('headerSearchBtn'),
+        input: getElement('headerSearchInput')
     },
     itemTemplate: getElement('itemTemplate'),
     skeletonItemTemplate: getElement('skeletonItemTemplate'),
@@ -159,21 +163,34 @@
     });
     
     let homeDebounce;
-    elements.home.searchInput.addEventListener('input', e => {
+    elements.headerSearch.input.addEventListener('input', e => {
       clearTimeout(homeDebounce);
       homeDebounce = setTimeout(() => { state.home.searchQuery = e.target.value.trim(); renderHomeList(); }, 200);
+    });
+
+    elements.headerSearch.btn.addEventListener('click', () => {
+      const container = elements.headerSearch.container;
+      container.classList.toggle('active');
+      if (container.classList.contains('active')) {
+        elements.headerSearch.input.focus();
+      }
     });
     
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
 
-    document.addEventListener('click', () => {
+    document.addEventListener('click', (e) => {
       toggleCustomSelect(elements.home.customSelect.wrapper, false);
       toggleCustomSelect(elements.preorder.customSelect.wrapper, false);
       if (elements.preorder.customStatusSelect.wrapper) {
         toggleCustomSelect(elements.preorder.customStatusSelect.wrapper, false);
       }
       toggleCustomSelect(elements.accounts.customSelect.wrapper, false);
+
+      // Close search if clicked outside
+      if (!elements.headerSearch.container.contains(e.target)) {
+        elements.headerSearch.container.classList.remove('active');
+      }
     });
 
     setupKeyboardNavForSelect(elements.home.customSelect.wrapper);
@@ -183,25 +200,23 @@
     
     loadCatalog();
     
-    // Handle back/forward browser buttons
     window.addEventListener('popstate', (event) => {
         const path = window.location.pathname;
         const mode = path.substring(1).toLowerCase() || 'home';
         if (event.state || mode) {
-            setMode(mode, true); // true indicates this is from a popstate event
+            setMode(mode, true);
         }
     });
 
-    // Handle initial page load based on URL
     const handleInitialLoad = () => {
         const path = window.location.pathname;
         const potentialMode = path.substring(1).toLowerCase() || 'home';
         const validModes = ['home', 'preorder', 'accounts', 'perpustakaan'];
 
         if (validModes.includes(potentialMode)) {
-            setMode(potentialMode, true); // Set initial view without pushing to history
+            setMode(potentialMode, true);
         } else {
-            setMode('home', true); // Default to home for invalid paths
+            setMode('home', true);
         }
     };
     handleInitialLoad();
@@ -216,15 +231,12 @@
     wrapper.addEventListener('keydown', e => {
         const options = Array.from(optionsEl.querySelectorAll('.custom-select-option'));
         if (options.length === 0) return;
-
         const isOpen = wrapper.classList.contains('open');
-        
         if (e.key === 'Escape') {
             toggleCustomSelect(wrapper, false);
             btn.focus();
             return;
         }
-
         if (document.activeElement === btn && (e.key === 'Enter' || e.key === ' ')) {
             e.preventDefault();
             toggleCustomSelect(wrapper, true);
@@ -232,7 +244,6 @@
             if(focusIndex === -1) focusIndex = 0;
             options[focusIndex]?.focus();
         }
-        
         if (isOpen && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
             e.preventDefault();
             if (e.key === 'ArrowDown') {
@@ -242,7 +253,6 @@
             }
             options[focusIndex]?.focus();
         }
-
         if (isOpen && (e.key === 'Enter' || e.key === ' ') && document.activeElement.classList.contains('custom-select-option')) {
             e.preventDefault();
             document.activeElement.click();
@@ -259,7 +269,6 @@
     const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
     document.body.classList.toggle('sidebar-open', isOpen);
     elements.sidebar.burger.classList.toggle('active', isOpen);
-
     if (isOpen) {
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
@@ -284,9 +293,14 @@
     const nextView = viewMap[nextMode];
     if (!nextView) return;
 
-    // Update URL and History if it's a direct navigation
+    if (nextMode === 'home') {
+      elements.headerSearch.container.classList.remove('hidden');
+    } else {
+      elements.headerSearch.container.classList.add('hidden');
+      elements.headerSearch.container.classList.remove('active');
+    }
+
     if (!fromPopState) {
-        // Preserve existing search params when changing path
         const search = window.location.search;
         const path = nextMode === 'home' ? `/${search}` : `/${nextMode}${search}`;
         const title = `PlayPal.ID - ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`;
@@ -306,7 +320,7 @@
       toggleSidebar(false);
     }
 
-    if (fromPopState) { // Avoid smooth scroll on back/forward
+    if (fromPopState) {
         window.scrollTo(0, 0);
     } else {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -329,11 +343,8 @@
     });
     const categories = [...categoryMap].map(([key, label]) => ({ key, label }));
     options.innerHTML = '';
-    
-    // Determine active category (could be set by URL handler)
     const activeCategoryKey = state.home.activeCategory || (categories.length > 0 ? categories[0].key : '');
     const activeCategory = categories.find(c => c.key === activeCategoryKey);
-    
     if (activeCategory) {
         state.home.activeCategory = activeCategory.key;
         value.textContent = activeCategory.label;
@@ -343,7 +354,6 @@
     } else {
         value.textContent = 'Data tidak tersedia';
     }
-
     categories.forEach(cat => {
       const el = document.createElement('div');
       el.className = 'custom-select-option';
@@ -352,20 +362,16 @@
       el.setAttribute('role', 'option');
       el.setAttribute('tabindex', '-1');
       if (cat.key === state.home.activeCategory) el.classList.add('selected');
-
       el.addEventListener('click', () => {
         state.home.activeCategory = cat.key;
         value.textContent = cat.label;
         document.querySelector('#homeCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         el.classList.add('selected');
         toggleCustomSelect(elements.home.customSelect.wrapper, false);
-        
         const url = new URL(window.location);
         const urlFriendlyCategory = cat.label.toLowerCase().replace(/ /g, '-').replace(/[+&]/g, '');
-        
         url.searchParams.set('kategori', urlFriendlyCategory);
         history.pushState({ activeCategory: cat.key }, '', url);
-
         renderHomeList();
       });
       options.appendChild(el);
@@ -378,21 +384,16 @@
   async function loadCatalog() { 
     if (catalogFetchController) catalogFetchController.abort();
     catalogFetchController = new AbortController();
-    
     try { 
       elements.home.errorContainer.style.display = 'none'; 
       showSkeleton(elements.home.listContainer, elements.skeletonItemTemplate, 6); 
-      
       const res = await fetch(getSheetUrl(config.sheets.katalog.name), { signal: catalogFetchController.signal }); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      
       const text = await res.text(); 
       allCatalogData = parseGvizPairs(text); 
       if (allCatalogData.length === 0) throw new Error('Data is empty or format is incorrect.'); 
-      
       const params = new URLSearchParams(window.location.search);
       const categoryFromUrl = params.get('kategori');
-
       if (categoryFromUrl && (window.location.pathname === '/' || window.location.pathname.endsWith('/index.html'))) {
           const urlToCatKeyMap = new Map();
           allCatalogData.forEach(item => {
@@ -401,13 +402,11 @@
                   urlToCatKeyMap.set(urlFriendlyLabel, item.catKey);
               }
           });
-
           const foundKey = urlToCatKeyMap.get(categoryFromUrl);
           if (foundKey) {
               state.home.activeCategory = foundKey;
           }
       }
-      
       buildHomeCategorySelect(allCatalogData); 
       renderHomeList(); 
     } catch (err) { 
@@ -439,12 +438,10 @@
     updatePriceDetails();
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('visible'), 10);
-
     const focusableEls = modal.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), input[type="radio"]:not([disabled])');
     modalFocusTrap.focusableEls = Array.from(focusableEls);
     modalFocusTrap.firstEl = modalFocusTrap.focusableEls[0];
     modalFocusTrap.lastEl = modalFocusTrap.focusableEls[modalFocusTrap.focusableEls.length - 1];
-    
     modalFocusTrap.listener = function(e) {
       if (e.key !== 'Tab') return;
       if (e.shiftKey) { 
@@ -466,11 +463,9 @@
   function closePaymentModal() { document.documentElement.style.overflow = ""; document.body.style.overflow = "";
     const { modal } = elements.paymentModal;
     modal.classList.remove('visible');
-    
     if (modalFocusTrap.listener) {
       modal.removeEventListener('keydown', modalFocusTrap.listener);
     }
-
     setTimeout(() => {
       modal.style.display = 'none';
       currentSelectedItem = null;
@@ -489,7 +484,6 @@
   async function fetchPreorderData(sheetName) { 
     if (preorderFetchController) preorderFetchController.abort();
     preorderFetchController = new AbortController();
-
     const { listContainer, total } = elements.preorder; 
     total.textContent = 'Memuat data...'; 
     showSkeleton(listContainer, elements.skeletonCardTemplate, 5); 
@@ -497,7 +491,6 @@
     try { 
       const res = await fetch(getSheetUrl(sheetName, 'csv'), { signal: preorderFetchController.signal }); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      
       const text = await res.text(); 
       let rows = text.trim().split('\n').map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim())); 
       if (rows.length < 2) { 
@@ -520,16 +513,12 @@
 
   function initializePreorder() {
     if (state.preorder.initialized) return;
-  
     const rebound = () => {
       state.preorder.currentPage = 1;
       renderPreorderCards();
     };
-  
     const { searchInput, statusSelect, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
-  
     searchInput.addEventListener('input', rebound);
-
     customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
         const selectedValue = e.target.dataset.value;
@@ -542,7 +531,6 @@
         toggleCustomSelect(customSelect.wrapper, false);
       });
     });
-  
     customStatusSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
         const selectedValue = e.target.dataset.value;
@@ -555,7 +543,6 @@
         rebound();
       });
     });
-  
     prevBtn.addEventListener('click', () => {
       if (state.preorder.currentPage > 1) {
         state.preorder.currentPage--;
@@ -568,12 +555,9 @@
       renderPreorderCards();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
-  
     fetchPreorderData(config.sheets.preorder.name1);
     state.preorder.initialized = true;
   }
-
-  // --- AKUN GAME FUNCTIONS ---
 
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
   
@@ -601,34 +585,28 @@
     const { customSelect } = elements.accounts;
     const { options, value } = customSelect;
     const categories = ['Semua Kategori', 'Mobile Legends', 'Free Fire', 'Roblox', 'PUBG Mobile', 'Clash Of Clans', 'Lainnya'];
-    
     options.innerHTML = '';
     value.textContent = state.accounts.activeCategory;
-
     categories.forEach((cat) => {
       const el = document.createElement('div');
       el.className = 'custom-select-option';
       el.textContent = cat;
       el.dataset.value = cat;
       if (cat === state.accounts.activeCategory) el.classList.add('selected');
-      
       el.addEventListener('click', () => {
         value.textContent = cat;
         document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         el.classList.add('selected');
         toggleCustomSelect(customSelect.wrapper, false);
         state.accounts.activeCategory = cat;
-
         const url = new URL(window.location);
         const urlFriendlyCategory = cat.toLowerCase().replace(/ /g, '-');
-
         if (cat === 'Semua Kategori') {
           url.searchParams.delete('kategori');
         } else {
           url.searchParams.set('kategori', urlFriendlyCategory);
         }
         history.pushState({ activeCategory: cat }, '', url);
-
         renderAccountCards();
       });
       options.appendChild(el);
@@ -638,32 +616,25 @@
   function renderAccountCards() {
     const { cardGrid, cardTemplate, empty } = elements.accounts;
     const { activeCategory } = state.accounts;
-    
     const filteredAccounts = state.accounts.allData.filter(acc => 
         activeCategory === 'Semua Kategori' || acc.category === activeCategory
     );
-    
     cardGrid.innerHTML = '';
-    
     if (filteredAccounts.length === 0) {
       empty.style.display = 'flex';
       return;
     }
-    
     empty.style.display = 'none';
     const fragment = document.createDocumentFragment();
-
     filteredAccounts.forEach(account => {
       const cardClone = cardTemplate.content.cloneNode(true);
       const cardElement = cardClone.querySelector('.account-card');
-      
       const carouselWrapper = cardElement.querySelector('.account-card-carousel-wrapper');
       if (account.images && account.images.length > 0) {
         const carouselContainer = document.createElement('div');
         carouselContainer.className = 'carousel-container';
         const slides = account.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar detail untuk ${account.category}" loading="lazy"></div>`).join('');
         const indicators = account.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
-        
         carouselContainer.innerHTML = `
           <div class="carousel-track">${slides}</div>
           ${account.images.length > 1 ? `
@@ -678,12 +649,10 @@
         `;
         carouselWrapper.appendChild(carouselContainer);
       }
-
       cardElement.querySelector('h3').textContent = formatToIdr(account.price);
       const statusBadge = cardElement.querySelector('.account-status-badge');
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
-
       const specsContainer = cardElement.querySelector('.account-card-specs');
       const specsList = document.createElement('ul');
       specsList.className = 'specs-list';
@@ -698,10 +667,8 @@
         }
       });
       specsContainer.appendChild(specsList);
-
       cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
       cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
-
       const trigger = cardElement.querySelector('.account-card-main-info');
       trigger.addEventListener('click', () => {
         cardElement.classList.toggle('expanded');
@@ -712,12 +679,9 @@
           cardElement.classList.toggle('expanded');
         }
       });
-
       fragment.appendChild(cardElement);
     });
-
     cardGrid.appendChild(fragment);
-
     cardGrid.querySelectorAll('.carousel-container').forEach(carouselContainer => {
       const imageCount = carouselContainer.querySelectorAll('.carousel-slide').length;
       if (imageCount > 1) {
@@ -726,7 +690,6 @@
         const nextBtn = carouselContainer.querySelector('.next');
         const indicators = carouselContainer.querySelectorAll('.indicator-dot');
         let currentIndex = 0;
-
         const update = () => {
           if (!track || !prevBtn || !nextBtn || !indicators) return;
           track.style.transform = `translateX(-${currentIndex * 100}%)`;
@@ -734,7 +697,6 @@
           nextBtn.disabled = currentIndex >= imageCount - 1;
           indicators.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
         };
-
         nextBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex < imageCount - 1) { currentIndex++; update(); } });
         prevBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex > 0) { currentIndex--; update(); } });
         indicators.forEach(dot => dot.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = parseInt(e.target.dataset.index, 10); update(); }));
@@ -749,13 +711,11 @@
     if (categoryFromUrl) {
       const categoriesMap = {'mobile-legends': 'Mobile Legends', 'free-fire': 'Free Fire', 'pubg-mobile': 'PUBG Mobile', 'clash-of-clans': 'Clash Of Clans'};
       const foundCategory = categoriesMap[categoryFromUrl] || categoryFromUrl.charAt(0).toUpperCase() + categoryFromUrl.slice(1);
-      
       const validCategories = ['Mobile Legends', 'Free Fire', 'Roblox', 'PUBG Mobile', 'Clash Of Clans', 'Lainnya'];
       if(validCategories.includes(foundCategory)) {
         state.accounts.activeCategory = foundCategory;
       }
     }
-
     if (state.accounts.initialized) {
         populateAccountCategorySelect();
         renderAccountCards();
@@ -763,16 +723,13 @@
     }
     if (accountsFetchController) accountsFetchController.abort();
     accountsFetchController = new AbortController();
-
     const { cardGrid, error, empty } = elements.accounts; 
     error.style.display = 'none'; 
     empty.style.display = 'none';
     cardGrid.innerHTML = '';
-    
     try { 
       const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv'), { signal: accountsFetchController.signal }); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      
       const text = await res.text(); 
       state.accounts.allData = await parseAccountsSheet(text); 
       populateAccountCategorySelect();
@@ -785,11 +742,8 @@
       cardGrid.innerHTML = '';
       empty.style.display = 'none';
     } 
-    
     state.accounts.initialized = true; 
   }
-
-  // --- START: Library Functions ---
 
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
@@ -830,8 +784,6 @@
     container.appendChild(fragment);
   }
   
-  // --- END: Library Functions ---
-
   const originalSetMode = setMode;
   setMode = function(nextMode, fromPopState = false) {
     originalSetMode(nextMode, fromPopState); 
@@ -842,7 +794,6 @@
   
   document.addEventListener('DOMContentLoaded', initializeApp);
 
-  // ===== BEGIN: Testimonials (Sheet7: Nama | MediaURL) =====
 function pp_csvParse(text) {
   const rows = []; let row = []; let cur = ''; let inQuotes = false;
   for (let i=0; i<text.length; i++) {
@@ -883,27 +834,21 @@ async function loadTestimonials() {
   const track = document.getElementById('testiTrack');
   const section = document.getElementById('testimonialSection');
   if (!track || !section) return;
-
   try {
     const res = await fetch(pp_getCsvUrl('Sheet7'));
     if (!res.ok) throw new Error('Network: ' + res.status);
     const csv = await res.text();
     const rows = pp_csvParse(csv);
     if (!rows.length) { section.style.display = 'none'; return; }
-
     const header = rows[0].map(x => (x||'').toLowerCase().trim());
     let data = rows;
     if (header[0].includes('nama') || header[1].includes('media')) data = rows.slice(1);
-
     const items = data.filter(r => r && r[0] && r[1])
                       .map(r => ({ name: String(r[0]).trim(), url: String(r[1]).trim() }));
-
     if (!items.length) { section.style.display = 'none'; return; }
-
     track.innerHTML = '';
     track.appendChild(pp_makeNodes(items));
     track.appendChild(pp_makeNodes(items));
-
     let pos = 0;
     let speed = 85;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -913,20 +858,17 @@ async function loadTestimonials() {
     let startX = 0, startPos = 0;
     let pausedByHover = false;
     let rafId = null, lastTs = 0;
-
     function measure() { halfWidth = Math.max(1, Math.round(track.scrollWidth / 2)); }
     measure();
     Array.from(track.querySelectorAll('img')).forEach(img => {
       img.addEventListener('load', measure, { once: true });
       img.addEventListener('error', measure, { once: true });
     });
-
     function applyTransform() {
       while (pos <= -halfWidth) pos += halfWidth;
       while (pos > 0) pos -= halfWidth;
       track.style.transform = `translateX(${pos}px)`;
     }
-
     function step(ts) {
       if (!lastTs) lastTs = ts;
       const dt = (ts - lastTs) / 1000;
@@ -938,48 +880,44 @@ async function loadTestimonials() {
       rafId = requestAnimationFrame(step);
     }
     cancelAnimationFrame(rafId); rafId = requestAnimationFrame(step);
-
     marquee.addEventListener('mouseenter', () => { pausedByHover = true; });
     marquee.addEventListener('mouseleave', () => { pausedByHover = false; });
-    
     const onPointerDown = (e) => { dragging = true; track.classList.add('dragging'); startX = (e.touches ? e.touches[0].clientX : e.clientX); startPos = pos; marquee.setPointerCapture && marquee.setPointerCapture(e.pointerId || 1); e.preventDefault(); };
     const onPointerMove = (e) => { if (!dragging) return; const x = (e.touches ? e.touches[0].clientX : e.clientX); pos = startPos + (x - startX); applyTransform(); };
     const onPointerUp = (e) => { dragging = false; track.classList.remove('dragging'); marquee.releasePointerCapture && marquee.releasePointerCapture(e.pointerId || 1); };
-
     marquee.addEventListener('pointerdown', onPointerDown, { passive: false });
     window.addEventListener('pointermove', onPointerMove, { passive: false });
     window.addEventListener('pointerup', onPointerUp, { passive: true });
     marquee.addEventListener('touchstart', onPointerDown, { passive: false });
     window.addEventListener('touchmove', onPointerMove, { passive: false });
     window.addEventListener('touchend', onPointerUp, { passive: true });
-
   } catch (err) {
     console.error('Testimonials error:', err);
     if (section) section.style.display = 'none';
   }
 }
 
-  const originalSetMode2 = setMode;
-  setMode = function(nextMode, fromPopState = false) {
-    originalSetMode2(nextMode, fromPopState);
-    elements.sidebar.links.forEach(link => {
-      const active = link.dataset.mode === nextMode;
-      if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
-    });
-  };
+const originalSetMode2 = setMode;
+setMode = function(nextMode, fromPopState = false) {
+  originalSetMode2(nextMode, fromPopState);
+  elements.sidebar.links.forEach(link => {
+    const active = link.dataset.mode === nextMode;
+    if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
+  });
+};
 
-  function __ppEscHandler(e) {
-    if (e.key === 'Escape') {
-      if (elements.paymentModal.modal && elements.paymentModal.modal.classList.contains('visible')) {
-        closePaymentModal();
-        elements.paymentModal.closeBtn && elements.paymentModal.closeBtn.focus();
-      } else if (document.body.classList.contains('sidebar-open')) {
-        toggleSidebar(false);
-        elements.sidebar.burger && elements.sidebar.burger.focus();
-      }
+function __ppEscHandler(e) {
+  if (e.key === 'Escape') {
+    if (elements.paymentModal.modal && elements.paymentModal.modal.classList.contains('visible')) {
+      closePaymentModal();
+      elements.paymentModal.closeBtn && elements.paymentModal.closeBtn.focus();
+    } else if (document.body.classList.contains('sidebar-open')) {
+      toggleSidebar(false);
+      elements.sidebar.burger && elements.sidebar.burger.focus();
     }
   }
-  document.addEventListener('keydown', __ppEscHandler);
+}
+document.addEventListener('keydown', __ppEscHandler);
 document.addEventListener('DOMContentLoaded', loadTestimonials);
 
 })();
