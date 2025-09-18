@@ -1015,18 +1015,10 @@ body.sidebar-open .sidebar {
 .action-btn:hover { transform: scale(1.03); }
 .action-btn.buy { background-color: var(--brand-blue); color: #fff; }
 .action-btn.offer { background-color: var(--surface-secondary); color: var(--text-primary); }
-
-/*
- * Sidebar Icon Styling
- *
- * This block uses the CSS mask property to allow external SVG files
- * to be recolored dynamically using 'background-color'.
-*/
 .nav-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  
   mask-image: var(--icon-url);
   -webkit-mask-image: var(--icon-url);
   mask-size: contain;
@@ -1035,15 +1027,65 @@ body.sidebar-open .sidebar {
   -webkit-mask-repeat: no-repeat;
   mask-position: center;
   -webkit-mask-position: center;
-
   background-color: var(--text-secondary);
   transition: background-color var(--duration-fast);
 }
-
 .nav-item:hover .nav-icon {
   background-color: var(--text-primary);
 }
-
 .nav-item.active .nav-icon {
   background-color: #fff;
+}
+
+/* Styling untuk Aksi di Header */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-fib-2);
+}
+
+/* Kontainer untuk Ikon dan Input Pencarian */
+.header-search-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Tombol Ikon Pencarian */
+.header-search-btn {
+  z-index: 2; 
+}
+
+/* Input Pencarian di Header */
+.header-search-input {
+  height: 44px;
+  border: none;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  border-radius: var(--radius-fib-small);
+  outline: none;
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: width 0.3s var(--ease-natural), 
+              opacity 0.2s var(--ease-natural),
+              padding 0.3s var(--ease-natural),
+              transform 0.3s var(--ease-natural);
+}
+
+/* State Aktif (Saat Ikon Diklik) */
+.header-search-container.active .header-search-input {
+  width: 200px;
+  opacity: 1;
+  padding: 0 var(--sp-fib-4);
+  transform: translateX(0);
+  margin-right: -44px;
+  padding-right: 50px;
+}
+
+/* Untuk menyembunyikan ikon di halaman lain */
+.header-search-container.hidden {
+  display: none;
 }
