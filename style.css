@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --brand-blue: #5C80BC;
   --brand-blue-rgb: 92, 128, 188;
   --success: #3dc1d3;
@@ -42,18 +42,6 @@
   --ease-natural: cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-width: 300px;
   --header-height: 60px; /* Fallback value */
-}
-body.dark-mode {
-  --bg-primary: #303952;
-  --bg-primary-rgb: 48, 57, 82;
-  --text-primary: #f3f3f3;
-  --text-secondary: rgba(243, 243, 243, 0.7);
-  --text-tertiary: rgba(243, 243, 243, 0.5);
-  --surface-primary: #3a425b;
-  --surface-secondary: #4a4f65;
-  --surface-tertiary: #424b64;
-  --separator: rgba(243, 243, 243, 0.12);
-  --shadow-sm: 0 5px 13px rgba(0, 0, 0, 0.2);
 }
 * {
   box-sizing: border-box;
@@ -232,9 +220,6 @@ body.sidebar-open .page-container {
   border-bottom: 1px solid var(--separator);
   will-change: transform;
 }
-body.dark-mode .main-header {
-  background: rgba(var(--bg-primary-rgb), 0.75);
-}
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -302,46 +287,6 @@ body.dark-mode .main-header {
 }
 .icon-btn:active {
   transform: scale(0.95);
-}
-.sidebar-action-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--sp-fib-3) var(--sp-fib-4);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-.theme-toggle-btn {
-  width: auto;
-  height: auto;
-  padding: var(--sp-fib-3);
-  border: none;
-  background: var(--surface-secondary);
-  box-shadow: none;
-  overflow: hidden;
-}
-#themeToggleBtn .icon, .theme-toggle-btn .icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transition: opacity var(--duration-natural) var(--ease-natural), transform var(--duration-natural) var(--ease-natural);
-}
-.icon-sun {
-  opacity: 0;
-  transform: translate(-50%, -50%) rotate(-90deg) scale(0.5);
-}
-.icon-moon {
-  opacity: 1;
-  transform: translate(-50%, -50%) rotate(0deg) scale(1);
-}
-body.dark-mode .icon-sun {
-  opacity: 1;
-  transform: translate(-50%, -50%) rotate(0deg) scale(1);
-}
-body.dark-mode .icon-moon {
-  opacity: 0;
-  transform: translate(-50%, -50%) rotate(90deg) scale(0.5);
 }
 .burger span {
   display: block;
@@ -735,9 +680,6 @@ body.dark-mode .icon-moon {
   background-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.04), transparent);
   transform: translateX(-100%);
   animation: shimmer 1.8s infinite;
-}
-body.dark-mode .skeleton::after {
-  background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
 }
 .skeleton-text {
   display: block;
