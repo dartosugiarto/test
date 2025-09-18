@@ -61,12 +61,10 @@
       burger: getElement('burgerBtn'),
       links: document.querySelectorAll('.sidebar-nav .nav-item'),
     },
-    themeToggle: getElement('themeToggleBtn'),
     viewHome: getElement('viewHome'),
     viewPreorder: getElement('viewPreorder'),
     viewAccounts: getElement('viewAccounts'),
     viewPerpustakaan: getElement('viewPerpustakaan'),
-    viewFilm: getElement('viewFilm'),
     home: {
       listContainer: getElement('homeListContainer'),
       searchInput: getElement('homeSearchInput'),
@@ -131,7 +129,6 @@
    * Main application entry point.
    */
   function initializeApp() {
-    elements.themeToggle?.addEventListener('click', toggleTheme);
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     
@@ -184,7 +181,6 @@
     setupKeyboardNavForSelect(elements.preorder.customStatusSelect.wrapper);
     setupKeyboardNavForSelect(elements.accounts.customSelect.wrapper);
     
-    initTheme();
     loadCatalog();
     
     // Handle back/forward browser buttons
@@ -200,7 +196,7 @@
     const handleInitialLoad = () => {
         const path = window.location.pathname;
         const potentialMode = path.substring(1).toLowerCase() || 'home';
-        const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'film'];
+        const validModes = ['home', 'preorder', 'accounts', 'perpustakaan'];
 
         if (validModes.includes(potentialMode)) {
             setMode(potentialMode, true); // Set initial view without pushing to history
@@ -258,10 +254,20 @@
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
-  function applyTheme(theme) { document.body.classList.toggle('dark-mode', theme === 'dark'); const btn = elements.themeToggle; if (btn) btn.setAttribute('aria-pressed', theme === 'dark'); document.documentElement.style.colorScheme = (theme === 'dark') ? 'dark' : 'light'; }
-  function initTheme() { const savedTheme = localStorage.getItem('theme'); const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light'); applyTheme(currentTheme); }
-  function toggleTheme() { const newTheme = document.body.classList.contains('dark-mode') ? 'light' : 'dark'; localStorage.setItem('theme', newTheme); applyTheme(newTheme); }
-  function toggleSidebar(forceOpen) { const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open'); document.body.classList.toggle('sidebar-open', isOpen); elements.sidebar.burger.classList.toggle('active', isOpen); }
+  
+  function toggleSidebar(forceOpen) {
+    const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
+    document.body.classList.toggle('sidebar-open', isOpen);
+    elements.sidebar.burger.classList.toggle('active', isOpen);
+
+    if (isOpen) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    }
+  }
   
   let setMode = function(nextMode, fromPopState = false) {
     if (nextMode === 'donasi') {
@@ -274,7 +280,6 @@
       preorder: elements.viewPreorder,
       accounts: elements.viewAccounts,
       perpustakaan: elements.viewPerpustakaan,
-      film: elements.viewFilm,
     };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
