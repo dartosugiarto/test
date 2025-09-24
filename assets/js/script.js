@@ -659,20 +659,39 @@
       const statusBadge = cardElement.querySelector('.account-status-badge');
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
+      
       const specsContainer = cardElement.querySelector('.account-card-specs');
       const specsList = document.createElement('ul');
       specsList.className = 'specs-list';
+      
       const specs = account.description.split('\n');
+      
+      // --- PERUBAHAN DIMULAI DI SINI ---
+      const specTitles = ['Spesifikasi Akun', 'Pengaturan Akun', 'Kontak Penjual']; // Daftar judul yang akan diberi gaya khusus
+      
       specs.forEach(spec => {
         const trimmedSpec = spec.trim();
         if (trimmedSpec === '') {
           specsList.innerHTML += `<li class="spec-divider"></li>`;
         } else {
-          const isTitle = ['Spesifikasi Akun', 'Pengaturan Akun', 'Kontak Penjual'].some(title => trimmedSpec.startsWith(title));
-          specsList.innerHTML += `<li class="${isTitle ? 'spec-title' : 'spec-item'}">${trimmedSpec}</li>`;
+          // Cek apakah baris ini adalah judul
+          const isTitle = specTitles.some(title => trimmedSpec.startsWith(title));
+          
+          const li = document.createElement('li');
+          li.textContent = trimmedSpec;
+          
+          if (isTitle) {
+            li.className = 'spec-title';
+          } else {
+            li.className = 'spec-item';
+          }
+          specsList.appendChild(li);
         }
       });
+      // --- PERUBAHAN SELESAI ---
+
       specsContainer.appendChild(specsList);
+
       cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
       cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
       const trigger = cardElement.querySelector('.account-card-main-info');
