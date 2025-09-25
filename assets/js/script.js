@@ -48,6 +48,9 @@
       allData: [],
       activeCategory: 'Semua Kategori',
     },
+    carousell: {
+        initialized: false,
+    },
   };
 
   function getElement(id) {
@@ -65,6 +68,7 @@
     viewPreorder: getElement('viewPreorder'),
     viewAccounts: getElement('viewAccounts'),
     viewPerpustakaan: getElement('viewPerpustakaan'),
+    viewCarousell: getElement('viewCarousell'),
     home: {
       listContainer: getElement('homeListContainer'),
       countInfo: getElement('homeCountInfo'),
@@ -126,6 +130,10 @@
         value: getElement('accountCustomSelectValue'),
         options: getElement('accountCustomSelectOptions'),
       },
+    },
+    carousell: {
+        gridContainer: getElement('carousellGridContainer'),
+        error: getElement('carousellError'),
     },
   };
 
@@ -216,7 +224,7 @@
     const handleInitialLoad = () => {
         const path = window.location.pathname;
         const potentialMode = path.substring(1).toLowerCase() || 'home';
-        const validModes = ['home', 'preorder', 'accounts', 'perpustakaan'];
+        const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'carousell'];
 
         if (validModes.includes(potentialMode)) {
             setMode(potentialMode, true);
@@ -307,6 +315,7 @@
       preorder: elements.viewPreorder,
       accounts: elements.viewAccounts,
       perpustakaan: elements.viewPerpustakaan,
+      carousell: elements.viewCarousell,
     };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
@@ -802,12 +811,68 @@
     });
     container.appendChild(fragment);
   }
+
+  async function initializeCarousell() {
+    if (state.carousell.initialized) return;
+
+    const container = elements.carousell.gridContainer;
+    const errorEl = elements.carousell.error;
+    container.innerHTML = ''; 
+    errorEl.style.display = 'none';
+    
+    try {
+      const res = await fetch(getSheetUrl('Sheet8', 'csv'));
+      if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
+      const text = await res.text();
+      const rows = robustCsvParser(text);
+      rows.shift();
+      
+      const items = rows.filter(r => r && r[1] && r[2]).map(r => ({ 
+        name: r[1], 
+        coverUrl: r[2], 
+        linkUrl: r[3] 
+      }));
+      
+      renderCarousellGrid(items);
+    } catch (err) {
+      console.error('Failed to load Carousell:', err);
+      errorEl.textContent = 'Gagal memuat item Carousell. Coba lagi nanti.';
+      errorEl.style.display = 'block';
+    }
+    state.carousell.initialized = true;
+  }
+
+  function renderCarousellGrid(items) {
+    const container = elements.carousell.gridContainer;
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div class="empty">Belum ada item yang ditambahkan di Carousell.</div>';
+      return;
+    }
+    
+    container.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+    items.forEach(item => {
+      const card = document.createElement('a');
+      card.className = 'book-card';
+      card.href = item.linkUrl || '#';
+      if(item.linkUrl) {
+          card.target = '_blank';
+          card.rel = 'noopener';
+      }
+      card.innerHTML = `<img src="${item.coverUrl}" alt="${item.name}" class="cover" decoding="async" loading="lazy"><div class="overlay"></div><div class="title">${item.name}</div>`;
+      fragment.appendChild(card);
+    });
+    container.appendChild(fragment);
+  }
   
   const originalSetMode = setMode;
   setMode = function(nextMode, fromPopState = false) {
     originalSetMode(nextMode, fromPopState); 
     if (nextMode === 'perpustakaan') {
       initializeLibrary();
+    }
+    if (nextMode === 'carousell') {
+      initializeCarousell();
     }
   };
   
