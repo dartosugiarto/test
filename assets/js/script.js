@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 12.0.0 (Professional refactor with reusable helper functions for carousels and expandable cards)
+ * @version 12.1.0 (Final UI tweaks for affiliate cards)
  */
 
 (function () {
@@ -246,7 +246,8 @@
 
     // Custom Selects
     [elements.home.customSelect, elements.preorder.customSelect, elements.preorder.customStatusSelect, elements.accounts.customSelect]
-      .forEach(select => select.btn?.addEventListener('click', (e) => {
+      .filter(select => select && select.btn)
+      .forEach(select => select.btn.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleCustomSelect(select.wrapper);
       }));
@@ -271,9 +272,8 @@
     // Global Click Listener for closing dropdowns/search
     document.addEventListener('click', (e) => {
       [elements.home.customSelect.wrapper, elements.preorder.customSelect.wrapper, elements.preorder.customStatusSelect.wrapper, elements.accounts.customSelect.wrapper]
-        .forEach(wrapper => {
-            if(wrapper) toggleCustomSelect(wrapper, false)
-        });
+        .filter(wrapper => wrapper)
+        .forEach(wrapper => toggleCustomSelect(wrapper, false));
       if (!elements.headerSearch.container.contains(e.target)) {
         elements.headerSearch.container.classList.remove('active');
       }
@@ -729,6 +729,8 @@
           } else {
             imagesHTML = `<div class="affiliate-card-img-container"></div>`;
           }
+          
+          const platformHTML = product.platform ? `<p class="affiliate-card-platform">${product.platform}</p>` : '';
 
           card.innerHTML = `
             ${imagesHTML}
@@ -737,6 +739,7 @@
                   <h3 class="affiliate-card-title">${product.name}</h3>
                   <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg>
                 </div>
+                ${platformHTML}
                 <p class="affiliate-card-price">${formatToIdr(product.price)}</p>
                 <div class="affiliate-card-details-wrapper">
                   <p class="affiliate-card-desc">${product.description}</p>
@@ -757,7 +760,7 @@
     const section = document.getElementById('testimonialSection');
     if (!track || !section) return;
     try {
-      const res = await fetch(pp_getCsvUrl('Sheet7'));
+      const res = await fetch(getSheetUrl('Sheet7'));
       if (!res.ok) throw new Error('Network: ' + res.status);
       const csv = await res.text(); const rows = robustCsvParser(csv); if (!rows.length) { section.style.display = 'none'; return; }
       const items = rows.slice(1).filter(r => r && r[0] && r[1]).map(r => ({ name: String(r[0]).trim(), url: String(r[1]).trim() }));
