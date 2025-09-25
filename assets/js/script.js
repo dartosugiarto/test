@@ -495,6 +495,30 @@
     state.preorder.initialized = true;
   }
   
+  function populateAccountCategorySelect() {
+    const { customSelect } = elements.accounts;
+    const { options, value } = customSelect;
+    const categories = ['Semua Kategori', 'Mobile Legends', 'Free Fire', 'Roblox', 'PUBG Mobile', 'Clash Of Clans', 'Lainnya'];
+    options.innerHTML = '';
+    value.textContent = state.accounts.activeCategory;
+    categories.forEach((cat) => {
+      const el = document.createElement('div');
+      el.className = 'custom-select-option';
+      el.textContent = cat;
+      el.dataset.value = cat;
+      if (cat === state.accounts.activeCategory) el.classList.add('selected');
+      el.addEventListener('click', () => {
+        value.textContent = cat;
+        document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+        el.classList.add('selected');
+        toggleCustomSelect(customSelect.wrapper, false);
+        state.accounts.activeCategory = cat;
+        renderAccountCards();
+      });
+      options.appendChild(el);
+    });
+  }
+
   async function parseAccountsSheet(text) {
     const rows = robustCsvParser(text);
     rows.shift();
@@ -560,6 +584,7 @@
       const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv')); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
       state.accounts.allData = await parseAccountsSheet(await res.text()); 
+      populateAccountCategorySelect();
       renderAccountCards();
     } catch (err) { 
       if (err.name === 'AbortError') return;
@@ -694,6 +719,17 @@
       initializeCarousels(container);
   }
   
+  function pp_makeNodes(list) {
+    const frag = document.createDocumentFragment();
+    list.forEach(({ name, url }) => {
+      const li = document.createElement('li');
+      li.className = 'testi-item';
+      li.innerHTML = `<figure class="testi-fig"><img src="${url}" alt="Testimoni ${name.replace(/"/g,'&quot;')}" decoding="async" loading="lazy"></figure><figcaption class="testi-caption">— ${name.replace(/</g,'&lt;')}</figcaption>`;
+      frag.appendChild(li);
+    });
+    return frag;
+  }
+
   async function loadTestimonials() {
     const track = document.getElementById('testiTrack');
     const section = document.getElementById('testimonialSection');
@@ -704,8 +740,7 @@
       const csv = await res.text(); const rows = robustCsvParser(csv); if (!rows.length) { section.style.display = 'none'; return; }
       const items = rows.slice(1).filter(r => r && r[0] && r[1]).map(r => ({ name: String(r[0]).trim(), url: String(r[1]).trim() }));
       if (!items.length) { section.style.display = 'none'; return; }
-      const makeNodes = (list) => { const frag = document.createDocumentFragment(); list.forEach(({ name, url }) => { const li = document.createElement('li'); li.className = 'testi-item'; li.innerHTML = `<figure class="testi-fig"><img src="${url}" alt="Testimoni ${name.replace(/"/g,'&quot;')}" decoding="async" loading="lazy" referrerpolicy="no-referrer"></figure><figcaption class="testi-caption">— ${name.replace(/</g,'&lt;')}</figcaption>`; frag.appendChild(li); }); return frag; };
-      track.innerHTML = ''; track.appendChild(makeNodes(items)); track.appendChild(makeNodes(items));
+      track.innerHTML = ''; track.appendChild(pp_makeNodes(items)); track.appendChild(pp_makeNodes(items));
     } catch (err) { console.error('Testimonials error:', err); if (section) section.style.display = 'none'; }
   }
   
