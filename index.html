@@ -90,8 +90,8 @@
         <div class="home-banner-container">
           <img src="/assets/images/banner-hero.webp" alt="PlayPal.ID Banner" class="home-banner-img">
         </div>
-        <div class="head-block" data-rail>
-          <div class="topbar" data-rail>
+        <div class="head-block">
+          <div class="topbar">
             <div class="topbar-grid">
               <div class="custom-select-wrapper" id="homeCustomSelectWrapper">
                 <button class="custom-select-btn" id="homeCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="homeCustomSelectOptions">
@@ -102,10 +102,10 @@
               </div>
             </div>
           </div>
-          <div id="homeCountInfo" data-rail aria-live="polite"></div>
+          <div id="homeCountInfo" aria-live="polite"></div>
         </div>
-        <section id="homeListContainer" class="list-container" aria-live="polite" data-rail></section>
-        <section id="homeErrorContainer" class="err" style="display:none" data-rail></section>
+        <section id="homeListContainer" class="list-container" aria-live="polite"></section>
+        <section id="homeErrorContainer" class="err" style="display:none"></section>
       </section>
 
       <section id="viewPreorder" class="view-section" aria-label="Pre-Order">
@@ -113,7 +113,7 @@
           <h1>Lacak Pre-Order</h1>
           <p class="page-subtitle">Cek status pesanan Anda di sini.</p>
         </header>
-        <div class="head-block" data-rail>
+        <div class="head-block">
           <div class="topbar-grid" style="grid-template-columns: 1fr;">
               <div class="custom-select-wrapper" id="preorderCustomSelectWrapper">
                 <button class="custom-select-btn" id="preorderCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="preorderCustomSelectOptions">
@@ -126,17 +126,17 @@
                 </div>
               </div>
           </div>
-          <div class="search-row" data-rail>
+          <div class="search-row">
             <div class="search-wrap">
-              <svg class="icon" xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
               <input id="preorderSearchInput" type="search" class="search-input" placeholder="Cari nama / ID Server..." />
             </div>
           </div>
-          <div class="status-row" data-rail>
+          <div class="status-row">
             <div class="custom-select-wrapper" id="preorderStatusCustomSelectWrapper">
               <button class="custom-select-btn" id="preorderStatusCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
                 <span id="preorderStatusCustomSelectValue">Semua Status</span>
-                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75_0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
               </button>
               <div class="custom-select-options" id="preorderStatusCustomSelectOptions" role="listbox">
                 <div class="custom-select-option selected" data-value="all">Semua Status</div>
@@ -154,11 +154,11 @@
               <option value="failed">Gagal</option>
             </select>
           </div>
-          <div id="preorderTotal" class="meta" data-rail></div>
+          <div id="preorderTotal" class="meta"></div>
         </div>
         <div class="container">
-          <main id="preorderListContainer" class="card-grid" aria-live="polite" data-rail></main>
-          <nav class="pagination" aria-label="Pagination" data-rail>
+          <main id="preorderListContainer" class="card-grid" aria-live="polite"></main>
+          <nav class="pagination" aria-label="Pagination">
             <button id="preorderPrevBtn" class="pagination-btn" disabled>Sebelumnya</button>
             <div id="preorderPageInfo" class="pagination-info"></div>
             <button id="preorderNextBtn" class="pagination-btn" disabled>Selanjutnya</button>
@@ -171,7 +171,7 @@
           <h1>Akun Game</h1>
           <p class="page-subtitle">Temukan akun game impian Anda dengan penawaran terbaik.</p>
         </header>
-        <div class="head-block" data-rail>
+        <div class="head-block">
             <div class="topbar-grid" style="grid-template-columns: 1fr;">
                 <div class="custom-select-wrapper" id="accountCustomSelectWrapper">
                   <button class="custom-select-btn" id="accountCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
@@ -183,9 +183,9 @@
             </div>
         </div>
         
-        <div id="accountCardGrid" class="account-card-grid" data-rail></div>
+        <div id="accountCardGrid" class="account-card-grid"></div>
         
-        <div id="accountEmpty" class="empty" style="display: none;" data-rail>
+        <div id="accountEmpty" class="empty" style="display: none;">
             <div class="empty-content">
               <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
@@ -193,7 +193,7 @@
               <p>Tidak ada akun dalam kategori ini.</p>
             </div>
         </div>
-        <section id="accountError" class="err" style="display:none" data-rail></section>
+        <section id="accountError" class="err" style="display:none"></section>
       </section>
 
       <section id="viewPerpustakaan" class="view-section" aria-label="Perpustakaan">
@@ -201,10 +201,8 @@
           <h1>Perpustakaan Digital</h1>
           <p class="page-subtitle">Kumpulan tulisan dan cerita pendek.</p>
         </header>
-      
         <div id="libraryGridContainer" class="library-grid"></div>
         <div id="libraryError" class="err" style="display:none"></div>
-      
       </section>
 
       <section id="viewAffiliate" class="view-section" aria-label="Rekomendasi Produk">
@@ -212,10 +210,8 @@
           <h1>Rekomendasi Produk</h1>
           <p class="page-subtitle">Produk pilihan terbaik yang kami rekomendasikan dari berbagai platform.</p>
         </header>
-      
         <div id="affiliateGridContainer" class="affiliate-grid"></div>
         <div id="affiliateError" class="err" style="display:none"></div>
-      
       </section>
       
     </main>
@@ -250,23 +246,16 @@
 
   <template id="accountCardTemplate">
     <article class="account-card">
-      <div class="account-card-carousel-wrapper">
-        </div>
-      
+      <div class="account-card-carousel-wrapper"></div>
       <div class="account-card-main-info" role="button" tabindex="0">
         <h3>Harga Akun</h3>
         <div class="status-wrapper">
           <span class="account-status-badge"></span>
-          <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-          </svg>
+          <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
         </div>
       </div>
-  
       <div class="account-card-details-wrapper">
-        <div class="account-card-specs">
-          </div>
-    
+        <div class="account-card-specs"></div>
         <div class="account-card-actions">
           <button type="button" class="action-btn buy">Beli Sekarang</button>
           <button type="button" class="action-btn offer">Tawar Harga</button>
@@ -275,7 +264,7 @@
     </article>
   </template>
   
-  <div id="paymentModal" class="modal-overlay" style="display: none;">
+  <div id="paymentModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
         <h2>Pilih Pembayaran</h2>
@@ -298,7 +287,6 @@
     </div>
   </div>
 
-
   <section id="testimonialSection" class="testi-wrap" aria-label="Testimoni pelanggan">
     <h2 class="testi-title">2.137 Ulasan Terverifikasi. — 4,8/5</h2>
     <div class="testi-marquee" aria-live="off">
@@ -307,21 +295,15 @@
   </section>
 
   <script>
+    // Sets --header-height CSS variable for layout calculations
     document.addEventListener('DOMContentLoaded', function() {
       const header = document.querySelector('.main-header');
-
-      // Fungsi untuk mengukur tinggi header dan mengupdate variabel CSS
       function updateHeaderHeight() {
         if (header) {
-          const headerHeight = header.offsetHeight;
-          document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+          document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
         }
       }
-
-      // Jalankan fungsi saat halaman pertama kali dimuat
       updateHeaderHeight();
-
-      // Jalankan kembali fungsi jika ukuran jendela berubah (untuk responsivitas)
       window.addEventListener('resize', updateHeaderHeight);
     });
   </script>
