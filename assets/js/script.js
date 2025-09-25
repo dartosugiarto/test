@@ -13,6 +13,7 @@
       katalog: { name: 'Sheet3' },
       preorder: { name1: 'Sheet1', name2: 'Sheet2' },
       accounts: { name: 'Sheet5' },
+      affiliate: { name: 'Sheet8' }
     },
     waNumber: '6285877001999',
     waGreeting: '*Detail pesanan:*',
@@ -48,9 +49,9 @@
       allData: [],
       activeCategory: 'Semua Kategori',
     },
-    carousell: {
+    affiliate: {
         initialized: false,
-    },
+    }
   };
 
   function getElement(id) {
@@ -68,7 +69,7 @@
     viewPreorder: getElement('viewPreorder'),
     viewAccounts: getElement('viewAccounts'),
     viewPerpustakaan: getElement('viewPerpustakaan'),
-    viewCarousell: getElement('viewCarousell'),
+    viewAffiliate: getElement('viewAffiliate'),
     home: {
       listContainer: getElement('homeListContainer'),
       countInfo: getElement('homeCountInfo'),
@@ -131,15 +132,12 @@
         options: getElement('accountCustomSelectOptions'),
       },
     },
-    carousell: {
-        gridContainer: getElement('carousellGridContainer'),
-        error: getElement('carousellError'),
-    },
+    affiliate: {
+        gridContainer: getElement('affiliateGridContainer'),
+        error: getElement('affiliateError'),
+    }
   };
 
-  /**
-   * Main application entry point.
-   */
   function initializeApp() {
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
@@ -224,7 +222,7 @@
     const handleInitialLoad = () => {
         const path = window.location.pathname;
         const potentialMode = path.substring(1).toLowerCase() || 'home';
-        const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'carousell'];
+        const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'affiliate'];
 
         if (validModes.includes(potentialMode)) {
             setMode(potentialMode, true);
@@ -292,18 +290,14 @@
   }
   
   let setMode = function(nextMode, fromPopState = false) {
-    // ================================================================
-    // KODE BARU: Menampilkan/menyembunyikan testimoni
-    // ================================================================
     const testimonialSection = document.getElementById('testimonialSection');
     if (testimonialSection) {
       if (nextMode === 'home') {
-        testimonialSection.style.display = 'block'; // Tampilkan di home
+        testimonialSection.style.display = 'block';
       } else {
-        testimonialSection.style.display = 'none';  // Sembunyikan di halaman lain
+        testimonialSection.style.display = 'none';
       }
     }
-    // ================================================================
 
     if (nextMode === 'donasi') {
       window.open('https://saweria.co/playpal', '_blank', 'noopener');
@@ -315,7 +309,7 @@
       preorder: elements.viewPreorder,
       accounts: elements.viewAccounts,
       perpustakaan: elements.viewPerpustakaan,
-      carousell: elements.viewCarousell,
+      affiliate: elements.viewAffiliate,
     };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
@@ -812,57 +806,68 @@
     container.appendChild(fragment);
   }
 
-  async function initializeCarousell() {
-    if (state.carousell.initialized) return;
+  async function initializeAffiliate() {
+    if (state.affiliate.initialized) return;
 
-    const container = elements.carousell.gridContainer;
-    const errorEl = elements.carousell.error;
-    container.innerHTML = ''; 
+    const container = elements.affiliate.gridContainer;
+    const errorEl = elements.affiliate.error;
+    container.innerHTML = '';
     errorEl.style.display = 'none';
-    
+
     try {
-      const res = await fetch(getSheetUrl('Sheet8', 'csv'));
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
-      const text = await res.text();
-      const rows = robustCsvParser(text);
-      rows.shift();
-      
-      const items = rows.filter(r => r && r[1] && r[2]).map(r => ({ 
-        name: r[1], 
-        coverUrl: r[2], 
-        linkUrl: r[3] 
-      }));
-      
-      renderCarousellGrid(items);
+        const res = await fetch(getSheetUrl(config.sheets.affiliate.name, 'csv'));
+        if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
+        const text = await res.text();
+        const rows = robustCsvParser(text);
+        rows.shift();
+
+        const products = rows.filter(r => r && r[0] && r[3]).map(r => ({
+            name: r[0],
+            price: Number(r[1]) || 0,
+            coverUrl: r[2],
+            linkUrl: r[3],
+            description: r[4] || 'Klik untuk melihat detail produk.',
+            platform: r[5] || ''
+        }));
+
+        renderAffiliateGrid(products);
     } catch (err) {
-      console.error('Failed to load Carousell:', err);
-      errorEl.textContent = 'Gagal memuat item Carousell. Coba lagi nanti.';
-      errorEl.style.display = 'block';
+        console.error('Failed to load affiliate products:', err);
+        errorEl.textContent = 'Gagal memuat produk rekomendasi. Coba lagi nanti.';
+        errorEl.style.display = 'block';
     }
-    state.carousell.initialized = true;
+    state.affiliate.initialized = true;
   }
 
-  function renderCarousellGrid(items) {
-    const container = elements.carousell.gridContainer;
-    if (!items || items.length === 0) {
-      container.innerHTML = '<div class="empty">Belum ada item yang ditambahkan di Carousell.</div>';
-      return;
-    }
-    
-    container.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    items.forEach(item => {
-      const card = document.createElement('a');
-      card.className = 'book-card';
-      card.href = item.linkUrl || '#';
-      if(item.linkUrl) {
-          card.target = '_blank';
-          card.rel = 'noopener';
+  function renderAffiliateGrid(products) {
+      const container = elements.affiliate.gridContainer;
+      if (!products || products.length === 0) {
+          container.innerHTML = '<div class="empty">Belum ada produk rekomendasi.</div>';
+          return;
       }
-      card.innerHTML = `<img src="${item.coverUrl}" alt="${item.name}" class="cover" decoding="async" loading="lazy"><div class="overlay"></div><div class="title">${item.name}</div>`;
-      fragment.appendChild(card);
-    });
-    container.appendChild(fragment);
+
+      container.innerHTML = '';
+      const fragment = document.createDocumentFragment();
+      products.forEach(product => {
+          const card = document.createElement('div');
+          card.className = 'affiliate-card';
+          
+          const buttonText = product.platform ? `Cek di ${product.platform}` : 'Cek Produk';
+
+          card.innerHTML = `
+              <div class="affiliate-card-img-container">
+                  <img src="${product.coverUrl}" alt="${product.name}" class="affiliate-card-img" loading="lazy">
+              </div>
+              <div class="affiliate-card-body">
+                  <h3 class="affiliate-card-title">${product.name}</h3>
+                  <p class="affiliate-card-price">${formatToIdr(product.price)}</p>
+                  <p class="affiliate-card-desc">${product.description}</p>
+                  <a href="${product.linkUrl}" target="_blank" rel="noopener" class="affiliate-card-button">${buttonText}</a>
+              </div>
+          `;
+          fragment.appendChild(card);
+      });
+      container.appendChild(fragment);
   }
   
   const originalSetMode = setMode;
@@ -871,8 +876,8 @@
     if (nextMode === 'perpustakaan') {
       initializeLibrary();
     }
-    if (nextMode === 'carousell') {
-      initializeCarousell();
+    if (nextMode === 'affiliate') {
+      initializeAffiliate();
     }
   };
   
