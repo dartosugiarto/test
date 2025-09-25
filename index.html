@@ -5,32 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>PlayPal.ID</title>
   <meta name="description" content="Destinasi Utama Para Pecinta Game, Film & Musik">
-
   <link rel="icon" type="image/png" href="/assets/images/logo.png">
   <link rel="apple-touch-icon" href="/assets/images/logo.png">
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  
   <link rel="stylesheet" href="/assets/css/style.css">
   <script src="/assets/js/script.js" defer></script>
 </head>
 <body>
-
   <noscript>
     <div class="noscript-warning">
       Website ini membutuhkan JavaScript untuk berfungsi sepenuhnya. Silakan aktifkan JavaScript di browser Anda.
     </div>
   </noscript>
-
   <header class="main-header">
     <div class="header-content">
         <a href="/" class="header-logo-link" data-mode="home">
           <img src="/assets/images/logo.png" alt="PlayPal.ID Logo" class="header-logo">
           <span class="header-title">PlayPal.ID</span>
         </a>
-
         <div class="header-actions">
           <div id="headerSearchContainer" class="header-search-container">
             <input id="headerSearchInput" class="header-search-input" type="search" placeholder="Cari item..." aria-label="Cari">
@@ -38,14 +32,12 @@
               <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
             </button>
           </div>
-    
           <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
               <span></span><span></span><span></span>
           </button>
         </div>
     </div>
   </header>
-  
   <aside class="sidebar" id="sidebarNav">
     <nav class="sidebar-nav">
       <a href="#" class="nav-item active" data-mode="home">
@@ -68,9 +60,7 @@
         <div class="nav-icon" style="--icon-url: url('/assets/images/rekomendasi.svg')"></div>
         <span>Rekomendasi Produk</span>
       </a>
-      
       <div class="nav-divider"></div>
-
       <a href="https://chat.whatsapp.com/B8P0L2ExsreGFI6iMPDYnc?mode=ems_copy_c" target="_blank" rel="noopener" class="nav-item">
         <div class="nav-icon" style="--icon-url: url('/assets/images/komunitas.svg')"></div>
         <span>Komunitas</span>
@@ -82,10 +72,8 @@
     </nav>
   </aside>
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
   <div class="page-container" id="pageContainer">
     <main class="wrap">
-
       <section id="viewHome" class="view-section active" aria-label="Home">
         <div class="home-banner-container">
           <img src="/assets/images/banner-hero.webp" alt="PlayPal.ID Banner" class="home-banner-img">
@@ -107,7 +95,6 @@
         <section id="homeListContainer" class="list-container" aria-live="polite"></section>
         <section id="homeErrorContainer" class="err" style="display:none"></section>
       </section>
-
       <section id="viewPreorder" class="view-section" aria-label="Pre-Order">
         <header class="page-title-header">
           <h1>Lacak Pre-Order</h1>
@@ -165,7 +152,6 @@
           </nav>
         </div>
       </section>
-
       <section id="viewAccounts" class="view-section" aria-label="Akun Game">
         <header class="page-title-header">
           <h1>Akun Game</h1>
@@ -182,9 +168,7 @@
                 </div>
             </div>
         </div>
-        
         <div id="accountCardGrid" class="account-card-grid"></div>
-        
         <div id="accountEmpty" class="empty" style="display: none;">
             <div class="empty-content">
               <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -195,7 +179,6 @@
         </div>
         <section id="accountError" class="err" style="display:none"></section>
       </section>
-
       <section id="viewPerpustakaan" class="view-section" aria-label="Perpustakaan">
         <header class="page-title-header">
           <h1>Perpustakaan Digital</h1>
@@ -204,33 +187,37 @@
         <div id="libraryGridContainer" class="library-grid"></div>
         <div id="libraryError" class="err" style="display:none"></div>
       </section>
-
       <section id="viewAffiliate" class="view-section" aria-label="Rekomendasi Produk">
         <header class="page-title-header">
           <h1>Rekomendasi Produk</h1>
           <p class="page-subtitle">Produk pilihan terbaik yang kami rekomendasikan dari berbagai platform.</p>
         </header>
+        <div class="head-block">
+          <div class="search-row">
+            <div class="search-wrap">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
+              <input id="affiliateSearchInput" type="search" class="search-input" placeholder="Cari berdasarkan nomor produk...">
+            </div>
+          </div>
+          <div id="affiliateTotal" class="meta"></div>
+        </div>
         <div id="affiliateGridContainer" class="affiliate-grid"></div>
         <div id="affiliateError" class="err" style="display:none"></div>
       </section>
-      
     </main>
   </div>
-  
   <template id="itemTemplate">
     <button type="button" class="list-item">
       <span class="title"></span>
       <span class="price"></span>
     </button>
   </template>
-
   <template id="skeletonItemTemplate">
     <div class="list-item skeleton">
       <span class="skeleton-text" style="width: 60%;"></span>
       <span class="skeleton-text" style="width: 25%;"></span>
     </div>
   </template>
-
   <template id="skeletonCardTemplate">
     <div class="card skeleton">
       <div class="card-header">
@@ -243,7 +230,6 @@
       <div class="skeleton-text" style="width: 65%; height: 12px; margin-top: 10px;"></div>
     </div>
   </template>
-
   <template id="accountCardTemplate">
     <article class="account-card">
       <div class="account-card-carousel-wrapper"></div>
@@ -263,7 +249,6 @@
       </div>
     </article>
   </template>
-  
   <div id="paymentModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -286,16 +271,13 @@
       </div>
     </div>
   </div>
-
   <section id="testimonialSection" class="testi-wrap" aria-label="Testimoni pelanggan">
     <h2 class="testi-title">2.137 Ulasan Terverifikasi. — 4,8/5</h2>
     <div class="testi-marquee" aria-live="off">
       <ul id="testiTrack" class="testi-track" aria-hidden="true"></ul>
     </div>
   </section>
-
   <script>
-    // Sets --header-height CSS variable for layout calculations
     document.addEventListener('DOMContentLoaded', function() {
       const header = document.querySelector('.main-header');
       function updateHeaderHeight() {
@@ -307,6 +289,5 @@
       window.addEventListener('resize', updateHeaderHeight);
     });
   </script>
-
 </body>
 </html>
