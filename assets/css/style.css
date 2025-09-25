@@ -878,12 +878,12 @@ body.sidebar-open .sidebar {
 .testi-track.dragging { cursor: grabbing; }
 .home-banner-container { margin-top: var(--sp-fib-5); margin-bottom: var(--sp-fib-5); border-radius: var(--radius-fib-medium); overflow: hidden; box-shadow: var(--shadow-sm); line-height: 0; }
 .home-banner-img { width: 100%; height: auto; display: block; }
-.carousel-container { position: relative; width: 100%; overflow: hidden; user-select: none; }
+.carousel-container { position: relative; width: 100%; overflow: hidden; user-select: none; border-radius: var(--radius-fib-small); }
 .carousel-container:active { cursor: grabbing; }
 .carousel-track { display: flex; transition: transform var(--duration-natural) var(--ease-natural); }
 .carousel-slide { flex: 0 0 100%; min-width: 100%; }
-.carousel-slide img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background-color: var(--surface-secondary); }
-.carousel-btn { position: absolute; top: 50%; z-index: 2; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; background-color: rgba(0, 0, 0, 0.35); color: white; opacity: 0; cursor: pointer; transform: translateY(-50%); transition: background-color var(--duration-fast), opacity var(--duration-fast); }
+.carousel-slide img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background-color: var(--surface-secondary); }
+.carousel-btn { position: absolute; top: 50%; z-index: 2; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border-radius: 50%; background-color: rgba(0, 0, 0, 0.35); color: white; opacity: 0; cursor: pointer; transform: translateY(-50%); transition: background-color var(--duration-fast), opacity var(--duration-fast); border: none; }
 .carousel-btn svg { width: 24px; height: 24px; }
 .carousel-container:hover .carousel-btn, .carousel-container:focus-within .carousel-btn { opacity: 1; }
 @media (hover: none) and (pointer: coarse) { .carousel-btn { opacity: 1; } }
@@ -925,6 +925,9 @@ body.sidebar-open .sidebar {
   overflow: hidden;
   line-height: 0;
 }
+.account-card-carousel-wrapper .carousel-slide img {
+  aspect-ratio: 16 / 9;
+}
 .account-card-main-info {
   display: flex;
   justify-content: space-between;
@@ -962,8 +965,9 @@ body.sidebar-open .sidebar {
   height: 20px;
   color: var(--text-tertiary);
   transition: transform var(--duration-natural) var(--ease-natural);
+  flex-shrink: 0;
 }
-.account-card.expanded .expand-indicator {
+.account-card.expanded .expand-indicator, .affiliate-card.expanded .expand-indicator {
   transform: rotate(180deg);
 }
 .account-card-details-wrapper {
@@ -1036,27 +1040,19 @@ body.sidebar-open .sidebar {
 .nav-item.active .nav-icon {
   background-color: #fff;
 }
-
-/* Styling untuk Aksi di Header */
 .header-actions {
   display: flex;
   align-items: center;
   gap: var(--sp-fib-2);
 }
-
-/* Kontainer untuk Ikon dan Input Pencarian */
 .header-search-container {
   display: flex;
   align-items: center;
   justify-content: flex-end;
 }
-
-/* Tombol Ikon Pencarian */
 .header-search-btn {
   z-index: 2; 
 }
-
-/* Input Pencarian di Header */
 .header-search-input {
   height: 44px;
   border: none;
@@ -1074,8 +1070,6 @@ body.sidebar-open .sidebar {
               padding 0.3s var(--ease-natural),
               transform 0.3s var(--ease-natural);
 }
-
-/* State Aktif (Saat Ikon Diklik) */
 .header-search-container.active .header-search-input {
   width: 200px;
   opacity: 1;
@@ -1084,23 +1078,18 @@ body.sidebar-open .sidebar {
   margin-right: -44px;
   padding-right: 50px;
 }
-
-/* Untuk menyembunyikan ikon di halaman lain */
 .header-search-container.hidden {
   display: none;
 }
-
 :root {
   --brand-cta: #EE4D2D; 
 }
-
 .affiliate-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: var(--sp-fib-5);
   margin-top: var(--sp-fib-5);
 }
-
 .affiliate-card {
   background: var(--surface-primary);
   border-radius: var(--radius-fib-medium);
@@ -1111,31 +1100,33 @@ body.sidebar-open .sidebar {
   flex-direction: column;
   transition: transform var(--duration-fast), box-shadow var(--duration-natural);
 }
-
 .affiliate-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 13px 21px rgba(48, 57, 82, 0.1);
 }
-
 .affiliate-card-img-container {
   aspect-ratio: 1 / 1;
   background-color: var(--surface-secondary);
 }
-
 .affiliate-card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-
 .affiliate-card-body {
   padding: var(--sp-fib-5);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  cursor: pointer;
 }
-
+.affiliate-card-main-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sp-fib-4);
+}
 .affiliate-card-title {
   font-size: 16px;
   font-weight: 700;
@@ -1147,22 +1138,29 @@ body.sidebar-open .sidebar {
   -webkit-box-orient: vertical;  
   overflow: hidden;
 }
-
 .affiliate-card-price {
   font-size: 21px;
   font-weight: 800;
   color: var(--brand-cta);
   margin-bottom: var(--sp-fib-4);
 }
-
 .affiliate-card-desc {
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
-  flex-grow: 1; 
 }
-
+.affiliate-card-details-wrapper {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.4s var(--ease-natural), opacity 0.3s var(--ease-natural), margin-top 0.4s var(--ease-natural);
+}
+.affiliate-card.expanded .affiliate-card-details-wrapper {
+  max-height: 500px; /* Adjust as needed */
+  opacity: 1;
+  margin-top: var(--sp-fib-2);
+}
 .affiliate-card-button {
   display: block;
   width: 100%;
@@ -1174,10 +1172,9 @@ body.sidebar-open .sidebar {
   font-size: 15px;
   padding: var(--sp-fib-4);
   border-radius: var(--radius-fib-small);
-  margin-top: var(--sp-fib-5);
+  margin-top: auto; /* Pushes button to the bottom */
   transition: transform var(--duration-fast), background-color var(--duration-fast);
 }
-
 .affiliate-card-button:hover {
   filter: brightness(0.9);
   transform: scale(1.03);
