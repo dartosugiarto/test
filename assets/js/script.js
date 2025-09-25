@@ -1,7 +1,7 @@
 /**
  * @file script.js
  * @description Main script for the PlayPal.ID single-page application.
- * @version 10.3.0 (Testimonial visibility logic added)
+ * @version 11.0.0 (Affiliate card enhancement with carousel and collapsible description)
  */
 
 (function () {
@@ -824,7 +824,7 @@
         const products = rows.filter(r => r && r[0] && r[3]).map(r => ({
             name: r[0],
             price: Number(r[1]) || 0,
-            coverUrl: r[2],
+            images: (r[2] || '').split(',').map(url => url.trim()).filter(Boolean),
             linkUrl: r[3],
             description: r[4] || 'Klik untuk melihat detail produk.',
             platform: r[5] || ''
@@ -854,20 +854,87 @@
           
           const buttonText = product.platform ? `Cek di ${product.platform}` : 'Cek Produk';
 
+          let imagesHTML = '';
+          if (product.images.length > 0) {
+            const slides = product.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar produk ${product.name}" loading="lazy"></div>`).join('');
+            const indicators = product.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
+            imagesHTML = `
+              <div class="carousel-container">
+                <div class="carousel-track">${slides}</div>
+                ${product.images.length > 1 ? `
+                <button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                </button>
+                <button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                </button>
+                <div class="carousel-indicators">${indicators}</div>
+                ` : ''}
+              </div>
+            `;
+          } else {
+            imagesHTML = `<div class="affiliate-card-img-container"></div>`; // Fallback for no image
+          }
+
           card.innerHTML = `
-              <div class="affiliate-card-img-container">
-                  <img src="${product.coverUrl}" alt="${product.name}" class="affiliate-card-img" loading="lazy">
-              </div>
-              <div class="affiliate-card-body">
+            ${imagesHTML}
+            <div class="affiliate-card-body" role="button" tabindex="0">
+                <div class="affiliate-card-main-info">
                   <h3 class="affiliate-card-title">${product.name}</h3>
-                  <p class="affiliate-card-price">${formatToIdr(product.price)}</p>
+                  <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg>
+                </div>
+                <p class="affiliate-card-price">${formatToIdr(product.price)}</p>
+                <div class="affiliate-card-details-wrapper">
                   <p class="affiliate-card-desc">${product.description}</p>
-                  <a href="${product.linkUrl}" target="_blank" rel="noopener" class="affiliate-card-button">${buttonText}</a>
-              </div>
+                </div>
+                <a href="${product.linkUrl}" target="_blank" rel="noopener" class="affiliate-card-button">${buttonText}</a>
+            </div>
           `;
+
+          const trigger = card.querySelector('.affiliate-card-body');
+          const button = card.querySelector('.affiliate-card-button');
+          
+          trigger.addEventListener('click', (e) => {
+              if (e.target.tagName.toLowerCase() !== 'a') {
+                  card.classList.toggle('expanded');
+              }
+          });
+          
+          trigger.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                  if (e.target.tagName.toLowerCase() !== 'a') {
+                      e.preventDefault();
+                      card.classList.toggle('expanded');
+                  }
+              }
+          });
+
           fragment.appendChild(card);
       });
       container.appendChild(fragment);
+
+      // Initialize carousels
+      container.querySelectorAll('.carousel-container').forEach(carouselContainer => {
+        const imageCount = carouselContainer.querySelectorAll('.carousel-slide').length;
+        if (imageCount > 1) {
+          const track = carouselContainer.querySelector('.carousel-track');
+          const prevBtn = carouselContainer.querySelector('.prev');
+          const nextBtn = carouselContainer.querySelector('.next');
+          const indicators = carouselContainer.querySelectorAll('.indicator-dot');
+          let currentIndex = 0;
+          const update = () => {
+            if (!track || !prevBtn || !nextBtn || !indicators) return;
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex >= imageCount - 1;
+            indicators.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+          };
+          nextBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex < imageCount - 1) { currentIndex++; update(); } });
+          prevBtn.addEventListener('click', (e) => { e.stopPropagation(); if (currentIndex > 0) { currentIndex--; update(); } });
+          indicators.forEach(dot => dot.addEventListener('click', (e) => { e.stopPropagation(); currentIndex = parseInt(e.target.dataset.index, 10); update(); }));
+          update();
+        }
+      });
   }
   
   const originalSetMode = setMode;
