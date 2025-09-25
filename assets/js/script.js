@@ -735,7 +735,7 @@
     const section = document.getElementById('testimonialSection');
     if (!track || !section) return;
     try {
-      const res = await fetch(getSheetUrl('Sheet7'));
+      const res = await fetch(getSheetUrl('Sheet7', 'csv'));
       if (!res.ok) throw new Error('Network: ' + res.status);
       const csv = await res.text(); const rows = robustCsvParser(csv); if (!rows.length) { section.style.display = 'none'; return; }
       const items = rows.slice(1).filter(r => r && r[0] && r[1]).map(r => ({ name: String(r[0]).trim(), url: String(r[1]).trim() }));
