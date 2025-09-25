@@ -1089,3 +1089,96 @@ body.sidebar-open .sidebar {
 .header-search-container.hidden {
   display: none;
 }
+
+:root {
+  --brand-cta: #EE4D2D; 
+}
+
+.affiliate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--sp-fib-5);
+  margin-top: var(--sp-fib-5);
+}
+
+.affiliate-card {
+  background: var(--surface-primary);
+  border-radius: var(--radius-fib-medium);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--duration-fast), box-shadow var(--duration-natural);
+}
+
+.affiliate-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 13px 21px rgba(48, 57, 82, 0.1);
+}
+
+.affiliate-card-img-container {
+  aspect-ratio: 1 / 1;
+  background-color: var(--surface-secondary);
+}
+
+.affiliate-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.affiliate-card-body {
+  padding: var(--sp-fib-5);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.affiliate-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--sp-fib-3) 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+}
+
+.affiliate-card-price {
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--brand-cta);
+  margin-bottom: var(--sp-fib-4);
+}
+
+.affiliate-card-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  flex-grow: 1; 
+}
+
+.affiliate-card-button {
+  display: block;
+  width: 100%;
+  background-color: var(--brand-cta);
+  color: #fff;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 700;
+  font-size: 15px;
+  padding: var(--sp-fib-4);
+  border-radius: var(--radius-fib-small);
+  margin-top: var(--sp-fib-5);
+  transition: transform var(--duration-fast), background-color var(--duration-fast);
+}
+
+.affiliate-card-button:hover {
+  filter: brightness(0.9);
+  transform: scale(1.03);
+}
