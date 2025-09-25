@@ -1,13 +1,6 @@
-/**
- * @file script.js
- * @description Main script for the PlayPal.ID single-page application.
- * @version 12.1.0 (Final UI tweaks for affiliate cards)
- */
-
 (function () {
   'use strict';
 
-  // --- CONFIGURATION ---
   const config = {
     sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
     sheets: {
@@ -27,7 +20,6 @@
     ],
   };
 
-  // --- STATE MANAGEMENT ---
   const state = {
     home: { activeCategory: '', searchQuery: '' },
     preorder: {
@@ -44,10 +36,11 @@
     },
     affiliate: {
       initialized: false,
+      allData: [],
+      searchQuery: '',
     }
   };
   
-  // --- GLOBAL VARIABLES ---
   let allCatalogData = [];
   let currentSelectedItem = null;
   let catalogFetchController;
@@ -56,7 +49,6 @@
   let modalFocusTrap = { listener: null, focusableEls: [], firstEl: null, lastEl: null };
   let elementToFocusOnModalClose = null;
 
-  // --- DOM ELEMENT CACHING ---
   function getElement(id) {
     return document.getElementById(id);
   }
@@ -141,31 +133,22 @@
     }
   };
 
-  // --- UTILITY & HELPER FUNCTIONS ---
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
 
-  // --- REUSABLE COMPONENT INITIALIZERS ---
-
-  /**
-   * Initializes interactive carousels within a given container.
-   * @param {HTMLElement} container The parent element containing .carousel-container elements.
-   */
   function initializeCarousels(container) {
     container.querySelectorAll('.carousel-container').forEach(carouselContainer => {
       const track = carouselContainer.querySelector('.carousel-track');
       const slides = carouselContainer.querySelectorAll('.carousel-slide');
       const imageCount = slides.length;
-      
       if (imageCount > 1) {
         const prevBtn = carouselContainer.querySelector('.prev');
         const nextBtn = carouselContainer.querySelector('.next');
         const indicators = carouselContainer.querySelectorAll('.indicator-dot');
         let currentIndex = 0;
-
         const update = () => {
           if (!track || !prevBtn || !nextBtn || !indicators) return;
           track.style.transform = `translateX(-${currentIndex * 100}%)`;
@@ -173,7 +156,6 @@
           nextBtn.disabled = currentIndex >= imageCount - 1;
           indicators.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
         };
-
         nextBtn.addEventListener('click', (e) => { 
           e.stopPropagation(); 
           if (currentIndex < imageCount - 1) { 
@@ -181,7 +163,6 @@
             update(); 
           } 
         });
-
         prevBtn.addEventListener('click', (e) => { 
           e.stopPropagation(); 
           if (currentIndex > 0) { 
@@ -189,32 +170,23 @@
             update(); 
           } 
         });
-
         indicators.forEach(dot => dot.addEventListener('click', (e) => { 
           e.stopPropagation(); 
           currentIndex = parseInt(e.target.dataset.index, 10); 
           update(); 
         }));
-
         update();
       }
     });
   }
 
-  /**
-   * Sets up expand/collapse functionality for a card.
-   * @param {HTMLElement} card The card element to be made expandable.
-   * @param {string} triggerSelector The CSS selector for the element that triggers the expansion.
-   */
   function setupExpandableCard(card, triggerSelector) {
     const trigger = card.querySelector(triggerSelector);
     if (trigger) {
       const action = (e) => {
-        // Prevent toggling when clicking a link inside the trigger area
         if (e.target.closest('a')) return;
         card.classList.toggle('expanded');
       };
-
       trigger.addEventListener('click', action);
       trigger.addEventListener('keydown', (e) => {
         if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('a')) {
@@ -225,14 +197,7 @@
     }
   }
 
-
-  // --- CORE APPLICATION LOGIC ---
-
-  /**
-   * Initializes the entire application and sets up event listeners.
-   */
   function initializeApp() {
-    // Sidebar and Navigation
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     elements.navLinks.forEach(link => {
@@ -243,16 +208,12 @@
         }
       });
     });
-
-    // Custom Selects
     [elements.home.customSelect, elements.preorder.customSelect, elements.preorder.customStatusSelect, elements.accounts.customSelect]
       .filter(select => select && select.btn)
       .forEach(select => select.btn.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleCustomSelect(select.wrapper);
       }));
-
-    // Header Search
     let homeDebounce;
     elements.headerSearch.input.addEventListener('input', e => {
       clearTimeout(homeDebounce);
@@ -264,12 +225,8 @@
       elements.headerSearch.container.classList.toggle('active');
       if (elements.headerSearch.container.classList.contains('active')) elements.headerSearch.input.focus();
     });
-    
-    // Modal
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
-
-    // Global Click Listener for closing dropdowns/search
     document.addEventListener('click', (e) => {
       [elements.home.customSelect.wrapper, elements.preorder.customSelect.wrapper, elements.preorder.customStatusSelect.wrapper, elements.accounts.customSelect.wrapper]
         .filter(wrapper => wrapper)
@@ -278,8 +235,6 @@
         elements.headerSearch.container.classList.remove('active');
       }
     });
-
-    // Initial Load and Routing
     loadCatalog();
     window.addEventListener('popstate', (event) => {
         const mode = (window.location.pathname.substring(1).toLowerCase() || 'home');
@@ -290,10 +245,6 @@
     setMode(validModes.includes(initialMode) ? initialMode : 'home', true);
   }
   
-  /**
-   * Toggles the sidebar visibility.
-   * @param {boolean} [forceOpen] - Force open or close the sidebar.
-   */
   function toggleSidebar(forceOpen) {
     const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
     document.body.classList.toggle('sidebar-open', isOpen);
@@ -302,33 +253,20 @@
     document.body.style.overflow = isOpen ? "hidden" : "";
   }
   
-  /**
-   * Main routing function. Sets the active view of the SPA.
-   * @param {string} nextMode - The mode/view to switch to.
-   * @param {boolean} [fromPopState=false] - True if triggered by browser back/forward.
-   */
   let setMode = function(nextMode, fromPopState = false) {
-    // Handle special "donasi" link
     if (nextMode === 'donasi') {
       window.open('https://saweria.co/playpal', '_blank', 'noopener');
       return;
     }
-
     const viewMap = { home: elements.viewHome, preorder: elements.viewPreorder, accounts: elements.viewAccounts, perpustakaan: elements.viewPerpustakaan, affiliate: elements.viewAffiliate };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
-
-    // Toggle header search visibility
     elements.headerSearch.container.classList.toggle('hidden', nextMode !== 'home');
     if(nextMode !== 'home') elements.headerSearch.container.classList.remove('active');
-    
-    // Toggle testimonial visibility
     const testimonialSection = document.getElementById('testimonialSection');
     if (testimonialSection) {
       testimonialSection.style.display = nextMode === 'home' ? 'block' : 'none';
     }
-
-    // Update URL and browser history
     if (!fromPopState) {
         const search = window.location.search;
         const path = nextMode === 'home' ? `/${search}` : `/${nextMode}${search}`;
@@ -336,8 +274,6 @@
         history.pushState({ mode: nextMode }, title, path);
     }
     document.title = `PlayPal.ID - ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`;
-    
-    // Switch active view and navigation link states
     document.querySelector('.view-section.active')?.classList.remove('active');
     nextView.classList.add('active');
     elements.navLinks.forEach(link => {
@@ -345,19 +281,14 @@
         link.classList.toggle('active', isActive);
         isActive ? link.setAttribute('aria-current', 'page') : link.removeAttribute('aria-current');
     });
-
-    // UI adjustments
     if (window.innerWidth < 769) toggleSidebar(false);
     window.scrollTo({ top: 0, behavior: fromPopState ? 'auto' : 'smooth' });
-
-    // Lazy load data for sections
     if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
     if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
     if (nextMode === 'perpustakaan' && !getElement('libraryGridContainer').innerHTML.trim()) initializeLibrary();
     if (nextMode === 'affiliate' && !state.affiliate.initialized) initializeAffiliate();
   }
 
-  // --- HOME/CATALOG SECTION ---
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   
   function buildHomeCategorySelect(catalogData) {
@@ -370,7 +301,6 @@
     const activeCategory = categories.find(c => c.key === activeCategoryKey) || categories[0];
     if (activeCategory) { state.home.activeCategory = activeCategory.key; value.textContent = activeCategory.label; } 
     else { value.textContent = 'Data tidak tersedia'; }
-
     categories.forEach(cat => {
       const el = document.createElement('div');
       el.className = 'custom-select-option';
@@ -430,7 +360,6 @@
     } 
   }
 
-  // --- PAYMENT MODAL SECTION ---
   function calculateFee(price, option) { if (option.feeType === 'fixed') return option.value; if (option.feeType === 'percentage') return Math.ceil(price * option.value); return 0; }
   function updatePriceDetails() { const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value; if (!selectedOptionId) return; const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId); if (!currentSelectedItem || !selectedOption) return; const price = currentSelectedItem.price; const fee = calculateFee(price, selectedOption); const total = price + fee; elements.paymentModal.fee.textContent = formatToIdr(fee); elements.paymentModal.total.textContent = formatToIdr(total); updateWaLink(selectedOption, fee, total); }
   function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `› Tipe: ${catLabel}`, `› Item: ${title}`, `› Pembayaran: ${option.name}`, `› Harga: ${formatToIdr(price)}`, `› Fee: ${formatToIdr(fee)}`, `› Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
@@ -472,7 +401,6 @@
     }, 200);
   }
 
-  // --- PRE-ORDER SECTION ---
   function normalizeStatus(rawStatus) { const s = String(rawStatus || '').trim().toLowerCase(); if (['success', 'selesai', 'berhasil', 'done'].includes(s)) return 'success'; if (['progress', 'proses', 'diproses', 'processing'].includes(s)) return 'progress'; if (['failed', 'gagal', 'dibatalkan', 'cancel', 'error'].includes(s)) return 'failed'; return 'pending'; }
   function filterPreorderData() { const query = elements.preorder.searchInput.value.trim().toLowerCase(); const statusFilter = elements.preorder.statusSelect.value; const mode = state.preorder.displayMode; return state.preorder.allData.filter(item => { const status = normalizeStatus(item[mode === 'detailed' ? 6 : 2]); if (statusFilter !== 'all' && status !== statusFilter) return false; if (mode === 'detailed') return [item[3], item[5], item[7]].some(val => (val || '').toLowerCase().includes(query)); return [item[0], item[1]].some(val => (val || '').toLowerCase().includes(query)); }); }
   function updatePreorderPagination(currentPage, totalPages) { elements.preorder.prevBtn.disabled = currentPage <= 1; elements.preorder.nextBtn.disabled = currentPage >= totalPages; elements.preorder.pageInfo.textContent = totalPages > 0 ? `Hal ${currentPage} dari ${totalPages}` : ''; }
@@ -488,7 +416,6 @@
     const pageData = filtered.slice(start, start + perPage);
     listContainer.innerHTML = '';
     if (pageData.length === 0) { listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak Ada Hasil Ditemukan</p></div></div>`; updatePreorderPagination(0, 0); return; }
-    
     const fragment = document.createDocumentFragment();
     pageData.forEach(item => {
       const card = document.createElement('article');
@@ -568,7 +495,6 @@
     state.preorder.initialized = true;
   }
   
-  // --- ACCOUNTS SECTION ---
   async function parseAccountsSheet(text) {
     const rows = robustCsvParser(text);
     rows.shift();
@@ -589,13 +515,11 @@
     cardGrid.innerHTML = '';
     empty.style.display = filteredAccounts.length === 0 ? 'flex' : 'none';
     if (filteredAccounts.length === 0) return;
-
     const fragment = document.createDocumentFragment();
     filteredAccounts.forEach(account => {
       const cardClone = cardTemplate.content.cloneNode(true);
       const cardElement = cardClone.querySelector('.account-card');
       const carouselWrapper = cardElement.querySelector('.account-card-carousel-wrapper');
-      
       if (account.images.length > 0) {
         const carouselContainer = document.createElement('div');
         carouselContainer.className = 'carousel-container';
@@ -604,12 +528,10 @@
         carouselContainer.innerHTML = `<div class="carousel-track">${slides}</div>${account.images.length > 1 ? `<button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button><button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button><div class="carousel-indicators">${indicators}</div>` : ''}`;
         carouselWrapper.appendChild(carouselContainer);
       }
-      
       cardElement.querySelector('h3').textContent = formatToIdr(account.price);
       const statusBadge = cardElement.querySelector('.account-status-badge');
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
-      
       const specsContainer = cardElement.querySelector('.account-card-specs');
       const specsList = document.createElement('ul');
       specsList.className = 'specs-list';
@@ -619,14 +541,11 @@
         else { const isTitle = ['Spesifikasi Akun', 'Pengaturan Akun', 'Kontak Penjual'].some(title => trimmedSpec.startsWith(title)); specsList.innerHTML += `<li class="${isTitle ? 'spec-title' : 'spec-item'}">${trimmedSpec}</li>`; }
       });
       specsContainer.appendChild(specsList);
-      
       cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
       cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
-      
       setupExpandableCard(cardElement, '.account-card-main-info');
       fragment.appendChild(cardElement);
     });
-    
     cardGrid.appendChild(fragment);
     initializeCarousels(cardGrid);
   }
@@ -637,7 +556,6 @@
     const { cardGrid, error, empty } = elements.accounts; 
     error.style.display = 'none'; empty.style.display = 'none';
     cardGrid.innerHTML = '';
-    
     try { 
       const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv')); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
@@ -651,7 +569,6 @@
     } 
   }
 
-  // --- LIBRARY SECTION ---
   async function initializeLibrary() {
     const container = getElement('libraryGridContainer');
     const errorEl = getElement('libraryError');
@@ -662,7 +579,6 @@
       const rows = robustCsvParser(await res.text());
       rows.shift(); 
       const books = rows.filter(r => r && r[0]).map(r => ({ title: r[0], coverUrl: r[1], bookUrl: r[2] }));
-      
       if (!books || books.length === 0) { container.innerHTML = '<div class="empty">Belum ada buku yang ditambahkan.</div>'; return; }
       const fragment = document.createDocumentFragment();
       books.forEach(book => {
@@ -682,45 +598,68 @@
     }
   }
 
-  // --- AFFILIATE SECTION ---
   async function initializeAffiliate() {
     if (state.affiliate.initialized) return;
-    state.affiliate.initialized = true;
     const { gridContainer, error } = elements.affiliate;
-    gridContainer.innerHTML = ''; error.style.display = 'none';
-
+    gridContainer.innerHTML = ''; 
+    error.style.display = 'none';
+    elements.affiliate.searchInput = getElement('affiliateSearchInput');
+    elements.affiliate.total = getElement('affiliateTotal');
+    let searchDebounce;
+    elements.affiliate.searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+            state.affiliate.searchQuery = e.target.value.trim();
+            renderAffiliateGrid(state.affiliate.allData);
+        }, 200);
+    });
     try {
         const res = await fetch(getSheetUrl(config.sheets.affiliate.name, 'csv'));
         if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
         const rows = robustCsvParser(await res.text());
         rows.shift();
-
         const products = rows.filter(r => r && r[0] && r[3]).map(r => ({
             name: r[0],
             price: Number(r[1]) || 0,
             images: (r[2] || '').split(',').map(url => url.trim()).filter(Boolean),
             linkUrl: r[3],
             description: r[4] || 'Klik untuk melihat detail produk.',
-            platform: r[5] || ''
+            platform: r[5] || '',
+            productNumber: r[6] || ''
         }));
+        state.affiliate.allData = products;
         renderAffiliateGrid(products);
     } catch (err) {
         console.error('Failed to load affiliate products:', err);
         error.textContent = 'Gagal memuat produk rekomendasi. Coba lagi nanti.';
         error.style.display = 'block';
+    } finally {
+        state.affiliate.initialized = true;
     }
   }
 
   function renderAffiliateGrid(products) {
       const container = elements.affiliate.gridContainer;
-      if (!products || products.length === 0) { container.innerHTML = '<div class="empty">Belum ada produk rekomendasi.</div>'; return; }
-
+      const totalEl = elements.affiliate.total;
+      const query = state.affiliate.searchQuery || '';
+      const filteredProducts = query 
+          ? products.filter(p => p.productNumber.includes(query))
+          : products;
+      if (products.length > 0) {
+        totalEl.textContent = `${products.length} total produk${query ? `, ${filteredProducts.length} ditemukan` : ''}`;
+        totalEl.style.display = 'block';
+      } else {
+        totalEl.style.display = 'none';
+      }
+      if (!filteredProducts || filteredProducts.length === 0) { 
+          container.innerHTML = '<div class="empty">Produk tidak ditemukan.</div>'; 
+          return; 
+      }
       container.innerHTML = '';
       const fragment = document.createDocumentFragment();
-      products.forEach(product => {
+      filteredProducts.forEach(product => {
           const card = document.createElement('div');
           card.className = 'affiliate-card';
-          
           let imagesHTML = '';
           if (product.images.length > 0) {
             const slides = product.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar produk ${product.name}" loading="lazy"></div>`).join('');
@@ -729,10 +668,11 @@
           } else {
             imagesHTML = `<div class="affiliate-card-img-container"></div>`;
           }
-          
           const platformHTML = product.platform ? `<p class="affiliate-card-platform">${product.platform}</p>` : '';
-
+          const formattedProductNumber = product.productNumber ? String(product.productNumber).padStart(3, '0') : '';
+          const productNumberHTML = formattedProductNumber ? `<span class="affiliate-card-number">#${formattedProductNumber}</span>` : '';
           card.innerHTML = `
+            ${productNumberHTML}
             ${imagesHTML}
             <div class="affiliate-card-body" role="button" tabindex="0">
                 <div class="affiliate-card-main-info">
@@ -754,7 +694,6 @@
       initializeCarousels(container);
   }
   
-  // --- TESTIMONIALS SECTION ---
   async function loadTestimonials() {
     const track = document.getElementById('testiTrack');
     const section = document.getElementById('testimonialSection');
@@ -770,10 +709,8 @@
     } catch (err) { console.error('Testimonials error:', err); if (section) section.style.display = 'none'; }
   }
   
-  // --- APP INITIALIZATION ---
   document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
     loadTestimonials();
   });
-
 })();
