@@ -194,9 +194,10 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .action-btn.offer { background-color: var(--surface-secondary); color: var(--text-primary); }
 .affiliate-card-body { padding: var(--sp-fib-5); display: flex; flex-direction: column; flex-grow: 1; }
 .affiliate-card-title { font-size: 16px; font-weight: 700; margin: 0 0 var(--sp-fib-3) 0; line-height: 1.4; }
+.affiliate-card-platform { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin: 0 0 var(--sp-fib-3) 0; }
 .affiliate-card-price { font-size: 21px; font-weight: 800; color: var(--brand-cta); margin-bottom: var(--sp-fib-4); }
 .affiliate-card-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0; }
-.affiliate-card-button { display: block; width: 100%; background-color: var(--brand-blue); color: #fff; text-decoration: none; text-align: center; font-weight: 700; font-size: 15px; padding: var(--sp-fib-4); border-radius: var(--radius-fib-small); margin-top: var(--sp-fib-5); transition: transform var(--duration-fast); }
+.affiliate-card-button { display: block; width: 100%; background-color: var(--brand-blue); color: #fff; text-decoration: none; text-align: center; font-weight: 700; font-size: 15px; padding: var(--sp-fib-4); border-radius: var(--radius-fib-small); margin-top: var(--sp-fib-4); transition: transform var(--duration-fast); }
 .affiliate-card-button:hover { transform: scale(1.03); }
 
 /* --- CAROUSEL (for Account & Affiliate) --- */
