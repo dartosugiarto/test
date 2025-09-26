@@ -143,7 +143,7 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .account-status-badge { flex-shrink: 0; display: inline-block; padding: var(--sp-fib-2) var(--sp-fib-4); border: 1px solid transparent; border-radius: 9999px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; }
 .account-status-badge.available { background-color: #DCFCE7; border-color: #86EFAC; color: #166534; }
 .account-status-badge.sold { background-color: var(--surface-secondary); border-color: var(--separator); color: var(--text-secondary); }
-#preorderTotal.meta, #affiliateTotal.meta { margin-top: var(--sp-fib-4); font-size: 13px; font-weight: 700; text-align: center; background: var(--surface-secondary); padding: var(--sp-fib-3) var(--sp-fib-5); border-radius: var(--radius-fib-small); }
+#preorderTotal.meta, #carousellTotal.meta { margin-top: var(--sp-fib-4); font-size: 13px; font-weight: 700; text-align: center; background: var(--surface-secondary); padding: var(--sp-fib-3) var(--sp-fib-5); border-radius: var(--radius-fib-small); }
 #viewPreorder .card { padding: var(--sp-fib-5); background: var(--surface-primary); border: 1px solid var(--separator); border-radius: var(--radius-fib-large); }
 #viewPreorder .card.clickable:hover { box-shadow: var(--shadow-sm); transform: translateY(-5px); }
 #viewPreorder .card-header { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: var(--sp-fib-4); }
