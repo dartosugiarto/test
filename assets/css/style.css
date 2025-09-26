@@ -167,10 +167,14 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .account-card-details-wrapper, .affiliate-card-details-wrapper { max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.5s var(--ease-natural), opacity 0.3s var(--ease-natural), margin-top 0.5s var(--ease-natural); }
 .account-card.expanded .account-card-details-wrapper { max-height: 2000px; opacity: 1; margin-top: var(--sp-fib-4); }
 .affiliate-card.expanded .affiliate-card-details-wrapper { max-height: 500px; opacity: 1; margin-top: var(--sp-fib-4); }
-.account-card-specs .specs-list { list-style: none; padding: 0; margin: 0; font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
-.account-card-specs .spec-item { margin-bottom: var(--sp-fib-2); }
-.account-card-specs .spec-title { font-weight: 700; color: var(--text-primary); margin-top: var(--sp-fib-3); margin-bottom: var(--sp-fib-3); }
-.account-card-specs .spec-divider { height: var(--sp-fib-4); }
+.account-card-specs { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+.account-card-specs .spec-title { font-weight: 700; color: var(--text-primary); margin-top: var(--sp-fib-4); margin-bottom: var(--sp-fib-3); }
+.account-card-specs .spec-paragraph { margin: 0 0 var(--sp-fib-3) 0; }
+.account-card-specs .spec-item { margin: 0 0 var(--sp-fib-2) 0; padding-left: 1.2em; position: relative; }
+.account-card-specs .spec-item-arrow::before { content: '›'; position: absolute; left: 0; color: var(--brand-blue); font-weight: 700; }
+.account-card-specs .spec-item-dash::before { content: '-'; position: absolute; left: 0; color: var(--brand-blue); }
+.account-card-specs .spec-hashtag { color: var(--text-tertiary); font-size: 14px; margin: var(--sp-fib-2) 0; }
+.account-card-specs p:first-child { margin-top: 0; }
 .account-card-actions { display: flex; gap: var(--sp-fib-4); margin-top: var(--sp-fib-4); }
 .action-btn { flex-grow: 1; padding: var(--sp-fib-4); border: none; border-radius: var(--radius-fib-small); font-size: 15px; font-weight: 700; cursor: pointer; transition: transform var(--duration-fast); }
 .action-btn:hover { transform: scale(1.03); }
