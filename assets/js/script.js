@@ -32,7 +32,7 @@
       allData: [],
       activeCategory: 'Semua Kategori',
     },
-    affiliate: {
+    carousell: {
       initialized: false,
       allData: [],
       searchQuery: '',
@@ -59,7 +59,7 @@
     viewPreorder: getElement('viewPreorder'),
     viewAccounts: getElement('viewAccounts'),
     viewPerpustakaan: getElement('viewPerpustakaan'),
-    viewAffiliate: getElement('viewAffiliate'),
+    viewCarousell: getElement('viewCarousell'),
     home: {
       listContainer: getElement('homeListContainer'),
       countInfo: getElement('homeCountInfo'),
@@ -122,9 +122,9 @@
         options: getElement('accountCustomSelectOptions'),
       },
     },
-    affiliate: {
-      gridContainer: getElement('affiliateGridContainer'),
-      error: getElement('affiliateError'),
+    carousell: {
+      gridContainer: getElement('carousellGridContainer'),
+      error: getElement('carousellError'),
     }
   };
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
@@ -250,7 +250,7 @@
         const mode = (window.location.pathname.substring(1).toLowerCase() || 'home');
         if (event.state || mode) setMode(mode, true);
     });
-    const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'affiliate'];
+    const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'carousell'];
     const initialMode = window.location.pathname.substring(1).toLowerCase() || 'home';
     setMode(validModes.includes(initialMode) ? initialMode : 'home', true);
   }
@@ -266,7 +266,7 @@
       window.open('https://saweria.co/playpal', '_blank', 'noopener');
       return;
     }
-    const viewMap = { home: elements.viewHome, preorder: elements.viewPreorder, accounts: elements.viewAccounts, perpustakaan: elements.viewPerpustakaan, affiliate: elements.viewAffiliate };
+    const viewMap = { home: elements.viewHome, preorder: elements.viewPreorder, accounts: elements.viewAccounts, perpustakaan: elements.viewPerpustakaan, carousell: elements.viewCarousell };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
     elements.headerSearch.container.classList.toggle('hidden', nextMode !== 'home');
@@ -275,19 +275,11 @@
     if (testimonialSection) {
       testimonialSection.style.display = nextMode === 'home' ? 'block' : 'none';
     }
+    const pageName = nextMode.charAt(0).toUpperCase() + nextMode.slice(1);
     if (!fromPopState) {
         const search = window.location.search;
-        let pageName = nextMode.charAt(0).toUpperCase() + nextMode.slice(1);
-        if (nextMode === 'affiliate') {
-            pageName = 'Carousell';
-        }
         const path = nextMode === 'home' ? `/${search}` : `/${nextMode}${search}`;
-        const title = `PlayPal.ID - ${pageName}`;
-        history.pushState({ mode: nextMode }, title, path);
-    }
-    let pageName = nextMode.charAt(0).toUpperCase() + nextMode.slice(1);
-    if (nextMode === 'affiliate') {
-        pageName = 'Carousell';
+        history.pushState({ mode: nextMode }, `PlayPal.ID - ${pageName}`, path);
     }
     document.title = `PlayPal.ID - ${pageName}`;
     document.querySelector('.view-section.active')?.classList.remove('active');
@@ -302,7 +294,7 @@
     if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
     if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
     if (nextMode === 'perpustakaan' && !getElement('libraryGridContainer').innerHTML.trim()) initializeLibrary();
-    if (nextMode === 'affiliate' && !state.affiliate.initialized) initializeAffiliate();
+    if (nextMode === 'carousell' && !state.carousell.initialized) initializeCarousell();
   }
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function buildHomeCategorySelect(catalogData) {
@@ -622,19 +614,19 @@
       errorEl.style.display = 'block';
     }
   }
-  async function initializeAffiliate() {
-    if (state.affiliate.initialized) return;
-    const { gridContainer, error } = elements.affiliate;
+  async function initializeCarousell() {
+    if (state.carousell.initialized) return;
+    const { gridContainer, error } = elements.carousell;
     gridContainer.innerHTML = ''; 
     error.style.display = 'none';
-    elements.affiliate.searchInput = getElement('affiliateSearchInput');
-    elements.affiliate.total = getElement('affiliateTotal');
+    elements.carousell.searchInput = getElement('carousellSearchInput');
+    elements.carousell.total = getElement('carousellTotal');
     let searchDebounce;
-    elements.affiliate.searchInput.addEventListener('input', (e) => {
+    elements.carousell.searchInput.addEventListener('input', (e) => {
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(() => {
-            state.affiliate.searchQuery = e.target.value.trim();
-            renderAffiliateGrid(state.affiliate.allData);
+            state.carousell.searchQuery = e.target.value.trim();
+            renderCarousellGrid(state.carousell.allData);
         }, 200);
     });
     try {
@@ -651,20 +643,20 @@
             platform: r[5] || '',
             productNumber: r[6] || ''
         }));
-        state.affiliate.allData = products;
-        renderAffiliateGrid(products);
+        state.carousell.allData = products;
+        renderCarousellGrid(products);
     } catch (err) {
-        console.error('Failed to load affiliate products:', err);
+        console.error('Failed to load Carousell products:', err);
         error.textContent = 'Gagal memuat produk Carousell. Coba lagi nanti.';
         error.style.display = 'block';
     } finally {
-        state.affiliate.initialized = true;
+        state.carousell.initialized = true;
     }
   }
-  function renderAffiliateGrid(products) {
-      const container = elements.affiliate.gridContainer;
-      const totalEl = elements.affiliate.total;
-      const query = state.affiliate.searchQuery || '';
+  function renderCarousellGrid(products) {
+      const container = elements.carousell.gridContainer;
+      const totalEl = elements.carousell.total;
+      const query = state.carousell.searchQuery || '';
       const filteredProducts = query 
           ? products.filter(p => p.productNumber.includes(query))
           : products;
