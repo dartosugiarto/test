@@ -190,7 +190,7 @@
   }
   function formatDescriptionToHTML(text) {
     if (!text) return '';
-    return text.split('\n').map(line => {
+    return text.split('||').map(line => {
         const trimmedLine = line.trim();
         if (trimmedLine === '') {
             return '<br>';
@@ -690,7 +690,7 @@
                 ${platformHTML}
                 <p class="affiliate-card-price">${formatToIdr(product.price)}</p>
                 <div class="affiliate-card-details-wrapper">
-                  <p class="affiliate-card-desc">${product.description}</p>
+                  <div class="affiliate-card-desc">${formatDescriptionToHTML(product.description)}</div>
                 </div>
                 <a href="${product.linkUrl}" target="_blank" rel="noopener" class="affiliate-card-button">Beli Sekarang</a>
             </div>
