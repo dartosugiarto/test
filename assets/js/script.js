@@ -277,11 +277,19 @@
     }
     if (!fromPopState) {
         const search = window.location.search;
+        let pageName = nextMode.charAt(0).toUpperCase() + nextMode.slice(1);
+        if (nextMode === 'affiliate') {
+            pageName = 'Carousell';
+        }
         const path = nextMode === 'home' ? `/${search}` : `/${nextMode}${search}`;
-        const title = `PlayPal.ID - ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`;
+        const title = `PlayPal.ID - ${pageName}`;
         history.pushState({ mode: nextMode }, title, path);
     }
-    document.title = `PlayPal.ID - ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`;
+    let pageName = nextMode.charAt(0).toUpperCase() + nextMode.slice(1);
+    if (nextMode === 'affiliate') {
+        pageName = 'Carousell';
+    }
+    document.title = `PlayPal.ID - ${pageName}`;
     document.querySelector('.view-section.active')?.classList.remove('active');
     nextView.classList.add('active');
     elements.navLinks.forEach(link => {
@@ -551,7 +559,14 @@
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
       const specsContainer = cardElement.querySelector('.account-card-specs');
-      specsContainer.innerHTML = formatDescriptionToHTML(account.description);
+      const specsList = document.createElement('ul');
+      specsList.className = 'specs-list';
+      account.description.split('\n').forEach(spec => {
+        const trimmedSpec = spec.trim();
+        if (trimmedSpec === '') { specsList.innerHTML += `<li class="spec-divider"></li>`; }
+        else { const isTitle = ['Spesifikasi Akun', 'Pengaturan Akun', 'Kontak Penjual'].some(title => trimmedSpec.startsWith(title)); specsList.innerHTML += `<li class="${isTitle ? 'spec-title' : 'spec-item'}">${trimmedSpec}</li>`; }
+      });
+      specsContainer.appendChild(specsList);
       cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
       cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
       setupExpandableCard(cardElement, '.account-card-main-info');
@@ -640,7 +655,7 @@
         renderAffiliateGrid(products);
     } catch (err) {
         console.error('Failed to load affiliate products:', err);
-        error.textContent = 'Gagal memuat produk rekomendasi. Coba lagi nanti.';
+        error.textContent = 'Gagal memuat produk Carousell. Coba lagi nanti.';
         error.style.display = 'block';
     } finally {
         state.affiliate.initialized = true;
@@ -660,7 +675,7 @@
         totalEl.style.display = 'none';
       }
       if (!filteredProducts || filteredProducts.length === 0) { 
-          container.innerHTML = '<div class="empty">Produk tidak ditemukan.</div>'; 
+          container.innerHTML = '<div class="empty">Belum ada produk di Carousell.</div>'; 
           return; 
       }
       container.innerHTML = '';
