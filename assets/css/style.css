@@ -75,11 +75,72 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
 .header-title { font-weight: 800; font-size: 20px; display: none; }
 @media (min-width: 769px) { .header-title { display: block; } }
 .header-actions { display: flex; align-items: center; gap: var(--sp-fib-2); }
-.header-search-container { display: flex; align-items: center; justify-content: flex-end; }
-.header-search-btn { z-index: 2; }
-.header-search-input { height: 44px; border: none; background: var(--surface-secondary); color: var(--text-primary); font-size: var(--font-size-body); border-radius: var(--radius-fib-small); outline: none; width: 0; padding: 0; opacity: 0; transform: translateX(10px); transition: width 0.3s var(--ease-natural), opacity 0.2s var(--ease-natural), padding 0.3s var(--ease-natural), transform 0.3s var(--ease-natural); }
-.header-search-container.active .header-search-input { width: 200px; opacity: 1; padding: 0 var(--sp-fib-4); transform: translateX(0); margin-right: -44px; padding-right: 50px; }
+
+/* --- Modern Search Bar Styles --- */
+.header-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 44px;
+}
+.header-search-input {
+  height: 100%;
+  width: 100%;
+  max-width: 44px;
+  padding: 0 44px;
+  border: none;
+  border-radius: 999px;
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-family: var(--font-family);
+  outline: none;
+  -webkit-appearance: none;
+  transition: max-width var(--duration-natural) var(--ease-natural), background-color var(--duration-fast);
+  cursor: pointer;
+}
+.header-search-input::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+.header-search-input:focus-visible {
+  box-shadow: var(--shadow-focus);
+}
+.header-search-btn, 
+.header-search-cancel-btn {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  color: var(--text-secondary);
+}
+.header-search-btn { left: 0; }
+.header-search-cancel-btn {
+  right: 0;
+  opacity: 0;
+  transform: scale(0.7);
+  pointer-events: none;
+  transition: opacity var(--duration-natural), transform var(--duration-natural);
+}
+.header-search-container.active .header-search-input {
+  max-width: 240px;
+  background-color: var(--surface-tertiary);
+  cursor: text;
+}
+.header-search-container.active .header-search-input::placeholder {
+  opacity: 1;
+}
+.header-search-container.active .header-search-cancel-btn {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+.header-search-container.active .header-search-btn {
+  pointer-events: none;
+}
 .header-search-container.hidden { display: none; }
+/* --- End of Modern Search Bar Styles --- */
+
 .icon-btn { position: relative; display: grid; place-content: center; width: 44px; height: 44px; background: transparent; border: 1px solid transparent; border-radius: var(--radius-fib-small); color: var(--text-secondary); cursor: pointer; transition: background-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast); }
 .icon-btn:hover { background: var(--surface-secondary); color: var(--brand-blue); }
 .icon-btn:active { transform: scale(0.95); }
