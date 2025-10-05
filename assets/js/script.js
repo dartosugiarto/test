@@ -74,7 +74,8 @@
     headerSearch: {
       container: getElement('headerSearchContainer'),
       btn: getElement('headerSearchBtn'),
-      input: getElement('headerSearchInput')
+      input: getElement('headerSearchInput'),
+      cancelBtn: getElement('headerSearchCancelBtn'),
     },
     itemTemplate: getElement('itemTemplate'),
     skeletonItemTemplate: getElement('skeletonItemTemplate'),
@@ -229,22 +230,47 @@
       clearTimeout(homeDebounce);
       homeDebounce = setTimeout(() => { state.home.searchQuery = e.target.value.trim(); renderHomeList(); }, 200);
     });
-    elements.headerSearch.btn.addEventListener('click', (e) => {
+
+    // --- New Search Logic ---
+    const openSearch = (e) => {
       e.stopPropagation();
       if (document.body.classList.contains('sidebar-open')) toggleSidebar(false);
-      elements.headerSearch.container.classList.toggle('active');
-      if (elements.headerSearch.container.classList.contains('active')) elements.headerSearch.input.focus();
+      elements.headerSearch.container.classList.add('active');
+      elements.headerSearch.input.focus();
+    };
+
+    const closeSearch = () => {
+      elements.headerSearch.container.classList.remove('active');
+      const searchInput = elements.headerSearch.input;
+      if (searchInput.value !== '') {
+        searchInput.value = '';
+        state.home.searchQuery = '';
+        if (document.getElementById('viewHome').classList.contains('active')) {
+          renderHomeList();
+        }
+      }
+    };
+
+    elements.headerSearch.btn.addEventListener('click', openSearch);
+    elements.headerSearch.input.addEventListener('click', (e) => e.stopPropagation());
+    elements.headerSearch.cancelBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeSearch();
     });
+
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
+
     document.addEventListener('click', (e) => {
       [elements.home.customSelect.wrapper, elements.preorder.customSelect.wrapper, elements.preorder.customStatusSelect.wrapper, elements.accounts.customSelect.wrapper]
         .filter(wrapper => wrapper)
         .forEach(wrapper => toggleCustomSelect(wrapper, false));
-      if (!elements.headerSearch.container.contains(e.target)) {
-        elements.headerSearch.container.classList.remove('active');
+      
+      if (elements.headerSearch.container.classList.contains('active') && !elements.headerSearch.container.contains(e.target)) {
+        closeSearch();
       }
     });
+    
     loadCatalog();
     window.addEventListener('popstate', (event) => {
         const mode = (window.location.pathname.substring(1).toLowerCase() || 'home');
