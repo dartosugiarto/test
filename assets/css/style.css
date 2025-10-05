@@ -76,7 +76,7 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
 @media (min-width: 769px) { .header-title { display: block; } }
 .header-actions { display: flex; align-items: center; gap: var(--sp-fib-2); }
 
-/* --- Modern Search Bar Styles --- */
+/* --- Corrected Modern Search Bar Styles --- */
 .header-search-container {
   position: relative;
   display: flex;
@@ -85,19 +85,19 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
 }
 .header-search-input {
   height: 100%;
-  width: 100%;
-  max-width: 44px;
+  width: 44px;
   padding: 0 44px;
-  border: none;
   border-radius: 999px;
+  border: none;
   background-color: var(--surface-secondary);
   color: var(--text-primary);
   font-size: var(--font-size-body);
   font-family: var(--font-family);
   outline: none;
-  -webkit-appearance: none;
-  transition: max-width var(--duration-natural) var(--ease-natural), background-color var(--duration-fast);
   cursor: pointer;
+  -webkit-appearance: none;
+  transition: width var(--duration-natural) var(--ease-natural),
+              background-color var(--duration-fast);
 }
 .header-search-input::placeholder {
   color: var(--text-tertiary);
@@ -114,7 +114,9 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
   z-index: 1;
   color: var(--text-secondary);
 }
-.header-search-btn { left: 0; }
+.header-search-btn {
+  left: 0;
+}
 .header-search-cancel-btn {
   right: 0;
   opacity: 0;
@@ -123,7 +125,7 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
   transition: opacity var(--duration-natural), transform var(--duration-natural);
 }
 .header-search-container.active .header-search-input {
-  max-width: 240px;
+  width: 240px;
   background-color: var(--surface-tertiary);
   cursor: text;
 }
@@ -138,8 +140,10 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
 .header-search-container.active .header-search-btn {
   pointer-events: none;
 }
-.header-search-container.hidden { display: none; }
-/* --- End of Modern Search Bar Styles --- */
+.header-search-container.hidden {
+  display: none;
+}
+/* --- End of Corrected Styles --- */
 
 .icon-btn { position: relative; display: grid; place-content: center; width: 44px; height: 44px; background: transparent; border: 1px solid transparent; border-radius: var(--radius-fib-small); color: var(--text-secondary); cursor: pointer; transition: background-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast); }
 .icon-btn:hover { background: var(--surface-secondary); color: var(--brand-blue); }
