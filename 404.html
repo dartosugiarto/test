@@ -26,10 +26,13 @@
           <span class="header-title">PlayPal.ID</span>
         </a>
         <div class="header-actions">
-          <div id="headerSearchContainer" class="header-search-container">
+          <div id="headerSearchContainer" class="header-search-container" role="search">
+            <button id="headerSearchBtn" class="icon-btn header-search-btn" type="button" aria-label="Buka Pencarian">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
+            </button>
             <input id="headerSearchInput" class="header-search-input" type="search" placeholder="Cari item..." aria-label="Cari">
-            <button id="headerSearchBtn" class="icon-btn header-search-btn" type="button" aria-label="Cari">
-              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path></svg>
+            <button id="headerSearchCancelBtn" class="icon-btn header-search-cancel-btn" type="button" aria-label="Tutup Pencarian">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
           <button class="icon-btn burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false">
