@@ -75,11 +75,6 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
 .header-title { font-weight: 800; font-size: 20px; display: none; }
 @media (min-width: 769px) { .header-title { display: block; } }
 .header-actions { display: flex; align-items: center; gap: var(--sp-fib-2); }
-.header-search-container { display: flex; align-items: center; justify-content: flex-end; }
-.header-search-btn { z-index: 2; }
-.header-search-input { height: 44px; border: none; background: var(--surface-secondary); color: var(--text-primary); font-size: var(--font-size-body); border-radius: var(--radius-fib-small); outline: none; width: 0; padding: 0; opacity: 0; transform: translateX(10px); transition: width 0.3s var(--ease-natural), opacity 0.2s var(--ease-natural), padding 0.3s var(--ease-natural), transform 0.3s var(--ease-natural); }
-.header-search-container.active .header-search-input { width: 200px; opacity: 1; padding: 0 var(--sp-fib-4); transform: translateX(0); margin-right: -44px; padding-right: 50px; }
-.header-search-container.hidden { display: none; }
 .icon-btn { position: relative; display: grid; place-content: center; width: 44px; height: 44px; background: transparent; border: 1px solid transparent; border-radius: var(--radius-fib-small); color: var(--text-secondary); cursor: pointer; transition: background-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast); }
 .icon-btn:hover { background: var(--surface-secondary); color: var(--brand-blue); }
 .icon-btn:active { transform: scale(0.95); }
