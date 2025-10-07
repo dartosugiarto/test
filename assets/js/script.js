@@ -72,11 +72,6 @@
         options: getElement('homeCustomSelectOptions'),
       },
     },
-    headerSearch: {
-      container: getElement('headerSearchContainer'),
-      btn: getElement('headerSearchBtn'),
-      input: getElement('headerSearchInput')
-    },
     headerStatusIndicator: getElement('headerStatusIndicator'),
     itemTemplate: getElement('itemTemplate'),
     skeletonItemTemplate: getElement('skeletonItemTemplate'),
@@ -244,21 +239,12 @@
       clearTimeout(homeDebounce);
       homeDebounce = setTimeout(() => { state.home.searchQuery = e.target.value.trim(); renderHomeList(); }, 200);
     });
-    elements.headerSearch.btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (document.body.classList.contains('sidebar-open')) toggleSidebar(false);
-      elements.headerSearch.container.classList.toggle('active');
-      if (elements.headerSearch.container.classList.contains('active')) elements.headerSearch.input.focus();
-    });
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
     document.addEventListener('click', (e) => {
       [elements.home.customSelect.wrapper, elements.preorder.customSelect.wrapper, elements.preorder.customStatusSelect.wrapper, elements.accounts.customSelect.wrapper]
         .filter(wrapper => wrapper)
         .forEach(wrapper => toggleCustomSelect(wrapper, false));
-      if (!elements.headerSearch.container.contains(e.target)) {
-        elements.headerSearch.container.classList.remove('active');
-      }
     });
     loadCatalog();
     window.addEventListener('popstate', (event) => {
@@ -268,6 +254,7 @@
     const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'carousell'];
     const initialMode = window.location.pathname.substring(1).toLowerCase() || 'home';
     setMode(validModes.includes(initialMode) ? initialMode : 'home', true);
+    elements.headerStatusIndicator.style.display = 'inline-flex';
     updateHeaderStatus();
     setInterval(updateHeaderStatus, 60000);
   }
@@ -286,10 +273,6 @@
     const viewMap = { home: elements.viewHome, preorder: elements.viewPreorder, accounts: elements.viewAccounts, perpustakaan: elements.viewPerpustakaan, carousell: elements.viewCarousell };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
-    const isHomePage = nextMode === 'home';
-    elements.headerStatusIndicator.style.display = isHomePage ? 'inline-flex' : 'none';
-    elements.headerSearch.container.style.display = isHomePage ? 'none' : 'flex';
-    if(isHomePage) elements.headerSearch.container.classList.remove('active');
     const testimonialSection = document.getElementById('testimonialSection');
     if (testimonialSection) {
       testimonialSection.style.display = nextMode === 'home' ? 'block' : 'none';
