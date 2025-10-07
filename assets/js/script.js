@@ -685,7 +685,7 @@
           } else {
             imagesHTML = `<div class="affiliate-card-img-container"></div>`;
           }
-          const platformHTML = product.platform ? `<p class="affiliate-card-platform">${product.platform}</p>` : '';
+          const platformHTML = product.platform ? `<p class="affiliate-card-platform">${product.platform}</p>` : ''
           const formattedProductNumber = product.productNumber ? String(product.productNumber).padStart(3, '0') : '';
           const productNumberHTML = formattedProductNumber ? `<span class="affiliate-card-number">#${formattedProductNumber}</span>` : '';
           card.innerHTML = `
@@ -720,21 +720,102 @@
     });
     return frag;
   }
-  async function loadTestimonials() {
-    const track = document.getElementById('testiTrack');
+  async function initializeTestimonialMarquee() {
     const section = document.getElementById('testimonialSection');
-    if (!track || !section) return;
+    const marquee = section.querySelector('.testi-marquee');
+    const track = section.querySelector('#testiTrack');
+    if (!marquee || !track) return;
+  
     try {
       const res = await fetch(getSheetUrl('Sheet7', 'csv'));
       if (!res.ok) throw new Error('Network: ' + res.status);
-      const csv = await res.text(); const rows = robustCsvParser(csv); if (!rows.length) { section.style.display = 'none'; return; }
+      const csv = await res.text();
+      const rows = robustCsvParser(csv);
+      if (rows.length <= 1) {
+        section.style.display = 'none';
+        return;
+      }
       const items = rows.slice(1).filter(r => r && r[0] && r[1]).map(r => ({ name: String(r[0]).trim(), url: String(r[1]).trim() }));
-      if (!items.length) { section.style.display = 'none'; return; }
-      track.innerHTML = ''; track.appendChild(pp_makeNodes(items)); track.appendChild(pp_makeNodes(items));
-    } catch (err) { console.error('Testimonials error:', err); if (section) section.style.display = 'none'; }
+      if (!items.length) {
+        section.style.display = 'none';
+        return;
+      }
+      track.innerHTML = '';
+      track.appendChild(pp_makeNodes(items));
+      track.appendChild(pp_makeNodes(items));
+  
+      let pos = 0;
+      let isDragging = false;
+      let startX = 0;
+      let startPos = 0;
+      let animationFrameId;
+
+      // --- Sesuaikan kecepatan di sini ---
+      // Angka lebih besar = lebih cepat. 0.5 adalah kecepatan sedang.
+      const speed = 0.5;
+      // ---------------------------------
+
+      const firstHalfWidth = track.scrollWidth / 2;
+  
+      function animate() {
+        if (!isDragging) {
+          pos -= speed;
+        }
+        if (pos <= -firstHalfWidth) {
+          pos += firstHalfWidth;
+        }
+        track.style.transform = `translateX(${pos}px)`;
+        animationFrameId = requestAnimationFrame(animate);
+      }
+  
+      function onDragStart(e) {
+        isDragging = true;
+        marquee.classList.add('is-grabbing');
+        startX = e.pageX || e.touches[0].pageX;
+        startPos = pos;
+        cancelAnimationFrame(animationFrameId);
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('touchmove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+        window.addEventListener('touchend', onDragEnd);
+      }
+  
+      function onDragMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const currentX = e.pageX || e.touches[0].pageX;
+        const diff = currentX - startX;
+        pos = startPos + diff;
+        track.style.transform = `translateX(${pos}px)`;
+      }
+  
+      function onDragEnd() {
+        isDragging = false;
+        marquee.classList.remove('is-grabbing');
+        // Wrap position
+        const trackWidth = track.scrollWidth / 2;
+        pos = pos % trackWidth;
+
+        animate();
+        window.removeEventListener('mousemove', onDragMove);
+        window.removeEventListener('touchmove', onDragMove);
+        window.removeEventListener('mouseup', onDragEnd);
+        window.removeEventListener('touchend', onDragEnd);
+      }
+  
+      marquee.addEventListener('mousedown', onDragStart);
+      marquee.addEventListener('touchstart', onDragStart, { passive: true });
+  
+      animate();
+  
+    } catch (err) {
+      console.error('Testimonials error:', err);
+      if (section) section.style.display = 'none';
+    }
   }
+
   document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
-    loadTestimonials();
+    initializeTestimonialMarquee(); // Menggantikan loadTestimonials()
   });
 })();
