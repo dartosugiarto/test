@@ -263,3 +263,19 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
   color: #6d243a;
   background-color: #f8e4e8;
 }
+
+.testi-track {
+  will-change: transform;
+  animation: marquee 60s linear infinite;
+}
+.testi-marquee:hover .testi-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
