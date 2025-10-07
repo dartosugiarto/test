@@ -228,7 +228,8 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .testi-wrap { margin: 32px auto; background: var(--surface-primary); border: 1px solid var(--separator); border-radius: 16px; padding: 16px; box-shadow: var(--shadow-sm); max-width: 1100px; }
 .testi-title { margin: 0 0 12px 0; font-size: 20px; font-weight: 800; text-align: center; }
 .testi-marquee { position: relative; overflow: hidden; mask-image: linear-gradient(to right, transparent 0, black 4%, black 96%, transparent 100%); cursor: grab; user-select: none; touch-action: pan-y; }
-.testi-track { display: flex; gap: 12px; list-style: none; padding: 0; margin: 0; }
+.testi-marquee.is-grabbing { cursor: grabbing; }
+.testi-track { display: flex; gap: 12px; list-style: none; padding: 0; margin: 0; will-change: transform; }
 .testi-item { flex: 0 0 auto; width: clamp(85px, 23vw, 320px); }
 .testi-fig { margin: 0; background: var(--surface-secondary); border: 1px solid var(--separator); border-radius: 12px; overflow: hidden; }
 .testi-fig img { width: 100%; height: auto; display: block; }
@@ -262,20 +263,4 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .header-status.closed {
   color: #6d243a;
   background-color: #f8e4e8;
-}
-
-.testi-track {
-  will-change: transform;
-  animation: marquee 60s linear infinite;
-}
-.testi-marquee:hover .testi-track {
-  animation-play-state: paused;
-}
-@keyframes marquee {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
 }
