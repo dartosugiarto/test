@@ -64,6 +64,7 @@
       listContainer: getElement('homeListContainer'),
       countInfo: getElement('homeCountInfo'),
       errorContainer: getElement('homeErrorContainer'),
+      searchInput: getElement('homeSearchInput'),
       customSelect: {
         wrapper: getElement('homeCustomSelectWrapper'),
         btn: getElement('homeCustomSelectBtn'),
@@ -74,9 +75,9 @@
     headerSearch: {
       container: getElement('headerSearchContainer'),
       btn: getElement('headerSearchBtn'),
-      input: getElement('headerSearchInput'),
-      cancelBtn: getElement('headerSearchCancelBtn'),
+      input: getElement('headerSearchInput')
     },
+    headerStatusIndicator: getElement('headerStatusIndicator'),
     itemTemplate: getElement('itemTemplate'),
     skeletonItemTemplate: getElement('skeletonItemTemplate'),
     skeletonCardTemplate: getElement('skeletonCardTemplate'),
@@ -208,6 +209,19 @@
         }
     }).join('');
   }
+  function updateHeaderStatus() {
+    const now = new Date();
+    const options = { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false };
+    const hour = parseInt(new Intl.DateTimeFormat('en-US', options).format(now), 10);
+    const indicator = elements.headerStatusIndicator;
+    if (hour >= 8) {
+      indicator.textContent = 'BUKA';
+      indicator.className = 'header-status open';
+    } else {
+      indicator.textContent = 'TUTUP';
+      indicator.className = 'header-status closed';
+    }
+  }
   function initializeApp() {
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
@@ -226,51 +240,26 @@
         toggleCustomSelect(select.wrapper);
       }));
     let homeDebounce;
-    elements.headerSearch.input.addEventListener('input', e => {
+    elements.home.searchInput.addEventListener('input', e => {
       clearTimeout(homeDebounce);
       homeDebounce = setTimeout(() => { state.home.searchQuery = e.target.value.trim(); renderHomeList(); }, 200);
     });
-
-    // --- New Search Logic ---
-    const openSearch = (e) => {
+    elements.headerSearch.btn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (document.body.classList.contains('sidebar-open')) toggleSidebar(false);
-      elements.headerSearch.container.classList.add('active');
-      elements.headerSearch.input.focus();
-    };
-
-    const closeSearch = () => {
-      elements.headerSearch.container.classList.remove('active');
-      const searchInput = elements.headerSearch.input;
-      if (searchInput.value !== '') {
-        searchInput.value = '';
-        state.home.searchQuery = '';
-        if (document.getElementById('viewHome').classList.contains('active')) {
-          renderHomeList();
-        }
-      }
-    };
-
-    elements.headerSearch.btn.addEventListener('click', openSearch);
-    elements.headerSearch.input.addEventListener('click', (e) => e.stopPropagation());
-    elements.headerSearch.cancelBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      closeSearch();
+      elements.headerSearch.container.classList.toggle('active');
+      if (elements.headerSearch.container.classList.contains('active')) elements.headerSearch.input.focus();
     });
-
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
-
     document.addEventListener('click', (e) => {
       [elements.home.customSelect.wrapper, elements.preorder.customSelect.wrapper, elements.preorder.customStatusSelect.wrapper, elements.accounts.customSelect.wrapper]
         .filter(wrapper => wrapper)
         .forEach(wrapper => toggleCustomSelect(wrapper, false));
-      
-      if (elements.headerSearch.container.classList.contains('active') && !elements.headerSearch.container.contains(e.target)) {
-        closeSearch();
+      if (!elements.headerSearch.container.contains(e.target)) {
+        elements.headerSearch.container.classList.remove('active');
       }
     });
-    
     loadCatalog();
     window.addEventListener('popstate', (event) => {
         const mode = (window.location.pathname.substring(1).toLowerCase() || 'home');
@@ -279,6 +268,8 @@
     const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'carousell'];
     const initialMode = window.location.pathname.substring(1).toLowerCase() || 'home';
     setMode(validModes.includes(initialMode) ? initialMode : 'home', true);
+    updateHeaderStatus();
+    setInterval(updateHeaderStatus, 60000);
   }
   function toggleSidebar(forceOpen) {
     const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
@@ -295,8 +286,10 @@
     const viewMap = { home: elements.viewHome, preorder: elements.viewPreorder, accounts: elements.viewAccounts, perpustakaan: elements.viewPerpustakaan, carousell: elements.viewCarousell };
     const nextView = viewMap[nextMode];
     if (!nextView) return;
-    elements.headerSearch.container.classList.toggle('hidden', nextMode !== 'home');
-    if(nextMode !== 'home') elements.headerSearch.container.classList.remove('active');
+    const isHomePage = nextMode === 'home';
+    elements.headerStatusIndicator.style.display = isHomePage ? 'inline-flex' : 'none';
+    elements.headerSearch.container.style.display = isHomePage ? 'none' : 'flex';
+    if(isHomePage) elements.headerSearch.container.classList.remove('active');
     const testimonialSection = document.getElementById('testimonialSection');
     if (testimonialSection) {
       testimonialSection.style.display = nextMode === 'home' ? 'block' : 'none';
@@ -718,7 +711,7 @@
             <div class="affiliate-card-body" role="button" tabindex="0">
                 <div class="affiliate-card-main-info">
                   <h3 class="affiliate-card-title">${product.name}</h3>
-                  <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg>
+                  <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                 </div>
                 ${platformHTML}
                 <p class="affiliate-card-price">${formatToIdr(product.price)}</p>
