@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf--8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>PlayPal.ID</title>
   <meta name="description" content="Destinasi Utama Para Pecinta Game, Film & Musik">
@@ -87,8 +87,9 @@
           </div>
           <div class="search-row">
             <div class="search-wrap">
-              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-              <input id="homeSearchInput" type="search" class="search-input" placeholder="Cari item..." />
+              <svg class="icon search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <div class="spinner" style="display: none;"></div>
+              <input id="homeSearchInput" type="search" class="search-input" placeholder="Cari item di semua kategori..." />
             </div>
           </div>
           <div id="homeCountInfo" aria-live="polite"></div>
@@ -109,8 +110,8 @@
                   <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
                 </button>
                 <div class="custom-select-options" id="preorderCustomSelectOptions" role="listbox">
-                  <div class="custom-select-option selected" data-value="0">Starlight Member</div>
-                  <div class="custom-select-option" data-value="1">Pesanan Umum</div>
+                  <div class="custom-select-option" data-value="0" role="option">Starlight Member</div>
+                  <div class="custom-select-option" data-value="1" role="option">Pesanan Umum</div>
                 </div>
               </div>
           </div>
@@ -127,11 +128,11 @@
                 <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
               </button>
               <div class="custom-select-options" id="preorderStatusCustomSelectOptions" role="listbox">
-                <div class="custom-select-option selected" data-value="all">Semua Status</div>
-                <div class="custom-select-option" data-value="success">Success</div>
-                <div class="custom-select-option" data-value="progress">Progress</div>
-                <div class="custom-select-option" data-value="pending">Pending</div>
-                <div class="custom-select-option" data-value="failed">Gagal</div>
+                <div class="custom-select-option" data-value="all" role="option">Semua Status</div>
+                <div class="custom-select-option" data-value="success" role="option">Success</div>
+                <div class="custom-select-option" data-value="progress" role="option">Progress</div>
+                <div class="custom-select-option" data-value="pending" role="option">Pending</div>
+                <div class="custom-select-option" data-value="failed" role="option">Gagal</div>
               </div>
             </div>
             <select class="status-select" id="preorderStatusSelect" aria-label="Filter status" style="display: none;">
@@ -142,7 +143,7 @@
               <option value="failed">Gagal</option>
             </select>
           </div>
-          <div id="preorderTotal" class="meta"></div>
+          <div id="preorderTotal" class="meta" aria-live="polite"></div>
         </div>
         <div class="container">
           <main id="preorderListContainer" class="card-grid" aria-live="polite"></main>
@@ -200,7 +201,7 @@
               <input id="carousellSearchInput" type="search" class="search-input" placeholder="Cari berdasarkan nomor produk..." />
             </div>
           </div>
-          <div id="carousellTotal" class="meta"></div>
+          <div id="carousellTotal" class="meta" aria-live="polite"></div>
         </div>
         <div id="carousellGridContainer" class="affiliate-grid"></div>
         <div id="carousellError" class="err" style="display:none"></div>
@@ -213,10 +214,13 @@
       <span class="price"></span>
     </button>
   </template>
+  <template id="categoryHeaderTemplate">
+      <h2 class="category-header"></h2>
+  </template>
   <template id="skeletonItemTemplate">
     <div class="list-item skeleton">
-      <span class="skeleton-text" style="width: 60%;"></span>
-      <span class="skeleton-text" style="width: 25%;"></span>
+      <span class="skeleton-text" style="width: 60%; height: 16px;"></span>
+      <span class="skeleton-text" style="width: 25%; height: 20px;"></span>
     </div>
   </template>
   <template id="skeletonCardTemplate">
