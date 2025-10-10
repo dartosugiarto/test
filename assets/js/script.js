@@ -17,9 +17,10 @@
       { id: 'bank_to_dana', name: 'Bank ke Dana', feeType: 'fixed', value: 500 },
       { id: 'qris', name: 'Qris', feeType: 'percentage', value: 0.01 },
     ],
+    imagePlaceholder: '/assets/images/placeholder.webp', // Path untuk gambar cadangan
   };
   const state = {
-    home: { activeCategory: '', searchQuery: '' },
+    home: { activeCategory: 'semua', searchQuery: '' }, // Default ke 'semua'
     preorder: {
       initialized: false,
       allData: [],
@@ -65,6 +66,8 @@
       countInfo: getElement('homeCountInfo'),
       errorContainer: getElement('homeErrorContainer'),
       searchInput: getElement('homeSearchInput'),
+      searchSpinner: document.querySelector('.search-wrap .spinner'),
+      searchIcon: document.querySelector('.search-wrap .search-icon'),
       customSelect: {
         wrapper: getElement('homeCustomSelectWrapper'),
         btn: getElement('homeCustomSelectBtn'),
@@ -74,6 +77,7 @@
     },
     headerStatusIndicator: getElement('headerStatusIndicator'),
     itemTemplate: getElement('itemTemplate'),
+    categoryHeaderTemplate: getElement('categoryHeaderTemplate'),
     skeletonItemTemplate: getElement('skeletonItemTemplate'),
     skeletonCardTemplate: getElement('skeletonCardTemplate'),
     paymentModal: {
@@ -127,8 +131,70 @@
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
-  function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
+  
+  function setupCustomSelect(selectConfig) {
+      const { wrapper, btn, options } = selectConfig;
+      if (!wrapper || !btn || !options) return;
+  
+      let focusIndex = -1;
+  
+      const updateFocus = () => {
+          options.querySelectorAll('.custom-select-option').forEach((opt, i) => {
+              opt.classList.toggle('focus-visible', i === focusIndex);
+          });
+      };
+  
+      btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = wrapper.classList.toggle('open');
+          btn.setAttribute('aria-expanded', isOpen);
+          if(isOpen) {
+              const selected = options.querySelector('.selected');
+              focusIndex = selected ? [...options.children].indexOf(selected) : 0;
+              updateFocus();
+          }
+      });
+  
+      options.addEventListener('click', (e) => {
+          if (e.target.classList.contains('custom-select-option')) {
+              wrapper.classList.remove('open');
+              btn.setAttribute('aria-expanded', 'false');
+          }
+      });
+
+      wrapper.addEventListener('keydown', (e) => {
+        if (!wrapper.classList.contains('open')) return;
+        const opts = options.querySelectorAll('.custom-select-option');
+        if (opts.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                focusIndex = (focusIndex + 1) % opts.length;
+                updateFocus();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                focusIndex = (focusIndex - 1 + opts.length) % opts.length;
+                updateFocus();
+                break;
+            case 'Enter':
+            case ' ':
+                e.preventDefault();
+                if (focusIndex > -1) opts[focusIndex].click();
+                wrapper.classList.remove('open');
+                btn.focus();
+                break;
+            case 'Escape':
+                e.preventDefault();
+                wrapper.classList.remove('open');
+                btn.focus();
+                break;
+        }
+    });
+  }
+
   function initializeCarousels(container) {
     container.querySelectorAll('.carousel-container').forEach(carouselContainer => {
       const track = carouselContainer.querySelector('.carousel-track');
@@ -146,24 +212,24 @@
           nextBtn.disabled = currentIndex >= imageCount - 1;
           indicators.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
         };
-        nextBtn.addEventListener('click', (e) => { 
-          e.stopPropagation(); 
-          if (currentIndex < imageCount - 1) { 
-            currentIndex++; 
-            update(); 
-          } 
+        nextBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (currentIndex < imageCount - 1) {
+            currentIndex++;
+            update();
+          }
         });
-        prevBtn.addEventListener('click', (e) => { 
-          e.stopPropagation(); 
-          if (currentIndex > 0) { 
-            currentIndex--; 
-            update(); 
-          } 
+        prevBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (currentIndex > 0) {
+            currentIndex--;
+            update();
+          }
         });
-        indicators.forEach(dot => dot.addEventListener('click', (e) => { 
-          e.stopPropagation(); 
-          currentIndex = parseInt(e.target.dataset.index, 10); 
-          update(); 
+        indicators.forEach(dot => dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentIndex = parseInt(e.target.dataset.index, 10);
+          update();
         }));
         update();
       }
@@ -211,10 +277,10 @@
     const indicator = elements.headerStatusIndicator;
     if (hour >= 8) {
       indicator.textContent = 'BUKA';
-      indicator.className = 'header-status open';
+      indicator.className = 'status-badge open';
     } else {
       indicator.textContent = 'TUTUP';
-      indicator.className = 'header-status closed';
+      indicator.className = 'status-badge closed';
     }
   }
   function initializeApp() {
@@ -229,22 +295,30 @@
       });
     });
     [elements.home.customSelect, elements.preorder.customSelect, elements.preorder.customStatusSelect, elements.accounts.customSelect]
-      .filter(select => select && select.btn)
-      .forEach(select => select.btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleCustomSelect(select.wrapper);
-      }));
+      .filter(Boolean)
+      .forEach(setupCustomSelect);
+    
     let homeDebounce;
     elements.home.searchInput.addEventListener('input', e => {
       clearTimeout(homeDebounce);
-      homeDebounce = setTimeout(() => { state.home.searchQuery = e.target.value.trim(); renderHomeList(); }, 200);
+      elements.home.searchSpinner.style.display = 'block';
+      elements.home.searchIcon.style.display = 'none';
+      homeDebounce = setTimeout(() => { 
+        state.home.searchQuery = e.target.value.trim(); 
+        renderHomeList();
+        elements.home.searchSpinner.style.display = 'none';
+        elements.home.searchIcon.style.display = 'block';
+      }, 300);
     });
     elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
     elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
     document.addEventListener('click', (e) => {
-      [elements.home.customSelect.wrapper, elements.preorder.customSelect.wrapper, elements.preorder.customStatusSelect.wrapper, elements.accounts.customSelect.wrapper]
-        .filter(wrapper => wrapper)
-        .forEach(wrapper => toggleCustomSelect(wrapper, false));
+      document.querySelectorAll('.custom-select-wrapper.open').forEach(wrapper => {
+        if (!wrapper.contains(e.target)) {
+          wrapper.classList.remove('open');
+          wrapper.querySelector('.custom-select-btn').setAttribute('aria-expanded', 'false');
+        }
+      });
     });
     loadCatalog();
     window.addEventListener('popstate', (event) => {
@@ -303,12 +377,14 @@
     const { options, value } = elements.home.customSelect;
     const categoryMap = new Map();
     catalogData.forEach(item => { if (!categoryMap.has(item.catKey)) categoryMap.set(item.catKey, item.catLabel); });
-    const categories = [...categoryMap].map(([key, label]) => ({ key, label }));
+    const categories = [{key: 'semua', label: 'Semua Kategori'}, ...[...categoryMap].map(([key, label]) => ({ key, label }))];
     options.innerHTML = '';
-    const activeCategoryKey = state.home.activeCategory || (categories[0]?.key || '');
+    
+    let activeCategoryKey = state.home.activeCategory;
     const activeCategory = categories.find(c => c.key === activeCategoryKey) || categories[0];
-    if (activeCategory) { state.home.activeCategory = activeCategory.key; value.textContent = activeCategory.label; } 
-    else { value.textContent = 'Data tidak tersedia'; }
+    state.home.activeCategory = activeCategory.key; 
+    value.textContent = activeCategory.label;
+
     categories.forEach(cat => {
       const el = document.createElement('div');
       el.className = 'custom-select-option';
@@ -321,30 +397,97 @@
         value.textContent = cat.label;
         options.querySelector('.selected')?.classList.remove('selected');
         el.classList.add('selected');
-        toggleCustomSelect(elements.home.customSelect.wrapper, false);
+        
+        localStorage.setItem('lastSelectedCategory', cat.key); // Simpan pilihan
+
         const url = new URL(window.location);
-        url.searchParams.set('kategori', cat.label.toLowerCase().replace(/ /g, '-').replace(/[+&]/g, ''));
+        if (cat.key === 'semua') {
+            url.searchParams.delete('kategori');
+        } else {
+            url.searchParams.set('kategori', cat.label.toLowerCase().replace(/ /g, '-').replace(/[+&]/g, ''));
+        }
         history.pushState({ activeCategory: cat.key }, '', url);
         renderHomeList();
       });
       options.appendChild(el);
     });
   }
-  function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
-  function renderHomeList() { const { activeCategory, searchQuery } = state.home; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada item ditemukan.'); }
+  function renderHomeList() {
+    const { activeCategory, searchQuery } = state.home;
+    const { listContainer, countInfo } = elements.home;
+    
+    listContainer.classList.add('is-filtering');
+    
+    setTimeout(() => {
+        const query = searchQuery.toLowerCase();
+        const filteredItems = allCatalogData.filter(item => {
+            const inCategory = activeCategory === 'semua' || item.catKey === activeCategory;
+            const inSearch = query === '' || item.title.toLowerCase().includes(query) || String(item.price).includes(query);
+            return inCategory && inSearch;
+        });
+
+        listContainer.innerHTML = '';
+        if (filteredItems.length === 0) {
+            listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak ada item ditemukan.</p></div></div>`;
+            countInfo.textContent = '';
+            listContainer.classList.remove('is-filtering');
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        // Global search: group by category
+        if (searchQuery && activeCategory === 'semua') {
+            const grouped = filteredItems.reduce((acc, item) => {
+                if (!acc[item.catLabel]) acc[item.catLabel] = [];
+                acc[item.catLabel].push(item);
+                return acc;
+            }, {});
+
+            for (const catLabel in grouped) {
+                const headerClone = elements.categoryHeaderTemplate.content.cloneNode(true);
+                headerClone.querySelector('h2').textContent = catLabel;
+                fragment.appendChild(headerClone);
+                grouped[catLabel].forEach(item => {
+                    const clone = elements.itemTemplate.content.cloneNode(true);
+                    const buttonEl = clone.querySelector('.list-item');
+                    buttonEl.querySelector('.title').textContent = item.title;
+                    buttonEl.querySelector('.price').textContent = formatToIdr(item.price);
+                    buttonEl.addEventListener('click', () => openPaymentModal(item));
+                    fragment.appendChild(clone);
+                });
+            }
+        } else { // Standard view
+            for (const item of filteredItems) {
+                const clone = elements.itemTemplate.content.cloneNode(true);
+                const buttonEl = clone.querySelector('.list-item');
+                buttonEl.querySelector('.title').textContent = item.title;
+                buttonEl.querySelector('.price').textContent = formatToIdr(item.price);
+                buttonEl.addEventListener('click', () => openPaymentModal(item));
+                fragment.appendChild(clone);
+            }
+        }
+        
+        listContainer.appendChild(fragment);
+        countInfo.textContent = `${filteredItems.length} item ditemukan`;
+        listContainer.classList.remove('is-filtering');
+    }, 100);
+  }
   async function loadCatalog() { 
     if (catalogFetchController) catalogFetchController.abort();
     catalogFetchController = new AbortController();
     try { 
       elements.home.errorContainer.style.display = 'none'; 
-      showSkeleton(elements.home.listContainer, elements.skeletonItemTemplate, 6); 
+      showSkeleton(elements.home.listContainer, elements.skeletonItemTemplate, 12); 
       const res = await fetch(getSheetUrl(config.sheets.katalog.name), { signal: catalogFetchController.signal }); 
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
       const text = await res.text(); 
       allCatalogData = parseGvizPairs(text); 
-      if (allCatalogData.length === 0) throw new Error('Data is empty or format is incorrect.'); 
+      if (allCatalogData.length === 0) throw new Error('Data is empty or format is incorrect.');
+      
+      const savedCategory = localStorage.getItem('lastSelectedCategory');
       const params = new URLSearchParams(window.location.search);
       const categoryFromUrl = params.get('kategori');
+
       if (categoryFromUrl && (window.location.pathname === '/' || window.location.pathname.endsWith('/index.html'))) {
           const urlToCatKeyMap = new Map();
           allCatalogData.forEach(item => {
@@ -353,7 +496,10 @@
           });
           const foundKey = urlToCatKeyMap.get(categoryFromUrl);
           if (foundKey) state.home.activeCategory = foundKey;
+      } else if (savedCategory) {
+          state.home.activeCategory = savedCategory;
       }
+      
       buildHomeCategorySelect(allCatalogData); 
       renderHomeList(); 
     } catch (err) { 
@@ -475,7 +621,6 @@
         customSelect.options.querySelector('.selected')?.classList.remove('selected');
         e.target.classList.add('selected');
         fetchPreorderData(e.target.dataset.value === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2);
-        toggleCustomSelect(customSelect.wrapper, false);
       });
     });
     customStatusSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
@@ -484,7 +629,6 @@
         customStatusSelect.options.querySelector('.selected')?.classList.remove('selected');
         e.target.classList.add('selected');
         elements.preorder.statusSelect.value = e.target.dataset.value;
-        toggleCustomSelect(customStatusSelect.wrapper, false);
         rebound();
       });
     });
@@ -504,12 +648,12 @@
       el.className = 'custom-select-option';
       el.textContent = cat;
       el.dataset.value = cat;
+      el.setAttribute('role', 'option');
       if (cat === state.accounts.activeCategory) el.classList.add('selected');
       el.addEventListener('click', () => {
         value.textContent = cat;
         document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
         el.classList.add('selected');
-        toggleCustomSelect(customSelect.wrapper, false);
         state.accounts.activeCategory = cat;
         renderAccountCards();
       });
@@ -543,7 +687,14 @@
       if (account.images.length > 0) {
         const carouselContainer = document.createElement('div');
         carouselContainer.className = 'carousel-container';
-        const slides = account.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar detail untuk ${account.category}" loading="lazy"></div>`).join('');
+        const slides = account.images.map(src => {
+            const img = new Image();
+            img.src = src;
+            img.alt = `Gambar detail untuk ${account.category}`;
+            img.loading = 'lazy';
+            img.onerror = function() { this.onerror=null; this.src=config.imagePlaceholder; };
+            return `<div class="carousel-slide">${img.outerHTML}</div>`;
+        }).join('');
         const indicators = account.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
         carouselContainer.innerHTML = `<div class="carousel-track">${slides}</div>${account.images.length > 1 ? `<button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button><button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button><div class="carousel-indicators">${indicators}</div>` : ''}`;
         carouselWrapper.appendChild(carouselContainer);
@@ -553,14 +704,7 @@
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
       const specsContainer = cardElement.querySelector('.account-card-specs');
-      const specsList = document.createElement('ul');
-      specsList.className = 'specs-list';
-      account.description.split('\n').forEach(spec => {
-        const trimmedSpec = spec.trim();
-        if (trimmedSpec === '') { specsList.innerHTML += `<li class="spec-divider"></li>`; }
-        else { const isTitle = ['Spesifikasi Akun', 'Pengaturan Akun', 'Kontak Penjual'].some(title => trimmedSpec.startsWith(title)); specsList.innerHTML += `<li class="${isTitle ? 'spec-title' : 'spec-item'}">${trimmedSpec}</li>`; }
-      });
-      specsContainer.appendChild(specsList);
+      specsContainer.innerHTML = formatDescriptionToHTML(account.description);
       cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
       cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
       setupExpandableCard(cardElement, '.account-card-main-info');
@@ -606,7 +750,7 @@
         card.href = book.bookUrl;
         card.target = '_blank';
         card.rel = 'noopener';
-        card.innerHTML = `<img src="${book.coverUrl}" alt="${book.title}" class="cover" decoding="async" loading="lazy"><div class="overlay"></div><div class="title">${book.title}</div>`;
+        card.innerHTML = `<img src="${book.coverUrl}" alt="${book.title}" class="cover" decoding="async" loading="lazy" onerror="this.onerror=null; this.src='${config.imagePlaceholder}';"><div class="overlay"></div><div class="title">${book.title}</div>`;
         fragment.appendChild(card);
       });
       container.appendChild(fragment);
@@ -679,7 +823,15 @@
           card.className = 'affiliate-card';
           let imagesHTML = '';
           if (product.images.length > 0) {
-            const slides = product.images.map(src => `<div class="carousel-slide"><img src="${src}" alt="Gambar produk ${product.name}" loading="lazy"></div>`).join('');
+            const slides = product.images.map(src => {
+                const img = new Image();
+                img.src = src;
+                img.alt = `Gambar produk ${product.name}`;
+                img.loading = 'lazy';
+                img.onerror = function() { this.onerror=null; this.src=config.imagePlaceholder; };
+                return `<div class="carousel-slide">${img.outerHTML}</div>`;
+            }).join('');
+
             const indicators = product.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
             imagesHTML = `<div class="carousel-container"><div class="carousel-track">${slides}</div>${product.images.length > 1 ? `<button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button><button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button><div class="carousel-indicators">${indicators}</div>` : ''}</div>`;
           } else {
@@ -715,7 +867,7 @@
     list.forEach(({ name, url }) => {
       const li = document.createElement('li');
       li.className = 'testi-item';
-      li.innerHTML = `<figure class="testi-fig"><img src="${url}" alt="Testimoni ${name.replace(/"/g,'&quot;')}" decoding="async" loading="lazy"></figure><figcaption class="testi-caption">— ${name.replace(/</g,'&lt;')}</figcaption>`;
+      li.innerHTML = `<figure class="testi-fig"><img src="${url}" alt="Testimoni ${name.replace(/"/g,'&quot;')}" decoding="async" loading="lazy" onerror="this.onerror=null; this.src='${config.imagePlaceholder}';"></figure><figcaption class="testi-caption">— ${name.replace(/</g,'&lt;')}</figcaption>`;
       frag.appendChild(li);
     });
     return frag;
@@ -725,7 +877,7 @@
     const marquee = section.querySelector('.testi-marquee');
     const track = section.querySelector('#testiTrack');
     if (!marquee || !track) return;
-  
+ 
     try {
       const res = await fetch(getSheetUrl('Sheet7', 'csv'));
       if (!res.ok) throw new Error('Network: ' + res.status);
@@ -743,20 +895,16 @@
       track.innerHTML = '';
       track.appendChild(pp_makeNodes(items));
       track.appendChild(pp_makeNodes(items));
-  
+ 
       let pos = 0;
       let isDragging = false;
       let startX = 0;
       let startPos = 0;
       let animationFrameId;
 
-      // --- Sesuaikan kecepatan di sini ---
-      // Angka lebih besar = lebih cepat. 0.5 adalah kecepatan sedang.
       const speed = 0.5;
-      // ---------------------------------
-
       const firstHalfWidth = track.scrollWidth / 2;
-  
+ 
       function animate() {
         if (!isDragging) {
           pos -= speed;
@@ -767,7 +915,7 @@
         track.style.transform = `translateX(${pos}px)`;
         animationFrameId = requestAnimationFrame(animate);
       }
-  
+ 
       function onDragStart(e) {
         isDragging = true;
         marquee.classList.add('is-grabbing');
@@ -779,7 +927,7 @@
         window.addEventListener('mouseup', onDragEnd);
         window.addEventListener('touchend', onDragEnd);
       }
-  
+ 
       function onDragMove(e) {
         if (!isDragging) return;
         e.preventDefault();
@@ -788,26 +936,24 @@
         pos = startPos + diff;
         track.style.transform = `translateX(${pos}px)`;
       }
-  
+ 
       function onDragEnd() {
         isDragging = false;
         marquee.classList.remove('is-grabbing');
-        // Wrap position
         const trackWidth = track.scrollWidth / 2;
         pos = pos % trackWidth;
-
         animate();
         window.removeEventListener('mousemove', onDragMove);
         window.removeEventListener('touchmove', onDragMove);
         window.removeEventListener('mouseup', onDragEnd);
         window.removeEventListener('touchend', onDragEnd);
       }
-  
+ 
       marquee.addEventListener('mousedown', onDragStart);
       marquee.addEventListener('touchstart', onDragStart, { passive: true });
-  
+ 
       animate();
-  
+ 
     } catch (err) {
       console.error('Testimonials error:', err);
       if (section) section.style.display = 'none';
@@ -816,6 +962,6 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
-    initializeTestimonialMarquee(); // Menggantikan loadTestimonials()
+    initializeTestimonialMarquee();
   });
 })();
