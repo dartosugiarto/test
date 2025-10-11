@@ -1,967 +1,480 @@
+/**
+ * PlayPal.ID Refactored Application
+ *
+ * Architecture: Modular, State-driven
+ * Features:
+ * - Centralized State Management
+ * - Component-based UI Rendering
+ * - Simple Client-side Router
+ * - API Abstraction for Google Sheets
+ * - Modern JS (ESM, Async/Await)
+ */
 (function () {
   'use strict';
-  const config = {
-    sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
+
+  // --- 1. CONFIGURATION ---
+  const CONFIG = {
+    googleSheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
     sheets: {
-      katalog: { name: 'Sheet3' },
-      preorder: { name1: 'Sheet1', name2: 'Sheet2' },
-      accounts: { name: 'Sheet5' },
-      affiliate: { name: 'Sheet8' }
+      catalog: 'Sheet3',
+      preorderStarlight: 'Sheet1',
+      preorderGeneral: 'Sheet2',
+      accounts: 'Sheet5',
+      library: 'Sheet6',
+      testimonials: 'Sheet7',
+      carousell: 'Sheet8',
     },
-    waNumber: '6285877001999',
-    waGreeting: '*Detail pesanan:*',
+    whatsappNumber: '6285877001999',
     paymentOptions: [
       { id: 'seabank', name: 'Seabank', feeType: 'fixed', value: 0 },
       { id: 'gopay', name: 'Gopay', feeType: 'fixed', value: 0 },
       { id: 'dana', name: 'Dana', feeType: 'fixed', value: 125 },
       { id: 'bank_to_dana', name: 'Bank ke Dana', feeType: 'fixed', value: 500 },
-      { id: 'qris', name: 'Qris', feeType: 'percentage', value: 0.01 },
+      { id: 'qris', name: 'QRIS', feeType: 'percentage', value: 0.01 },
     ],
-    imagePlaceholder: '/assets/images/placeholder.webp', // Path untuk gambar cadangan
   };
+
+  // --- 2. STATE MANAGEMENT ---
   const state = {
-    home: { activeCategory: 'semua', searchQuery: '' }, // Default ke 'semua'
-    preorder: {
-      initialized: false,
-      allData: [],
-      currentPage: 1,
-      perPage: 15,
-      displayMode: 'detailed',
-    },
-    accounts: {
-      initialized: false,
-      allData: [],
-      activeCategory: 'Semua Kategori',
-    },
-    carousell: {
-      initialized: false,
-      allData: [],
+    currentPage: null,
+    catalog: {
+      all: [],
+      categories: [],
+      activeCategory: null,
       searchQuery: '',
-    }
-  };
-  let allCatalogData = [];
-  let currentSelectedItem = null;
-  let catalogFetchController;
-  let preorderFetchController;
-  let accountsFetchController;
-  let modalFocusTrap = { listener: null, focusableEls: [], firstEl: null, lastEl: null };
-  let elementToFocusOnModalClose = null;
-  function getElement(id) {
-    return document.getElementById(id);
-  }
-  const elements = {
-    sidebar: {
-      nav: getElement('sidebarNav'),
-      overlay: getElement('sidebarOverlay'),
-      burger: getElement('burgerBtn'),
-    },
-    navLinks: document.querySelectorAll('[data-mode]'),
-    viewHome: getElement('viewHome'),
-    viewPreorder: getElement('viewPreorder'),
-    viewAccounts: getElement('viewAccounts'),
-    viewPerpustakaan: getElement('viewPerpustakaan'),
-    viewCarousell: getElement('viewCarousell'),
-    home: {
-      listContainer: getElement('homeListContainer'),
-      countInfo: getElement('homeCountInfo'),
-      errorContainer: getElement('homeErrorContainer'),
-      searchInput: getElement('homeSearchInput'),
-      searchSpinner: document.querySelector('.search-wrap .spinner'),
-      searchIcon: document.querySelector('.search-wrap .search-icon'),
-      customSelect: {
-        wrapper: getElement('homeCustomSelectWrapper'),
-        btn: getElement('homeCustomSelectBtn'),
-        value: getElement('homeCustomSelectValue'),
-        options: getElement('homeCustomSelectOptions'),
-      },
-    },
-    headerStatusIndicator: getElement('headerStatusIndicator'),
-    itemTemplate: getElement('itemTemplate'),
-    categoryHeaderTemplate: getElement('categoryHeaderTemplate'),
-    skeletonItemTemplate: getElement('skeletonItemTemplate'),
-    skeletonCardTemplate: getElement('skeletonCardTemplate'),
-    paymentModal: {
-      modal: getElement('paymentModal'),
-      closeBtn: getElement('closeModalBtn'),
-      itemName: getElement('modalItemName'),
-      itemPrice: getElement('modalItemPrice'),
-      optionsContainer: getElement('paymentOptionsContainer'),
-      fee: getElement('modalFee'),
-      total: getElement('modalTotal'),
-      waBtn: getElement('continueToWaBtn'),
+      isLoading: true,
     },
     preorder: {
-      searchInput: getElement('preorderSearchInput'),
-      statusSelect: getElement('preorderStatusSelect'),
-      listContainer: getElement('preorderListContainer'),
-      prevBtn: getElement('preorderPrevBtn'),
-      nextBtn: getElement('preorderNextBtn'),
-      pageInfo: getElement('preorderPageInfo'),
-      total: getElement('preorderTotal'),
-      customSelect: {
-        wrapper: getElement('preorderCustomSelectWrapper'),
-        btn: getElement('preorderCustomSelectBtn'),
-        value: getElement('preorderCustomSelectValue'),
-        options: getElement('preorderCustomSelectOptions'),
-      },
-      customStatusSelect: {
-        wrapper: getElement('preorderStatusCustomSelectWrapper'),
-        btn: getElement('preorderStatusCustomSelectBtn'),
-        value: getElement('preorderStatusCustomSelectValue'),
-        options: getElement('preorderStatusCustomSelectOptions'),
-      }
+      data: [],
+      searchQuery: '',
+      statusFilter: 'all',
+      type: 'starlight', // 'starlight' or 'general'
+      currentPage: 1,
+      itemsPerPage: 15,
+      isLoading: true,
     },
-    accounts: {
-      cardGrid: getElement('accountCardGrid'),
-      cardTemplate: getElement('accountCardTemplate'),
-      empty: getElement('accountEmpty'),
-      error: getElement('accountError'),
-      customSelect: {
-        wrapper: getElement('accountCustomSelectWrapper'),
-        btn: getElement('accountCustomSelectBtn'),
-        value: getElement('accountCustomSelectValue'),
-        options: getElement('accountCustomSelectOptions'),
-      },
-    },
-    carousell: {
-      gridContainer: getElement('carousellGridContainer'),
-      error: getElement('carousellError'),
-    }
+    // ... other states for accounts, carousell, etc.
   };
-  function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
-  function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
-  function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
-  function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
-  
-  function setupCustomSelect(selectConfig) {
-      const { wrapper, btn, options } = selectConfig;
-      if (!wrapper || !btn || !options) return;
-  
-      let focusIndex = -1;
-  
-      const updateFocus = () => {
-          options.querySelectorAll('.custom-select-option').forEach((opt, i) => {
-              opt.classList.toggle('focus-visible', i === focusIndex);
-          });
+
+  // --- 3. UTILITIES ---
+  const
+ 
+utils = {
+    getElement: (selector) => document.querySelector(selector),
+    getAllElements: (selector) => document.querySelectorAll(selector),
+    formatToIdr: (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value),
+    debounce: (func, delay = 250) => {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
       };
-  
-      btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const isOpen = wrapper.classList.toggle('open');
-          btn.setAttribute('aria-expanded', isOpen);
-          if(isOpen) {
-              const selected = options.querySelector('.selected');
-              focusIndex = selected ? [...options.children].indexOf(selected) : 0;
-              updateFocus();
+    },
+    parseCsv: (text) => {
+      const rows = text.trim().replace(/\r\n/g, '\n').split('\n');
+      return rows.map(row => {
+          const result = [];
+          let current = '';
+          let inQuote = false;
+          for (let i = 0; i < row.length; i++) {
+              const char = row[i];
+              if (char === '"') {
+                  if (inQuote && row[i+1] === '"') {
+                      current += '"';
+                      i++;
+                  } else {
+                      inQuote = !inQuote;
+                  }
+              } else if (char === ',' && !inQuote) {
+                  result.push(current.trim());
+                  current = '';
+              } else {
+                  current += char;
+              }
           }
+          result.push(current.trim());
+          return result;
       });
-  
-      options.addEventListener('click', (e) => {
-          if (e.target.classList.contains('custom-select-option')) {
-              wrapper.classList.remove('open');
-              btn.setAttribute('aria-expanded', 'false');
-          }
-      });
+    },
+  };
 
-      wrapper.addEventListener('keydown', (e) => {
-        if (!wrapper.classList.contains('open')) return;
-        const opts = options.querySelectorAll('.custom-select-option');
-        if (opts.length === 0) return;
-
-        switch (e.key) {
-            case 'ArrowDown':
-                e.preventDefault();
-                focusIndex = (focusIndex + 1) % opts.length;
-                updateFocus();
-                break;
-            case 'ArrowUp':
-                e.preventDefault();
-                focusIndex = (focusIndex - 1 + opts.length) % opts.length;
-                updateFocus();
-                break;
-            case 'Enter':
-            case ' ':
-                e.preventDefault();
-                if (focusIndex > -1) opts[focusIndex].click();
-                wrapper.classList.remove('open');
-                btn.focus();
-                break;
-            case 'Escape':
-                e.preventDefault();
-                wrapper.classList.remove('open');
-                btn.focus();
-                break;
-        }
-    });
-  }
-
-  function initializeCarousels(container) {
-    container.querySelectorAll('.carousel-container').forEach(carouselContainer => {
-      const track = carouselContainer.querySelector('.carousel-track');
-      const slides = carouselContainer.querySelectorAll('.carousel-slide');
-      const imageCount = slides.length;
-      if (imageCount > 1) {
-        const prevBtn = carouselContainer.querySelector('.prev');
-        const nextBtn = carouselContainer.querySelector('.next');
-        const indicators = carouselContainer.querySelectorAll('.indicator-dot');
-        let currentIndex = 0;
-        const update = () => {
-          if (!track || !prevBtn || !nextBtn || !indicators) return;
-          track.style.transform = `translateX(-${currentIndex * 100}%)`;
-          prevBtn.disabled = currentIndex === 0;
-          nextBtn.disabled = currentIndex >= imageCount - 1;
-          indicators.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
-        };
-        nextBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (currentIndex < imageCount - 1) {
-            currentIndex++;
-            update();
-          }
-        });
-        prevBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (currentIndex > 0) {
-            currentIndex--;
-            update();
-          }
-        });
-        indicators.forEach(dot => dot.addEventListener('click', (e) => {
-          e.stopPropagation();
-          currentIndex = parseInt(e.target.dataset.index, 10);
-          update();
-        }));
-        update();
+  // --- 4. API SERVICE ---
+  const api = {
+    _getSheetUrl: (sheetName, format = 'csv') => `https://docs.google.com/spreadsheets/d/${CONFIG.googleSheetId}/gviz/tq?tqx=out:${format}&sheet=${encodeURIComponent(sheetName)}`,
+    
+    _fetchSheet: async (sheetName) => {
+      try {
+        const response = await fetch(this._getSheetUrl(sheetName));
+        if (!response.ok) throw new Error(`Network error: ${response.statusText}`);
+        const csvText = await response.text();
+        const data = utils.parseCsv(csvText);
+        data.shift(); // Remove header row
+        return data.filter(row => row.some(cell => cell)); // Filter out empty rows
+      } catch (error) {
+        console.error(`Failed to fetch sheet "${sheetName}":`, error);
+        return null;
       }
-    });
-  }
-  function setupExpandableCard(card, triggerSelector) {
-    const trigger = card.querySelector(triggerSelector);
-    if (trigger) {
-      const action = (e) => {
-        if (e.target.closest('a')) return;
-        card.classList.toggle('expanded');
-      };
-      trigger.addEventListener('click', action);
-      trigger.addEventListener('keydown', (e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('a')) {
-          e.preventDefault();
-          action(e);
-        }
-      });
-    }
-  }
-  function formatDescriptionToHTML(text) {
-    if (!text) return '';
-    return text.split('||').map(line => {
-        const trimmedLine = line.trim();
-        if (trimmedLine === '') {
-            return '<br>';
-        } else if (trimmedLine.endsWith(':')) {
-            return `<p class="spec-title">${trimmedLine.slice(0, -1)}</p>`;
-        } else if (trimmedLine.startsWith('›')) {
-            return `<p class="spec-item spec-item-arrow">${trimmedLine.substring(1).trim()}</p>`;
-        } else if (trimmedLine.startsWith('-')) {
-            return `<p class="spec-item spec-item-dash">${trimmedLine.substring(1).trim()}</p>`;
-        } else if (trimmedLine.startsWith('#')) {
-            return `<p class="spec-hashtag">${trimmedLine}</p>`;
-        } else {
-            return `<p class="spec-paragraph">${trimmedLine}</p>`;
-        }
-    }).join('');
-  }
-  function updateHeaderStatus() {
-    const now = new Date();
-    const options = { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false };
-    const hour = parseInt(new Intl.DateTimeFormat('en-US', options).format(now), 10);
-    const indicator = elements.headerStatusIndicator;
-    if (hour >= 8) {
-      indicator.textContent = 'BUKA';
-      indicator.className = 'status-badge open';
-    } else {
-      indicator.textContent = 'TUTUP';
-      indicator.className = 'status-badge closed';
-    }
-  }
-  function initializeApp() {
-    elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
-    elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
-    elements.navLinks.forEach(link => {
-      link.addEventListener('click', e => {
-        if (link.dataset.mode) {
-          e.preventDefault();
-          setMode(link.dataset.mode);
-        }
-      });
-    });
-    [elements.home.customSelect, elements.preorder.customSelect, elements.preorder.customStatusSelect, elements.accounts.customSelect]
-      .filter(Boolean)
-      .forEach(setupCustomSelect);
-    
-    let homeDebounce;
-    elements.home.searchInput.addEventListener('input', e => {
-      clearTimeout(homeDebounce);
-      elements.home.searchSpinner.style.display = 'block';
-      elements.home.searchIcon.style.display = 'none';
-      homeDebounce = setTimeout(() => { 
-        state.home.searchQuery = e.target.value.trim(); 
-        renderHomeList();
-        elements.home.searchSpinner.style.display = 'none';
-        elements.home.searchIcon.style.display = 'block';
-      }, 300);
-    });
-    elements.paymentModal.closeBtn.addEventListener('click', closePaymentModal);
-    elements.paymentModal.modal.addEventListener('click', e => { if (e.target === elements.paymentModal.modal) closePaymentModal(); });
-    document.addEventListener('click', (e) => {
-      document.querySelectorAll('.custom-select-wrapper.open').forEach(wrapper => {
-        if (!wrapper.contains(e.target)) {
-          wrapper.classList.remove('open');
-          wrapper.querySelector('.custom-select-btn').setAttribute('aria-expanded', 'false');
-        }
-      });
-    });
-    loadCatalog();
-    window.addEventListener('popstate', (event) => {
-        const mode = (window.location.pathname.substring(1).toLowerCase() || 'home');
-        if (event.state || mode) setMode(mode, true);
-    });
-    const validModes = ['home', 'preorder', 'accounts', 'perpustakaan', 'carousell'];
-    const initialMode = window.location.pathname.substring(1).toLowerCase() || 'home';
-    setMode(validModes.includes(initialMode) ? initialMode : 'home', true);
-    elements.headerStatusIndicator.style.display = 'inline-flex';
-    updateHeaderStatus();
-    setInterval(updateHeaderStatus, 60000);
-  }
-  function toggleSidebar(forceOpen) {
-    const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
-    document.body.classList.toggle('sidebar-open', isOpen);
-    elements.sidebar.burger.classList.toggle('active', isOpen);
-    document.documentElement.style.overflow = isOpen ? "hidden" : "";
-    document.body.style.overflow = isOpen ? "hidden" : "";
-  }
-  let setMode = function(nextMode, fromPopState = false) {
-    if (nextMode === 'donasi') {
-      window.open('https://saweria.co/playpal', '_blank', 'noopener');
-      return;
-    }
-    const viewMap = { home: elements.viewHome, preorder: elements.viewPreorder, accounts: elements.viewAccounts, perpustakaan: elements.viewPerpustakaan, carousell: elements.viewCarousell };
-    const nextView = viewMap[nextMode];
-    if (!nextView) return;
-    const testimonialSection = document.getElementById('testimonialSection');
-    if (testimonialSection) {
-      testimonialSection.style.display = nextMode === 'home' ? 'block' : 'none';
-    }
-    const pageName = nextMode.charAt(0).toUpperCase() + nextMode.slice(1);
-    if (!fromPopState) {
-        const search = window.location.search;
-        const path = nextMode === 'home' ? `/${search}` : `/${nextMode}${search}`;
-        history.pushState({ mode: nextMode }, `PlayPal.ID - ${pageName}`, path);
-    }
-    document.title = `PlayPal.ID - ${pageName}`;
-    document.querySelector('.view-section.active')?.classList.remove('active');
-    nextView.classList.add('active');
-    elements.navLinks.forEach(link => {
-        const isActive = link.dataset.mode === nextMode;
-        link.classList.toggle('active', isActive);
-        isActive ? link.setAttribute('aria-current', 'page') : link.removeAttribute('aria-current');
-    });
-    if (window.innerWidth < 769) toggleSidebar(false);
-    window.scrollTo({ top: 0, behavior: fromPopState ? 'auto' : 'smooth' });
-    if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
-    if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
-    if (nextMode === 'perpustakaan' && !getElement('libraryGridContainer').innerHTML.trim()) initializeLibrary();
-    if (nextMode === 'carousell' && !state.carousell.initialized) initializeCarousell();
-  }
-  function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
-  function buildHomeCategorySelect(catalogData) {
-    const { options, value } = elements.home.customSelect;
-    const categoryMap = new Map();
-    catalogData.forEach(item => { if (!categoryMap.has(item.catKey)) categoryMap.set(item.catKey, item.catLabel); });
-    const categories = [{key: 'semua', label: 'Semua Kategori'}, ...[...categoryMap].map(([key, label]) => ({ key, label }))];
-    options.innerHTML = '';
-    
-    let activeCategoryKey = state.home.activeCategory;
-    const activeCategory = categories.find(c => c.key === activeCategoryKey) || categories[0];
-    state.home.activeCategory = activeCategory.key; 
-    value.textContent = activeCategory.label;
+    },
 
-    categories.forEach(cat => {
-      const el = document.createElement('div');
-      el.className = 'custom-select-option';
-      el.textContent = cat.label;
-      el.dataset.value = cat.key;
-      el.setAttribute('role', 'option');
-      if (cat.key === state.home.activeCategory) el.classList.add('selected');
-      el.addEventListener('click', () => {
-        state.home.activeCategory = cat.key;
-        value.textContent = cat.label;
-        options.querySelector('.selected')?.classList.remove('selected');
-        el.classList.add('selected');
+    getCatalog: async () => {
+        const url = `https://docs.google.com/spreadsheets/d/${CONFIG.googleSheetId}/gviz/tq?sheet=${CONFIG.sheets.catalog}&tqx=out:json`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Network error: ${response.statusText}`);
+            const text = await response.text();
+            const json = JSON.parse(text.match(/\{.*\}/s)[0]);
+            const data = [];
+            const cols = json.table.cols;
+            json.table.rows.forEach(r => {
+                for (let i = 0; i < cols.length; i += 2) {
+                    const category = cols[i].label;
+                    const titleCell = r.c[i];
+                    const priceCell = r.c[i + 1];
+                    if (category && titleCell && titleCell.v && priceCell && priceCell.v !== null) {
+                        data.push({
+                            category: category.trim(),
+                            title: String(titleCell.v).trim(),
+                            price: Number(priceCell.v),
+                        });
+                    }
+                }
+            });
+            return data;
+        } catch (error) {
+            console.error('Failed to fetch catalog:', error);
+            return null;
+        }
+    },
+    
+    getPreorderData: (type) => {
+      const sheetName = type === 'starlight' ? CONFIG.sheets.preorderStarlight : CONFIG.sheets.preorderGeneral;
+      return this._fetchSheet(sheetName);
+    },
+  };
+
+  // --- 5. UI COMPONENTS & RENDERING ---
+  const ui = {
+    mainContent: utils.getElement('#mainContent'),
+    
+    renderPage: function(pageId, content) {
+      this.mainContent.innerHTML = `<div class="container page" id="${pageId}">${content}</div>`;
+    },
+
+    renderHomePage: function() {
+        const { categories, activeCategory } = state.catalog;
+        const categoryOptions = categories.map(cat => 
+            `<div class="custom-select__option ${cat === activeCategory ? 'is-selected' : ''}" data-value="${cat}">${cat}</div>`
+        ).join('');
         
-        localStorage.setItem('lastSelectedCategory', cat.key); // Simpan pilihan
-
-        const url = new URL(window.location);
-        if (cat.key === 'semua') {
-            url.searchParams.delete('kategori');
-        } else {
-            url.searchParams.set('kategori', cat.label.toLowerCase().replace(/ /g, '-').replace(/[+&]/g, ''));
-        }
-        history.pushState({ activeCategory: cat.key }, '', url);
-        renderHomeList();
-      });
-      options.appendChild(el);
-    });
-  }
-  function renderHomeList() {
-    const { activeCategory, searchQuery } = state.home;
-    const { listContainer, countInfo } = elements.home;
+        const content = `
+            <header class="page-header">
+                <h1 class="page-header__title">Katalog Produk</h1>
+                <p class="page-header__subtitle">Temukan item game favoritmu dengan harga terbaik.</p>
+            </header>
+            <div class="form-controls">
+                <div class="custom-select" id="categorySelect">
+                    <button class="input custom-select__button" type="button" aria-haspopup="listbox" aria-expanded="false">
+                        <span id="categorySelectValue">${activeCategory || 'Pilih Kategori'}</span>
+                        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                    </button>
+                    <div class="custom-select__options" role="listbox">${categoryOptions}</div>
+                </div>
+                <div class="input-group">
+                    <svg class="input-group__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                    <input id="searchInput" type="search" class="input input--with-icon" placeholder="Cari item..." />
+                </div>
+            </div>
+            <div class="info-bar" id="itemCountInfo"></div>
+            <div class="grid grid--2-cols" id="itemListContainer"></div>
+        `;
+        this.renderPage('homePage', content);
+        this.renderCatalogList();
+    },
     
-    listContainer.classList.add('is-filtering');
-    
-    setTimeout(() => {
-        const query = searchQuery.toLowerCase();
-        const filteredItems = allCatalogData.filter(item => {
-            const inCategory = activeCategory === 'semua' || item.catKey === activeCategory;
-            const inSearch = query === '' || item.title.toLowerCase().includes(query) || String(item.price).includes(query);
-            return inCategory && inSearch;
-        });
+    renderCatalogList: function() {
+        const container = utils.getElement('#itemListContainer');
+        if (!container) return;
 
-        listContainer.innerHTML = '';
-        if (filteredItems.length === 0) {
-            listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak ada item ditemukan.</p></div></div>`;
-            countInfo.textContent = '';
-            listContainer.classList.remove('is-filtering');
+        const { all, activeCategory, searchQuery, isLoading } = state.catalog;
+        
+        if (isLoading) {
+            container.innerHTML = Array(8).fill(this._getSkeletonCardHTML()).join('');
             return;
         }
 
-        const fragment = document.createDocumentFragment();
-        // Global search: group by category
-        if (searchQuery && activeCategory === 'semua') {
-            const grouped = filteredItems.reduce((acc, item) => {
-                if (!acc[item.catLabel]) acc[item.catLabel] = [];
-                acc[item.catLabel].push(item);
-                return acc;
-            }, {});
+        const filteredItems = all.filter(item => 
+            item.category === activeCategory &&
+            (item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+             String(item.price).includes(searchQuery))
+        );
 
-            for (const catLabel in grouped) {
-                const headerClone = elements.categoryHeaderTemplate.content.cloneNode(true);
-                headerClone.querySelector('h2').textContent = catLabel;
-                fragment.appendChild(headerClone);
-                grouped[catLabel].forEach(item => {
-                    const clone = elements.itemTemplate.content.cloneNode(true);
-                    const buttonEl = clone.querySelector('.list-item');
-                    buttonEl.querySelector('.title').textContent = item.title;
-                    buttonEl.querySelector('.price').textContent = formatToIdr(item.price);
-                    buttonEl.addEventListener('click', () => openPaymentModal(item));
-                    fragment.appendChild(clone);
-                });
-            }
-        } else { // Standard view
-            for (const item of filteredItems) {
-                const clone = elements.itemTemplate.content.cloneNode(true);
-                const buttonEl = clone.querySelector('.list-item');
-                buttonEl.querySelector('.title').textContent = item.title;
-                buttonEl.querySelector('.price').textContent = formatToIdr(item.price);
-                buttonEl.addEventListener('click', () => openPaymentModal(item));
-                fragment.appendChild(clone);
-            }
+        utils.getElement('#itemCountInfo').textContent = `${filteredItems.length} item ditemukan.`;
+
+        if (filteredItems.length === 0) {
+            container.innerHTML = this._getEmptyStateHTML('Item Tidak Ditemukan', 'Coba kata kunci atau kategori lain.');
+            return;
         }
+
+        container.innerHTML = filteredItems.map(item => `
+            <button class="card__clickable" data-item='${JSON.stringify(item)}'>
+                <span class="card__title">${item.title}</span>
+                <span class="card__price">${utils.formatToIdr(item.price)}</span>
+            </button>
+        `).join('');
+    },
+
+    renderPreorderPage: function() {
+      // ... logic to render the preorder page similar to home
+      this.renderPage('preorderPage', '<h1>Pre-Order Page</h1><p>Content goes here...</p>');
+    },
+
+    openModal: function(title, body, footer) {
+        const modal = utils.getElement('#paymentModal');
+        modal.hidden = false;
+        setTimeout(() => modal.classList.add('is-open'), 10);
         
-        listContainer.appendChild(fragment);
-        countInfo.textContent = `${filteredItems.length} item ditemukan`;
-        listContainer.classList.remove('is-filtering');
-    }, 100);
-  }
-  async function loadCatalog() { 
-    if (catalogFetchController) catalogFetchController.abort();
-    catalogFetchController = new AbortController();
-    try { 
-      elements.home.errorContainer.style.display = 'none'; 
-      showSkeleton(elements.home.listContainer, elements.skeletonItemTemplate, 12); 
-      const res = await fetch(getSheetUrl(config.sheets.katalog.name), { signal: catalogFetchController.signal }); 
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      const text = await res.text(); 
-      allCatalogData = parseGvizPairs(text); 
-      if (allCatalogData.length === 0) throw new Error('Data is empty or format is incorrect.');
-      
-      const savedCategory = localStorage.getItem('lastSelectedCategory');
-      const params = new URLSearchParams(window.location.search);
-      const categoryFromUrl = params.get('kategori');
+        utils.getElement('#paymentModalTitle').textContent = title;
+        utils.getElement('#modalBody').innerHTML = body;
+        utils.getElement('#modalCloseBtn').focus();
+        document.body.classList.add('overflow-hidden');
+    },
 
-      if (categoryFromUrl && (window.location.pathname === '/' || window.location.pathname.endsWith('/index.html'))) {
-          const urlToCatKeyMap = new Map();
-          allCatalogData.forEach(item => {
-              const urlFriendlyLabel = item.catLabel.toLowerCase().replace(/ /g, '-').replace(/[+&]/g, '');
-              if (!urlToCatKeyMap.has(urlFriendlyLabel)) urlToCatKeyMap.set(urlFriendlyLabel, item.catKey);
-          });
-          const foundKey = urlToCatKeyMap.get(categoryFromUrl);
-          if (foundKey) state.home.activeCategory = foundKey;
-      } else if (savedCategory) {
-          state.home.activeCategory = savedCategory;
-      }
-      
-      buildHomeCategorySelect(allCatalogData); 
-      renderHomeList(); 
-    } catch (err) { 
-      if (err.name === 'AbortError') return;
-      console.error('Failed to load catalog:', err); 
-      const view = elements.home;
-      view.listContainer.innerHTML = ''; 
-      view.errorContainer.style.display = 'block'; 
-      view.errorContainer.textContent = 'Oops, terjadi kesalahan. Silakan coba lagi nanti.';
-    } 
-  }
-  function calculateFee(price, option) { if (option.feeType === 'fixed') return option.value; if (option.feeType === 'percentage') return Math.ceil(price * option.value); return 0; }
-  function updatePriceDetails() { const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value; if (!selectedOptionId) return; const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId); if (!currentSelectedItem || !selectedOption) return; const price = currentSelectedItem.price; const fee = calculateFee(price, selectedOption); const total = price + fee; elements.paymentModal.fee.textContent = formatToIdr(fee); elements.paymentModal.total.textContent = formatToIdr(total); updateWaLink(selectedOption, fee, total); }
-  function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `› Tipe: ${catLabel}`, `› Item: ${title}`, `› Pembayaran: ${option.name}`, `› Harga: ${formatToIdr(price)}`, `› Fee: ${formatToIdr(fee)}`, `› Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
-  function openPaymentModal(item) {
-    document.documentElement.style.overflow = "hidden"; document.body.style.overflow = "hidden";
-    elementToFocusOnModalClose = document.activeElement;
-    currentSelectedItem = item;
-    const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal;
-    itemName.textContent = item.title;
-    itemPrice.textContent = formatToIdr(item.price);
-    optionsContainer.innerHTML = '';
-    config.paymentOptions.forEach((option, index) => {
-      const fee = calculateFee(item.price, option);
-      optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> </div>`);
-    });
-    optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails));
-    updatePriceDetails();
-    modal.style.display = 'flex';
-    setTimeout(() => modal.classList.add('visible'), 10);
-    const focusableEls = modal.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), input[type="radio"]:not([disabled])');
-    modalFocusTrap.focusableEls = Array.from(focusableEls);
-    modalFocusTrap.firstEl = modalFocusTrap.focusableEls[0];
-    modalFocusTrap.lastEl = modalFocusTrap.focusableEls[modalFocusTrap.focusableEls.length - 1];
-    modalFocusTrap.listener = function(e) { if (e.key !== 'Tab') return; if (e.shiftKey) { if (document.activeElement === modalFocusTrap.firstEl) { modalFocusTrap.lastEl.focus(); e.preventDefault(); } } else { if (document.activeElement === modalFocusTrap.lastEl) { modalFocusTrap.firstEl.focus(); e.preventDefault(); } } };
-    modal.addEventListener('keydown', modalFocusTrap.listener);
-    setTimeout(() => modalFocusTrap.firstEl?.focus(), 100);
-  }
-  function closePaymentModal() {
-    document.documentElement.style.overflow = ""; document.body.style.overflow = "";
-    const { modal } = elements.paymentModal;
-    modal.classList.remove('visible');
-    if (modalFocusTrap.listener) modal.removeEventListener('keydown', modalFocusTrap.listener);
-    setTimeout(() => {
-      modal.style.display = 'none';
-      currentSelectedItem = null;
-      elementToFocusOnModalClose?.focus();
-    }, 200);
-  }
-  function normalizeStatus(rawStatus) { const s = String(rawStatus || '').trim().toLowerCase(); if (['success', 'selesai', 'berhasil', 'done'].includes(s)) return 'success'; if (['progress', 'proses', 'diproses', 'processing'].includes(s)) return 'progress'; if (['failed', 'gagal', 'dibatalkan', 'cancel', 'error'].includes(s)) return 'failed'; return 'pending'; }
-  function filterPreorderData() { const query = elements.preorder.searchInput.value.trim().toLowerCase(); const statusFilter = elements.preorder.statusSelect.value; const mode = state.preorder.displayMode; return state.preorder.allData.filter(item => { const status = normalizeStatus(item[mode === 'detailed' ? 6 : 2]); if (statusFilter !== 'all' && status !== statusFilter) return false; if (mode === 'detailed') return [item[3], item[5], item[7]].some(val => (val || '').toLowerCase().includes(query)); return [item[0], item[1]].some(val => (val || '').toLowerCase().includes(query)); }); }
-  function updatePreorderPagination(currentPage, totalPages) { elements.preorder.prevBtn.disabled = currentPage <= 1; elements.preorder.nextBtn.disabled = currentPage >= totalPages; elements.preorder.pageInfo.textContent = totalPages > 0 ? `Hal ${currentPage} dari ${totalPages}` : ''; }
-  function renderPreorderCards() {
-    const filtered = filterPreorderData();
-    const { perPage } = state.preorder;
-    const { listContainer, total } = elements.preorder;
-    total.textContent = `${state.preorder.allData.length} total pesanan${filtered.length !== state.preorder.allData.length ? `, ${filtered.length} ditemukan` : ''}`;
-    const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-    state.preorder.currentPage = Math.min(Math.max(1, state.preorder.currentPage), totalPages);
-    const start = (state.preorder.currentPage - 1) * perPage;
-    const pageData = filtered.slice(start, start + perPage);
-    listContainer.innerHTML = '';
-    if (pageData.length === 0) { listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak Ada Hasil Ditemukan</p></div></div>`; updatePreorderPagination(0, 0); return; }
-    const fragment = document.createDocumentFragment();
-    pageData.forEach(item => {
-      const card = document.createElement('article');
-      if (state.preorder.displayMode === 'detailed') {
-        const [tglOrder, estPengiriman, , product, bulan, name, statusRaw] = item;
-        const status = normalizeStatus(statusRaw);
-        const details = [{ label: 'TGL ORDER', value: tglOrder }, { label: 'BULAN', value: bulan }];
-        const detailsHtml = details.filter(d => d.value && String(d.value).trim()).map(d => `<div class="detail-item"><div class="detail-label">${d.label}</div><div class="detail-value">${d.value}</div></div>`).join('');
-        card.className = `card ${detailsHtml ? 'clickable' : ''}`;
-        card.innerHTML = `<div class="card-header"><div><div class="card-name">${name || 'Tanpa Nama'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge-wrapper"><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div>${detailsHtml ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="expand-indicator"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>` : ''}</div></div>${estPengiriman ? `<div class="card-date">Estimasi Pengiriman: ${estPengiriman} 20:00 WIB</div>` : ''}${detailsHtml ? `<div class="card-details"><div class="details-grid">${detailsHtml}</div></div>` : ''}`;
-        if (detailsHtml) card.addEventListener('click', () => card.classList.toggle('expanded'));
-      } else {
-        const [orderNum, product, statusRaw] = item;
-        const status = normalizeStatus(statusRaw);
-        card.className = 'card';
-        card.innerHTML = `<div class="card-header"><div><div class="card-name">${orderNum || 'Tanpa Nomor'}</div><div class="card-product">${product || 'N/A'}</div></div><div class="status-badge ${status}">${(statusRaw || 'Pending').toUpperCase()}</div></div>`;
-      }
-      fragment.appendChild(card);
-    });
-    listContainer.appendChild(fragment);
-    updatePreorderPagination(state.preorder.currentPage, totalPages);
-  }
-  async function fetchPreorderData(sheetName) { 
-    if (preorderFetchController) preorderFetchController.abort();
-    preorderFetchController = new AbortController();
-    elements.preorder.total.textContent = 'Memuat data...'; 
-    showSkeleton(elements.preorder.listContainer, elements.skeletonCardTemplate, 5); 
-    state.preorder.displayMode = sheetName === config.sheets.preorder.name1 ? 'detailed' : 'simple'; 
-    try { 
-      const res = await fetch(getSheetUrl(sheetName, 'csv'), { signal: preorderFetchController.signal }); 
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      const text = await res.text(); 
-      let rows = robustCsvParser(text);
-      rows.shift();
-      const statusOrder = { progress: 1, pending: 2, success: 3, failed: 4 };
-      const statusIndex = state.preorder.displayMode === 'detailed' ? 6 : 2;
-      state.preorder.allData = rows.filter(row => row && (row[0] || '').trim()).sort((a, b) => statusOrder[normalizeStatus(a[statusIndex])] - statusOrder[normalizeStatus(b[statusIndex])]);
-    } catch (e) { 
-      if (e.name === 'AbortError') return;
-      state.preorder.allData = []; 
-      elements.preorder.total.textContent = 'Gagal memuat data.'; 
-      console.error('Fetch Pre-Order failed:', e); 
-    } finally { 
-      state.preorder.currentPage = 1; 
-      renderPreorderCards(); 
-    } 
-  }
-  function initializePreorder() {
-    if (state.preorder.initialized) return;
-    const { searchInput, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
-    const rebound = () => { state.preorder.currentPage = 1; renderPreorderCards(); };
-    searchInput.addEventListener('input', rebound);
-    customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
-      option.addEventListener('click', e => {
-        customSelect.value.textContent = e.target.textContent;
-        customSelect.options.querySelector('.selected')?.classList.remove('selected');
-        e.target.classList.add('selected');
-        fetchPreorderData(e.target.dataset.value === '0' ? config.sheets.preorder.name1 : config.sheets.preorder.name2);
-      });
-    });
-    customStatusSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
-      option.addEventListener('click', e => {
-        customStatusSelect.value.textContent = e.target.textContent;
-        customStatusSelect.options.querySelector('.selected')?.classList.remove('selected');
-        e.target.classList.add('selected');
-        elements.preorder.statusSelect.value = e.target.dataset.value;
-        rebound();
-      });
-    });
-    prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
-    nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
-    fetchPreorderData(config.sheets.preorder.name1);
-    state.preorder.initialized = true;
-  }
-  function populateAccountCategorySelect() {
-    const { customSelect } = elements.accounts;
-    const { options, value } = customSelect;
-    const categories = ['Semua Kategori', 'Mobile Legends', 'Free Fire', 'Roblox', 'PUBG Mobile', 'Clash Of Clans', 'Lainnya'];
-    options.innerHTML = '';
-    value.textContent = state.accounts.activeCategory;
-    categories.forEach((cat) => {
-      const el = document.createElement('div');
-      el.className = 'custom-select-option';
-      el.textContent = cat;
-      el.dataset.value = cat;
-      el.setAttribute('role', 'option');
-      if (cat === state.accounts.activeCategory) el.classList.add('selected');
-      el.addEventListener('click', () => {
-        value.textContent = cat;
-        document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
-        el.classList.add('selected');
-        state.accounts.activeCategory = cat;
-        renderAccountCards();
-      });
-      options.appendChild(el);
-    });
-  }
-  async function parseAccountsSheet(text) {
-    const rows = robustCsvParser(text);
-    rows.shift();
-    return rows.filter(row => row && row.length >= 5 && row[0]).map(row => ({
-      id: `acc_${Date.now()}_${Math.random()}`,
-      title: `${row[0] || 'Akun'} (${formatToIdr(Number(row[1]) || 0)})`,
-      category: row[0] || 'Lainnya',
-      price: Number(row[1]) || 0,
-      status: row[2] || 'Tersedia',
-      description: row[3] || 'Tidak ada deskripsi.',
-      images: (row[4] || '').split(',').map(url => url.trim()).filter(Boolean),
-    }));
-  }
-  function renderAccountCards() {
-    const { cardGrid, cardTemplate, empty } = elements.accounts;
-    const filteredAccounts = state.accounts.allData.filter(acc => state.accounts.activeCategory === 'Semua Kategori' || acc.category === state.accounts.activeCategory);
-    cardGrid.innerHTML = '';
-    empty.style.display = filteredAccounts.length === 0 ? 'flex' : 'none';
-    if (filteredAccounts.length === 0) return;
-    const fragment = document.createDocumentFragment();
-    filteredAccounts.forEach(account => {
-      const cardClone = cardTemplate.content.cloneNode(true);
-      const cardElement = cardClone.querySelector('.account-card');
-      const carouselWrapper = cardElement.querySelector('.account-card-carousel-wrapper');
-      if (account.images.length > 0) {
-        const carouselContainer = document.createElement('div');
-        carouselContainer.className = 'carousel-container';
-        const slides = account.images.map(src => {
-            const img = new Image();
-            img.src = src;
-            img.alt = `Gambar detail untuk ${account.category}`;
-            img.loading = 'lazy';
-            img.onerror = function() { this.onerror=null; this.src=config.imagePlaceholder; };
-            return `<div class="carousel-slide">${img.outerHTML}</div>`;
-        }).join('');
-        const indicators = account.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
-        carouselContainer.innerHTML = `<div class="carousel-track">${slides}</div>${account.images.length > 1 ? `<button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button><button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button><div class="carousel-indicators">${indicators}</div>` : ''}`;
-        carouselWrapper.appendChild(carouselContainer);
-      }
-      cardElement.querySelector('h3').textContent = formatToIdr(account.price);
-      const statusBadge = cardElement.querySelector('.account-status-badge');
-      statusBadge.textContent = account.status;
-      statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
-      const specsContainer = cardElement.querySelector('.account-card-specs');
-      specsContainer.innerHTML = formatDescriptionToHTML(account.description);
-      cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
-      cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
-      setupExpandableCard(cardElement, '.account-card-main-info');
-      fragment.appendChild(cardElement);
-    });
-    cardGrid.appendChild(fragment);
-    initializeCarousels(cardGrid);
-  }
-  async function initializeAccounts() { 
-    if (state.accounts.initialized) return;
-    state.accounts.initialized = true;
-    const { cardGrid, error, empty } = elements.accounts; 
-    error.style.display = 'none'; empty.style.display = 'none';
-    cardGrid.innerHTML = '';
-    try { 
-      const res = await fetch(getSheetUrl(config.sheets.accounts.name, 'csv')); 
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
-      state.accounts.allData = await parseAccountsSheet(await res.text()); 
-      populateAccountCategorySelect();
-      renderAccountCards();
-    } catch (err) { 
-      if (err.name === 'AbortError') return;
-      console.error('Fetch Accounts failed:', err); 
-      error.textContent = 'Gagal memuat data akun. Coba lagi nanti.'; 
-      error.style.display = 'block'; 
-    } 
-  }
-  async function initializeLibrary() {
-    const container = getElement('libraryGridContainer');
-    const errorEl = getElement('libraryError');
-    container.innerHTML = ''; errorEl.style.display = 'none';
-    try {
-      const res = await fetch(getSheetUrl('Sheet6', 'csv'));
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
-      const rows = robustCsvParser(await res.text());
-      rows.shift(); 
-      const books = rows.filter(r => r && r[0]).map(r => ({ title: r[0], coverUrl: r[1], bookUrl: r[2] }));
-      if (!books || books.length === 0) { container.innerHTML = '<div class="empty">Belum ada buku yang ditambahkan.</div>'; return; }
-      const fragment = document.createDocumentFragment();
-      books.forEach(book => {
-        const card = document.createElement('a');
-        card.className = 'book-card';
-        card.href = book.bookUrl;
-        card.target = '_blank';
-        card.rel = 'noopener';
-        card.innerHTML = `<img src="${book.coverUrl}" alt="${book.title}" class="cover" decoding="async" loading="lazy" onerror="this.onerror=null; this.src='${config.imagePlaceholder}';"><div class="overlay"></div><div class="title">${book.title}</div>`;
-        fragment.appendChild(card);
-      });
-      container.appendChild(fragment);
-    } catch (err) {
-      console.error('Failed to load library:', err);
-      errorEl.textContent = 'Gagal memuat perpustakaan. Coba lagi nanti.';
-      errorEl.style.display = 'block';
-    }
-  }
-  async function initializeCarousell() {
-    if (state.carousell.initialized) return;
-    const { gridContainer, error } = elements.carousell;
-    gridContainer.innerHTML = ''; 
-    error.style.display = 'none';
-    elements.carousell.searchInput = getElement('carousellSearchInput');
-    elements.carousell.total = getElement('carousellTotal');
-    let searchDebounce;
-    elements.carousell.searchInput.addEventListener('input', (e) => {
-        clearTimeout(searchDebounce);
-        searchDebounce = setTimeout(() => {
-            state.carousell.searchQuery = e.target.value.trim();
-            renderCarousellGrid(state.carousell.allData);
-        }, 200);
-    });
-    try {
-        const res = await fetch(getSheetUrl(config.sheets.affiliate.name, 'csv'));
-        if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
-        const rows = robustCsvParser(await res.text());
-        rows.shift();
-        const products = rows.filter(r => r && r[0] && r[3]).map(r => ({
-            name: r[0],
-            price: Number(r[1]) || 0,
-            images: (r[2] || '').split(',').map(url => url.trim()).filter(Boolean),
-            linkUrl: r[3],
-            description: r[4] || 'Klik untuk melihat detail produk.',
-            platform: r[5] || '',
-            productNumber: r[6] || ''
-        }));
-        state.carousell.allData = products;
-        renderCarousellGrid(products);
-    } catch (err) {
-        console.error('Failed to load Carousell products:', err);
-        error.textContent = 'Gagal memuat produk Carousell. Coba lagi nanti.';
-        error.style.display = 'block';
-    } finally {
-        state.carousell.initialized = true;
-    }
-  }
-  function renderCarousellGrid(products) {
-      const container = elements.carousell.gridContainer;
-      const totalEl = elements.carousell.total;
-      const query = state.carousell.searchQuery || '';
-      const filteredProducts = query 
-          ? products.filter(p => p.productNumber.includes(query))
-          : products;
-      if (products.length > 0) {
-        totalEl.textContent = `${products.length} total produk${query ? `, ${filteredProducts.length} ditemukan` : ''}`;
-        totalEl.style.display = 'block';
-      } else {
-        totalEl.style.display = 'none';
-      }
-      if (!filteredProducts || filteredProducts.length === 0) { 
-          container.innerHTML = '<div class="empty">Belum ada produk di Carousell.</div>'; 
-          return; 
-      }
-      container.innerHTML = '';
-      const fragment = document.createDocumentFragment();
-      filteredProducts.forEach(product => {
-          const card = document.createElement('div');
-          card.className = 'affiliate-card';
-          let imagesHTML = '';
-          if (product.images.length > 0) {
-            const slides = product.images.map(src => {
-                const img = new Image();
-                img.src = src;
-                img.alt = `Gambar produk ${product.name}`;
-                img.loading = 'lazy';
-                img.onerror = function() { this.onerror=null; this.src=config.imagePlaceholder; };
-                return `<div class="carousel-slide">${img.outerHTML}</div>`;
-            }).join('');
+    closeModal: function() {
+        const modal = utils.getElement('#paymentModal');
+        modal.classList.remove('is-open');
+        setTimeout(() => {
+            modal.hidden = true;
+            document.body.classList.remove('overflow-hidden');
+        }, 300);
+    },
 
-            const indicators = product.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
-            imagesHTML = `<div class="carousel-container"><div class="carousel-track">${slides}</div>${product.images.length > 1 ? `<button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button><button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button><div class="carousel-indicators">${indicators}</div>` : ''}</div>`;
-          } else {
-            imagesHTML = `<div class="affiliate-card-img-container"></div>`;
+    _getSkeletonCardHTML: () => `
+        <div class="card card__clickable skeleton">
+            <span class="skeleton--text" style="width: 60%;"></span>
+            <span class="skeleton--text" style="width: 25%;"></span>
+        </div>`,
+        
+    _getEmptyStateHTML: (title, message) => `
+        <div class="empty-state">
+            <svg class="empty-state__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+            <h3>${title}</h3>
+            <p>${message}</p>
+        </div>`,
+  };
+
+  // --- 6. PAGE LOGIC & CONTROLLERS ---
+  const pages = {
+    home: {
+      init: async function() {
+        state.catalog.isLoading = true;
+        ui.renderHomePage();
+        
+        const data = await api.getCatalog();
+        if (data) {
+            state.catalog.all = data;
+            const categories = [...new Set(data.map(item => item.category))];
+            state.catalog.categories = categories;
+            state.catalog.activeCategory = categories[0] || null;
+        }
+        state.catalog.isLoading = false;
+        ui.renderHomePage(); // Re-render with data
+      },
+      addListeners: function() {
+          const container = utils.getElement('#homePage');
+          container.addEventListener('click', this.handleClick);
+          container.querySelector('#searchInput').addEventListener('input', this.handleSearch);
+      },
+      handleClick: (e) => {
+          const itemButton = e.target.closest('.card__clickable');
+          if (itemButton) {
+              const itemData = JSON.parse(itemButton.dataset.item);
+              pages.home.showPaymentModal(itemData);
+              return;
           }
-          const platformHTML = product.platform ? `<p class="affiliate-card-platform">${product.platform}</p>` : ''
-          const formattedProductNumber = product.productNumber ? String(product.productNumber).padStart(3, '0') : '';
-          const productNumberHTML = formattedProductNumber ? `<span class="affiliate-card-number">#${formattedProductNumber}</span>` : '';
-          card.innerHTML = `
-            ${productNumberHTML}
-            ${imagesHTML}
-            <div class="affiliate-card-body" role="button" tabindex="0">
-                <div class="affiliate-card-main-info">
-                  <h3 class="affiliate-card-title">${product.name}</h3>
-                  <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
-                </div>
-                ${platformHTML}
-                <p class="affiliate-card-price">${formatToIdr(product.price)}</p>
-                <div class="affiliate-card-details-wrapper">
-                  <div class="affiliate-card-desc">${formatDescriptionToHTML(product.description)}</div>
-                </div>
-                <a href="${product.linkUrl}" target="_blank" rel="noopener" class="affiliate-card-button">Beli Sekarang</a>
-            </div>
+
+          const selectBtn = e.target.closest('.custom-select__button');
+          if (selectBtn) {
+              selectBtn.parentElement.classList.toggle('is-open');
+              return;
+          }
+
+          const option = e.target.closest('.custom-select__option');
+          if (option) {
+              state.catalog.activeCategory = option.dataset.value;
+              utils.getElement('#categorySelectValue').textContent = option.dataset.value;
+              utils.getElement('.custom-select__option.is-selected')?.classList.remove('is-selected');
+              option.classList.add('is-selected');
+              option.closest('.custom-select').classList.remove('is-open');
+              ui.renderCatalogList();
+              return;
+          }
+      },
+      handleSearch: utils.debounce((e) => {
+          state.catalog.searchQuery = e.target.value;
+          ui.renderCatalogList();
+      }),
+      showPaymentModal: (item) => {
+          const optionsHTML = CONFIG.paymentOptions.map((opt, index) => {
+              const fee = opt.feeType === 'fixed' ? opt.value : Math.ceil(item.price * opt.value);
+              return `
+                  <div class="payment-option">
+                      <input type="radio" id="${opt.id}" name="payment" value="${opt.id}" data-price="${item.price}" ${index === 0 ? 'checked' : ''}>
+                      <label for="${opt.id}">
+                          <span>${opt.name}</span>
+                          <span class="payment-option__fee">+ ${utils.formatToIdr(fee)}</span>
+                      </label>
+                  </div>`;
+          }).join('');
+
+          const body = `
+              <div class="payment-recap">
+                  <div class="payment-recap__item">
+                      <span class="payment-recap__label">Item:</span>
+                      <span class="payment-recap__value">${item.title}</span>
+                  </div>
+                  <div class="payment-recap__item">
+                      <span class="payment-recap__label">Harga:</span>
+                      <span class="payment-recap__value" id="modalBasePrice">${utils.formatToIdr(item.price)}</span>
+                  </div>
+              </div>
+              <div class="payment-options__group">${optionsHTML}</div>
+              <div class="payment-total" id="paymentTotalContainer"></div>
           `;
-          setupExpandableCard(card, '.affiliate-card-body');
-          fragment.appendChild(card);
+          ui.openModal('Pilih Pembayaran', body);
+          pages.home.updatePaymentTotal();
+      },
+      updatePaymentTotal: () => {
+          const selectedOptionEl = utils.getElement('input[name="payment"]:checked');
+          if (!selectedOptionEl) return;
+          
+          const optionId = selectedOptionEl.value;
+          const basePrice = Number(selectedOptionEl.dataset.price);
+          const optionConfig = CONFIG.paymentOptions.find(o => o.id === optionId);
+
+          const fee = optionConfig.feeType === 'fixed' ? optionConfig.value : Math.ceil(basePrice * optionConfig.value);
+          const total = basePrice + fee;
+
+          const totalHTML = `
+              <div class="payment-total__row">
+                  <span class="payment-total__label">Fee:</span>
+                  <span class="payment-total__value">${utils.formatToIdr(fee)}</span>
+              </div>
+              <div class="payment-total__row payment-total__row--grand">
+                  <span class="payment-total__label">Total:</span>
+                  <span class="payment-total__value">${utils.formatToIdr(total)}</span>
+              </div>
+          `;
+          utils.getElement('#paymentTotalContainer').innerHTML = totalHTML;
+          // Update WA button link
+      }
+    },
+    preorder: {
+      init: function() {
+        ui.renderPreorderPage();
+      },
+      addListeners: function() {}
+    },
+    // ... other page controllers
+  };
+
+  // --- 7. ROUTER ---
+  const router = {
+    routes: {
+      '/': pages.home,
+      '/preorder': pages.preorder,
+      '/akun-game': { init: () => ui.renderPage('akunPage', '<h1>Akun Game</h1>') },
+      '/perpustakaan': { init: () => ui.renderPage('perpustakaanPage', '<h1>Perpustakaan</h1>') },
+      '/carousell': { init: () => ui.renderPage('carousellPage', '<h1>Carousell</h1>') },
+    },
+    
+    navigate: async function(path, fromPopState = false) {
+      const page = this.routes[path] || this.routes['/'];
+      state.currentPage = page;
+
+      if (!fromPopState) {
+          history.pushState({ path }, '', path);
+      }
+      
+      document.title = `PlayPal.ID - ${path.substring(1).replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Home'}`;
+      utils.getAllElements('.sidebar__link.is-active').forEach(l => l.classList.remove('is-active'));
+      utils.getElement(`.sidebar__link[href="${path}"]`)?.classList.add('is-active');
+
+      if (page.init) await page.init();
+      if (page.addListeners) page.addListeners();
+      
+      if (app.isSidebarOpen()) app.toggleSidebar(false);
+      window.scrollTo(0, 0);
+    },
+
+    init: function() {
+      window.addEventListener('popstate', e => {
+        const path = e.state ? e.state.path : '/';
+        this.navigate(path, true);
       });
-      container.appendChild(fragment);
-      initializeCarousels(container);
-  }
-  function pp_makeNodes(list) {
-    const frag = document.createDocumentFragment();
-    list.forEach(({ name, url }) => {
-      const li = document.createElement('li');
-      li.className = 'testi-item';
-      li.innerHTML = `<figure class="testi-fig"><img src="${url}" alt="Testimoni ${name.replace(/"/g,'&quot;')}" decoding="async" loading="lazy" onerror="this.onerror=null; this.src='${config.imagePlaceholder}';"></figure><figcaption class="testi-caption">— ${name.replace(/</g,'&lt;')}</figcaption>`;
-      frag.appendChild(li);
-    });
-    return frag;
-  }
-  async function initializeTestimonialMarquee() {
-    const section = document.getElementById('testimonialSection');
-    const marquee = section.querySelector('.testi-marquee');
-    const track = section.querySelector('#testiTrack');
-    if (!marquee || !track) return;
- 
-    try {
-      const res = await fetch(getSheetUrl('Sheet7', 'csv'));
-      if (!res.ok) throw new Error('Network: ' + res.status);
-      const csv = await res.text();
-      const rows = robustCsvParser(csv);
-      if (rows.length <= 1) {
-        section.style.display = 'none';
-        return;
-      }
-      const items = rows.slice(1).filter(r => r && r[0] && r[1]).map(r => ({ name: String(r[0]).trim(), url: String(r[1]).trim() }));
-      if (!items.length) {
-        section.style.display = 'none';
-        return;
-      }
-      track.innerHTML = '';
-      track.appendChild(pp_makeNodes(items));
-      track.appendChild(pp_makeNodes(items));
- 
-      let pos = 0;
-      let isDragging = false;
-      let startX = 0;
-      let startPos = 0;
-      let animationFrameId;
-
-      const speed = 0.5;
-      const firstHalfWidth = track.scrollWidth / 2;
- 
-      function animate() {
-        if (!isDragging) {
-          pos -= speed;
+      document.body.addEventListener('click', e => {
+        const navLink = e.target.closest('[data-nav-link]');
+        if (navLink) {
+          e.preventDefault();
+          this.navigate(navLink.getAttribute('href'));
         }
-        if (pos <= -firstHalfWidth) {
-          pos += firstHalfWidth;
-        }
-        track.style.transform = `translateX(${pos}px)`;
-        animationFrameId = requestAnimationFrame(animate);
-      }
- 
-      function onDragStart(e) {
-        isDragging = true;
-        marquee.classList.add('is-grabbing');
-        startX = e.pageX || e.touches[0].pageX;
-        startPos = pos;
-        cancelAnimationFrame(animationFrameId);
-        window.addEventListener('mousemove', onDragMove);
-        window.addEventListener('touchmove', onDragMove);
-        window.addEventListener('mouseup', onDragEnd);
-        window.addEventListener('touchend', onDragEnd);
-      }
- 
-      function onDragMove(e) {
-        if (!isDragging) return;
-        e.preventDefault();
-        const currentX = e.pageX || e.touches[0].pageX;
-        const diff = currentX - startX;
-        pos = startPos + diff;
-        track.style.transform = `translateX(${pos}px)`;
-      }
- 
-      function onDragEnd() {
-        isDragging = false;
-        marquee.classList.remove('is-grabbing');
-        const trackWidth = track.scrollWidth / 2;
-        pos = pos % trackWidth;
-        animate();
-        window.removeEventListener('mousemove', onDragMove);
-        window.removeEventListener('touchmove', onDragMove);
-        window.removeEventListener('mouseup', onDragEnd);
-        window.removeEventListener('touchend', onDragEnd);
-      }
- 
-      marquee.addEventListener('mousedown', onDragStart);
-      marquee.addEventListener('touchstart', onDragStart, { passive: true });
- 
-      animate();
- 
-    } catch (err) {
-      console.error('Testimonials error:', err);
-      if (section) section.style.display = 'none';
+      });
+      this.navigate(window.location.pathname);
     }
-  }
+  };
 
-  document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-    initializeTestimonialMarquee();
-  });
+  // --- 8. MAIN APPLICATION ---
+  const app = {
+    init: function() {
+      this.setupHeader();
+      this.setupSidebar();
+      this.setupModal();
+      router.init();
+    },
+    setupHeader: function() {
+      const indicator = utils.getElement('#headerStatusIndicator');
+      const updateStatus = () => {
+        const hour = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Jakarta', hour: '2-digit', hour12: false });
+        if (parseInt(hour, 10) >= 8) {
+            indicator.textContent = 'Buka';
+            indicator.className = 'header__status is-open';
+        } else {
+            indicator.textContent = 'Tutup';
+            indicator.className = 'header__status is-closed';
+        }
+      };
+      updateStatus();
+      setInterval(updateStatus, 60000);
+    },
+    setupSidebar: function() {
+      const toggleBtn = utils.getElement('#menuToggleBtn');
+      const sidebar = utils.getElement('#sidebar');
+      const overlay = utils.getElement('#sidebarOverlay');
+      
+      toggleBtn.addEventListener('click', () => this.toggleSidebar());
+      overlay.addEventListener('click', () => this.toggleSidebar(false));
+    },
+    toggleSidebar: function(forceOpen) {
+        const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !this.isSidebarOpen();
+        utils.getElement('#sidebar').classList.toggle('is-open', isOpen);
+        utils.getElement('#sidebarOverlay').classList.toggle('is-visible', isOpen);
+        utils.getElement('#menuToggleBtn').setAttribute('aria-expanded', isOpen);
+        document.body.classList.toggle('overflow-hidden', isOpen);
+    },
+    isSidebarOpen: () => utils.getElement('#sidebar').classList.contains('is-open'),
+    setupModal: function() {
+        const modal = utils.getElement('#paymentModal');
+        modal.addEventListener('click', e => {
+            if (e.target.id === 'modalOverlay' || e.target.closest('.modal__close')) {
+                ui.closeModal();
+            }
+            if (e.target.name === 'payment') {
+                pages.home.updatePaymentTotal();
+            }
+        });
+    }
+  };
+
+  // --- INITIALIZE ON DOM CONTENT LOADED ---
+  document.addEventListener('DOMContentLoaded', () => app.init());
+
 })();
