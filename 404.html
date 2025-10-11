@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <script src="script.js" defer></script>
+  <script src="script.js" type="module"></script>
 </head>
 <body>
   <noscript>
@@ -57,15 +57,47 @@
     <div class="modal__overlay" id="modalOverlay"></div>
     <div class="modal__content">
       <div class="modal__header">
-        <h2 class="modal__title" id="paymentModalTitle">Detail Pembayaran</h2>
+        <h2 class="modal__title" id="paymentModalTitle"></h2>
         <button class="modal__close" id="modalCloseBtn" type="button" aria-label="Tutup Modal">&times;</button>
       </div>
       <div class="modal__body" id="modalBody"></div>
-      <div class="modal__footer">
-        <a id="continueToWaBtn" class="button button--primary" href="#" target="_blank" rel="noopener">Lanjutkan ke WhatsApp</a>
-      </div>
+      <div class="modal__footer" id="modalFooter"></div>
     </div>
   </div>
+
+  <template id="page-home">
+    <header class="page-header">
+      <h1 class="page-header__title">Katalog Produk</h1>
+      <p class="page-header__subtitle">Temukan item game favoritmu dengan harga terbaik.</p>
+    </header>
+    <div class="form-controls">
+      <div class="custom-select" id="categorySelectWrapper"></div>
+      <div class="input-group">
+        <svg class="input-group__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <input id="searchInput" type="search" class="input input--with-icon" placeholder="Cari item..." />
+      </div>
+    </div>
+    <div class="info-bar" id="itemCountInfo"></div>
+    <div class="grid grid--2-cols" id="itemListContainer"></div>
+  </template>
+
+  <template id="page-preorder">
+     <header class="page-header">
+      <h1 class="page-header__title">Lacak Pre-Order</h1>
+      <p class="page-header__subtitle">Cek status pesanan Anda di sini.</p>
+    </header>
+    <div class="form-controls">
+        <div class="custom-select" id="preorderTypeSelectWrapper"></div>
+        <div class="custom-select" id="preorderStatusSelectWrapper"></div>
+    </div>
+     <div class="input-group">
+        <svg class="input-group__icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <input id="preorderSearchInput" type="search" class="input input--with-icon" placeholder="Cari nama atau ID..." />
+    </div>
+    <div class="info-bar" id="preorderCountInfo"></div>
+    <div class="grid grid--1-col" id="preorderListContainer"></div>
+    <nav class="pagination" id="preorderPagination"></nav>
+  </template>
 
 </body>
 </html>
