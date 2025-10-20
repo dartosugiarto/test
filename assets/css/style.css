@@ -36,7 +36,7 @@
   --duration-fast: 0.21s;
   --duration-natural: 0.34s;
   --ease-natural: cubic-bezier(0.4, 0, 0.2, 1);
-  --sidebar-width: 300px;
+  --sidebar-width: 280px;
   --header-height: 60px;
 }
 * { box-sizing: border-box; }
@@ -279,8 +279,8 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 
 
 /* === Polishing: Sidebar mobile ergonomics === */
-@media (max-width: 390px){
-  :root { --sidebar-width: 85vw; }
+@media (max-width: 430px){
+  :root { --sidebar-width: clamp(248px, 72vw, 288px); }
 }
 .sidebar{
   max-height: calc(100% - var(--header-height));
