@@ -310,12 +310,29 @@ function enhanceCustomSelectKeyboard(wrapper){
     if (heroImg){ heroImg.setAttribute('decoding','async'); try{ heroImg.setAttribute('fetchpriority','high'); }catch(e){} }
   }
   function toggleSidebar(forceOpen) {
-    const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
-    document.body.classList.toggle('sidebar-open', isOpen);
-    elements.sidebar.burger.classList.toggle('active', isOpen);
-    document.documentElement.style.overflow = isOpen ? "hidden" : "";
-    document.body.style.overflow = isOpen ? "hidden" : "";
+  const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
+  document.body.classList.toggle('sidebar-open', isOpen);
+  elements.sidebar.burger.classList.toggle('active', isOpen);
+
+  const body = document.body;
+  if (isOpen) {
+    // Lock scroll without causing layout shift
+    const y = window.scrollY || window.pageYOffset || 0;
+    body.dataset.ppLockY = String(y);
+    body.style.position = 'fixed';
+    body.style.top = `-${y}px`;  /* keep visual position */
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+  } else {
+    // Restore scroll exactly where the user was
+    const y = parseInt(body.dataset.ppLockY || '0', 10);
+    body.style.position = '';
+    body.style.top = '';
+    body.style.width = '';
+    body.style.overflow = '';
+    window.scrollTo(0, y);
   }
+}
   let setMode = function(nextMode, fromPopState = false) {
     if (nextMode === 'donasi') {
       window.open('https://saweria.co/playpal', '_blank', 'noopener');
