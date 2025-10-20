@@ -3,8 +3,8 @@
   const config = {
     sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
     sheets: {
-      katalog: { name: 'Sheet9' },
-      homeCatalog: { name: 'HomeCatalog' },
+      katalog: { name: 'Sheet3' },
+      homeCatalog: { name: 'Sheet9' },
       preorder: { name1: 'Sheet1', name2: 'Sheet2' },
       accounts: { name: 'Sheet5' },
       affiliate: { name: 'Sheet8' }
