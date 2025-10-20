@@ -60,7 +60,7 @@ p { font-size: var(--font-size-body); line-height: 1.5; color: var(--text-second
 .view-section { display: none; animation: fadeIn var(--duration-natural) var(--ease-natural); }
 .view-section.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(var(--sp-fib-4)); } to { opacity: 1; transform: translateY(0); } }
-.page-container { transition: transform var(--duration-natural), filter var(--duration-natural); }
+.page-container { transition: transform var(--duration-natural), filter var(--duration-natural); transform-origin: top center; }
 body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
 .page-title-header { margin-top: var(--sp-fib-6); margin-bottom: var(--sp-fib-5); }
 .page-title-header h1 { margin: 0; line-height: 1.2; }
