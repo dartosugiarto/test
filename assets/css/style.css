@@ -36,7 +36,7 @@
   --duration-fast: 0.21s;
   --duration-natural: 0.34s;
   --ease-natural: cubic-bezier(0.4, 0, 0.2, 1);
-  --sidebar-width: 280px;
+  --sidebar-width: 264px;
   --header-height: 60px;
 }
 * { box-sizing: border-box; }
@@ -279,9 +279,7 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 
 
 /* === Polishing: Sidebar mobile ergonomics === */
-@media (max-width: 430px){
-  :root { --sidebar-width: clamp(248px, 72vw, 288px); }
-}
+@media (max-width: 430px){ :root { --sidebar-width: clamp(232px, 68vw, 272px); } }
 .sidebar{
   max-height: calc(100% - var(--header-height));
   overflow: auto;
@@ -297,3 +295,10 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 
 /* === Polishing: Perceived performance on long lists === */
 .card, .list-item { content-visibility: auto; contain-intrinsic-size: 200px; }
+
+
+/* Menu text ellipsis */
+.sidebar .nav-item span{
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
