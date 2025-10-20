@@ -40,14 +40,13 @@
     }
   };
   let allCatalogData = [];
-  let homeCards = [];
-  let homeCardsReady = false;
   let currentSelectedItem = null;
   let catalogFetchController;
   let preorderFetchController;
   let accountsFetchController;
   let modalFocusTrap = { listener: null, focusableEls: [], firstEl: null, lastEl: null };
   let elementToFocusOnModalClose = null;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function getElement(id) {
     return document.getElementById(id);
   }
@@ -131,6 +130,34 @@
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
+
+  function enhanceCustomSelectKeyboard(wrapper){
+    if (!wrapper) return;
+    const options = wrapper.querySelector('.custom-select-options');
+    const btn = wrapper.querySelector('.custom-select-btn');
+    if (!options || !btn) return;
+    options.setAttribute('role','listbox');
+    options.addEventListener('keydown', (e)=>{
+      const items = Array.from(options.querySelectorAll('.custom-select-option'));
+      if (!items.length) return;
+      let i = items.findIndex(o => o.classList.contains('highlight'));
+      const move = (delta)=>{
+        i = (i === -1 ? items.findIndex(o=>o.classList.contains('selected')) : i);
+        if (i === -1) i = 0;
+        i = (i + delta + items.length) % items.length;
+        items.forEach(o=>o.classList.remove('highlight'));
+        items[i].classList.add('highlight');
+        items[i].scrollIntoView({ block: 'nearest' });
+      };
+      if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+      if (e.key === 'ArrowUp'){   e.preventDefault(); move(-1); }
+      if (e.key === 'Home'){      e.preventDefault(); move(-9999); }
+      if (e.key === 'End'){       e.preventDefault(); move(9999); }
+      if (e.key === 'Enter'){     e.preventDefault(); if (i>-1) items[i].click(); }
+      if (e.key === 'Escape'){    e.preventDefault(); toggleCustomSelect(wrapper, false); btn.focus(); }
+    });
+  }
+
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
   function initializeCarousels(container) {
     container.querySelectorAll('.carousel-container').forEach(carouselContainer => {
@@ -217,10 +244,131 @@
       indicator.className = 'status-badge success';
     } else {
       indicator.textContent = 'TUTUP';
-      indicator.className = 'status-badge failed';
+      indicator.className = 'status-badge closed';
     }
   }
-  function initializeApp() {
+  
+  /* === HOME as Cards (HomeCatalog) === */
+  let homeCards = []; let homeCardsReady = false;
+  function buildHomeCategorySelectFromCards(cards) {
+    const { options, value } = elements.home.customSelect;
+    const distinct = Array.from(new Set(cards.map(c => (c.category || '').trim()).filter(Boolean)));
+    const categories = ['Semua Kategori', ...distinct];
+    options.innerHTML = '';
+    const active = state.home.activeCategory && categories.includes(state.home.activeCategory)
+      ? state.home.activeCategory
+      : categories[0];
+    state.home.activeCategory = active;
+    value.textContent = active;
+    categories.forEach(label => {
+      const el = document.createElement('div');
+      el.className = 'custom-select-option' + (label === active ? ' selected' : '');
+      el.textContent = label;
+      el.dataset.value = label;
+      el.tabIndex = 0;
+      el.addEventListener('click', () => {
+        state.home.activeCategory = label;
+        value.textContent = label;
+        options.querySelector('.selected')?.classList.remove('selected');
+        el.classList.add('selected');
+        toggleCustomSelect(elements.home.customSelect.wrapper, false);
+        const url = new URL(window.location);
+        const slug = label.toLowerCase().replace(/\s+/g,'-').replace(/[+&]/g,'');
+        url.searchParams.set('kategori', slug);
+        history.pushState({ activeCategory: label }, '', url);
+        renderHomeCards();
+      });
+      options.appendChild(el);
+    });
+  }
+  function getMinPriceForCard(card) {
+    if (!Array.isArray(allCatalogData) || allCatalogData.length === 0) return null;
+    const group = (card.groupKey || '').trim();
+    const needle = (card.itemFilter || '').toLowerCase();
+    const matches = allCatalogData.filter(x => {
+      const sameGroup = (x.catLabel || '').trim() === group;
+      if (!sameGroup) return false;
+      if (!needle) return true;
+      return (x.title || '').toLowerCase().includes(needle);
+    });
+    if (!matches.length) return null;
+    let min = Infinity;
+    matches.forEach(m => { if (typeof m.price === 'number' && !isNaN(m.price)) { if (m.price < min) min = m.price; } });
+    return (min === Infinity) ? null : min;
+  }
+  function renderHomeCards() {
+    const container = elements.home.listContainer;
+    const countInfoEl = elements.home.countInfo;
+    container.classList.remove('list-container');
+    container.classList.add('library-grid');
+    const q = (state.home.searchQuery || '').toLowerCase();
+    const cat = state.home.activeCategory || 'Semua Kategori';
+    let data = homeCards.slice();
+    if (cat && cat !== 'Semua Kategori') data = data.filter(c => (c.category || '') === cat);
+    if (q) data = data.filter(c => ((c.cardTitle || '').toLowerCase().includes(q) || (c.subtitle || '').toLowerCase().includes(q)));
+    countInfoEl.textContent = `${data.length} item ditemukan`;
+    container.innerHTML = '';
+    if (!data.length) { container.innerHTML = '<div class="empty">Belum ada item untuk kategori ini.</div>'; return; }
+    const frag = document.createDocumentFragment();
+    data.forEach(item => {
+      const img = (item.images && item.images.length) ? item.images[0] : '';
+      const a = document.createElement('a');
+      a.className = 'book-card'; a.href = '#';
+      const safeTitle = (item.cardTitle || 'Item');
+      const min = getMinPriceForCard(item);
+      const priceHtml = (min != null) ? `<div class="price-pill">Mulai dari ${formatToIdr(min)}</div>` : '';
+      a.innerHTML = `<img src="${img}" alt="${safeTitle}" class="cover" loading="lazy" decoding="async"><div class="overlay"></div><div class="title">${safeTitle}</div>${priceHtml}`;
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const group = (item.groupKey || '').trim();
+        const needle = (item.itemFilter || '').toLowerCase();
+        const matches = (allCatalogData || []).filter(x => {
+          const sameGroup = (x.catLabel || '').trim() === group;
+          if (!sameGroup) return false;
+          if (!needle) return true;
+          return (x.title || '').toLowerCase().includes(needle);
+        });
+        if (matches && matches.length) {
+          let pick = matches[0];
+          let min = typeof pick.price === 'number' ? pick.price : Infinity;
+          matches.forEach(m => { if (typeof m.price==='number' && m.price < min) { min = m.price; pick = m; } });
+          openPaymentModal({ title: pick.title, price: pick.price, catLabel: group });
+        } else {
+          console.warn('Tidak ada varian untuk kartu ini:', item);
+        }
+      });
+      frag.appendChild(a);
+    });
+    container.appendChild(frag);
+  }
+  async function loadHomeCards() {
+    try {
+      const cont = elements.home.listContainer;
+      cont.classList.remove('list-container'); cont.classList.add('library-grid');
+      showSkeleton(cont, elements.skeletonCardTemplate, 6);
+      const sheetName = (config.sheets.homeCatalog && config.sheets.homeCatalog.name) || 'HomeCatalog';
+      const res = await fetch(getSheetUrl(sheetName, 'csv'));
+      if (!res.ok) throw new Error('Network error: ' + res.statusText);
+      const rows = robustCsvParser(await res.text());
+      rows.shift();
+      homeCards = rows.filter(r => r && r[0] && r[1]).map(r => ({
+        category: r[0], cardTitle: r[1], groupKey: r[2] || '', itemFilter: r[3] || '',
+        images: (r[4] || '').split(',').map(s => s.trim()).filter(Boolean),
+        subtitle: r[5] || '', link: r[6] || '', sort: Number(r[7] || 0),
+        badge: r[8] || '', status: r[9] || '',
+      }));
+      homeCards.sort((a,b) => (a.sort||0)-(b.sort||0) || String(a.cardTitle).localeCompare(String(b.cardTitle)));
+      homeCardsReady = true;
+      buildHomeCategorySelectFromCards(homeCards);
+      renderHomeCards();
+    } catch (err) {
+      console.error('Failed to load HomeCatalog:', err);
+      elements.home.errorContainer.textContent = 'Gagal memuat data Home.';
+      elements.home.errorContainer.style.display = 'block';
+    }
+  }
+
+function initializeApp() {
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
     elements.navLinks.forEach(link => {
@@ -233,10 +381,7 @@
     });
     [elements.home.customSelect, elements.preorder.customSelect, elements.preorder.customStatusSelect, elements.accounts.customSelect]
       .filter(select => select && select.btn)
-      .forEach(select => select.btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleCustomSelect(select.wrapper);
-      }));
+      .forEach(select => { select.btn.addEventListener('click', (e) => { e.stopPropagation(); toggleCustomSelect(select.wrapper); }); enhanceCustomSelectKeyboard(select.wrapper); });
     let homeDebounce;
     elements.home.searchInput.addEventListener('input', e => {
       clearTimeout(homeDebounce);
@@ -260,14 +405,30 @@
     elements.headerStatusIndicator.style.display = 'inline-flex';
     updateHeaderStatus();
     setInterval(updateHeaderStatus, 60000);
+    const heroImg = document.querySelector('.home-banner-img');
+    if (heroImg){ heroImg.setAttribute('decoding','async'); try{ heroImg.setAttribute('fetchpriority','high'); }catch(e){} }
   }
   function toggleSidebar(forceOpen) {
-    const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
-    document.body.classList.toggle('sidebar-open', isOpen);
-    elements.sidebar.burger.classList.toggle('active', isOpen);
-    document.documentElement.style.overflow = isOpen ? "hidden" : "";
-    document.body.style.overflow = isOpen ? "hidden" : "";
+  const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
+  document.body.classList.toggle('sidebar-open', isOpen);
+  elements.sidebar.burger.classList.toggle('active', isOpen);
+  const body = document.body;
+  if (isOpen) {
+    const y = window.scrollY || window.pageYOffset || 0;
+    body.dataset.ppLockY = String(y);
+    body.style.position = 'fixed';
+    body.style.top = `-${y}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+  } else {
+    const y = parseInt(body.dataset.ppLockY || '0', 10);
+    body.style.position = '';
+    body.style.top = '';
+    body.style.width = '';
+    body.style.overflow = '';
+    window.scrollTo(0, y);
   }
+}
   let setMode = function(nextMode, fromPopState = false) {
     if (nextMode === 'donasi') {
       window.open('https://saweria.co/playpal', '_blank', 'noopener');
@@ -295,7 +456,7 @@
         isActive ? link.setAttribute('aria-current', 'page') : link.removeAttribute('aria-current');
     });
     if (window.innerWidth < 769) toggleSidebar(false);
-    window.scrollTo({ top: 0, behavior: fromPopState ? 'auto' : 'smooth' });
+    window.scrollTo({ top: 0, behavior: (prefersReducedMotion || fromPopState) ? 'auto' : 'smooth' });
     if (nextMode === 'preorder' && !state.preorder.initialized) initializePreorder();
     if (nextMode === 'accounts' && !state.accounts.initialized) initializeAccounts();
     if (nextMode === 'perpustakaan' && !getElement('libraryGridContainer').innerHTML.trim()) initializeLibrary();
@@ -328,155 +489,12 @@
         const url = new URL(window.location);
         url.searchParams.set('kategori', cat.label.toLowerCase().replace(/ /g, '-').replace(/[+&]/g, ''));
         history.pushState({ activeCategory: cat.key }, '', url);
-        renderHomeList();
+        renderHomeCards();
       });
       options.appendChild(el);
     });
   }
-  
-/* === HOME as Cards (HomeCatalog) === */
-function buildHomeCategorySelectFromCards(cards) {
-  const { options, value } = elements.home.customSelect;
-  const distinct = Array.from(new Set(cards.map(c => (c.category || '').trim()).filter(Boolean)));
-  const categories = ['Semua Kategori', ...distinct];
-  options.innerHTML = '';
-  const active = state.home.activeCategory && categories.includes(state.home.activeCategory)
-    ? state.home.activeCategory
-    : categories[0];
-  state.home.activeCategory = active;
-  value.textContent = active;
-
-  categories.forEach(label => {
-    const el = document.createElement('div');
-    el.className = 'custom-select-option' + (label === active ? ' selected' : '');
-    el.textContent = label;
-    el.dataset.value = label;
-    el.tabIndex = 0;
-    el.addEventListener('click', () => {
-      state.home.activeCategory = label;
-      value.textContent = label;
-      options.querySelector('.selected')?.classList.remove('selected');
-      el.classList.add('selected');
-      toggleCustomSelect(elements.home.customSelect.wrapper, false);
-      // update URL slug
-      const url = new URL(window.location);
-      const slug = label.toLowerCase().replace(/\s+/g,'-').replace(/[+&]/g,'');
-      url.searchParams.set('kategori', slug);
-      history.pushState({ activeCategory: label }, '', url);
-      renderHomeCards();
-    });
-    options.appendChild(el);
-  });
-}
-
-function getMinPriceForCard(card) {
-  if (!Array.isArray(allCatalogData) || allCatalogData.length === 0) return null;
-  const group = (card.groupKey || '').trim();
-  const needle = (card.itemFilter || '').toLowerCase();
-  const matches = allCatalogData.filter(x => {
-    const sameGroup = (x.catLabel || '').trim() === group;
-    if (!sameGroup) return false;
-    if (!needle) return true;
-    return (x.title || '').toLowerCase().includes(needle);
-  });
-  if (!matches.length) return null;
-  let min = Infinity;
-  matches.forEach(m => { if (typeof m.price === 'number' && !isNaN(m.price)) { if (m.price < min) min = m.price; } });
-  return (min === Infinity) ? null : min;
-}
-
-function renderHomeCards() {
-  const container = elements.home.listContainer;
-  const countInfoEl = elements.home.countInfo;
-  // ensure grid class
-  container.classList.remove('list-container');
-  container.classList.add('library-grid');
-  const q = (state.home.searchQuery || '').toLowerCase();
-  const cat = state.home.activeCategory || 'Semua Kategori';
-  let data = homeCards;
-  if (cat && cat !== 'Semua Kategori') data = data.filter(c => (c.category || '') === cat);
-  if (q) data = data.filter(c => (c.cardTitle || '').toLowerCase().includes(q) || (c.subtitle || '').toLowerCase().includes(q));
-
-  countInfoEl.textContent = `${data.length} item ditemukan`;
-  container.innerHTML = '';
-
-  if (!data.length) {
-    container.innerHTML = '<div class="empty">Belum ada item untuk kategori ini.</div>';
-    return;
-  }
-
-  const frag = document.createDocumentFragment();
-  data.forEach(item => {
-    const img = (item.images && item.images.length) ? item.images[0] : '';
-    const a = document.createElement('a');
-    a.className = 'book-card';
-    a.href = '#';
-    const safeTitle = (item.cardTitle || 'Item');
-    a.innerHTML = \`<img src="\${img}" alt="\${safeTitle}" class="cover"><div class="overlay"></div><div class="title">\${safeTitle}</div>\`;
-    a.addEventListener('click', e => {
-      e.preventDefault();
-      // pick cheapest variant (temporary) â full variant chooser can be added next
-      const group = (item.groupKey || '').trim();
-      const needle = (item.itemFilter || '').toLowerCase();
-      const matches = (allCatalogData || []).filter(x => {
-        const sameGroup = (x.catLabel || '').trim() == group;
-        if (!sameGroup) return false;
-        if (!needle) return true;
-        return (x.title || '').toLowerCase().includes(needle);
-      });
-      if (matches && matches.length) {
-        // choose cheapest
-        let pick = matches[0];
-        let min = typeof pick.price === 'number' ? pick.price : Infinity;
-        matches.forEach(m => { if (typeof m.price==='number' && m.price < min) { min = m.price; pick = m; } });
-        openPaymentModal({ title: pick.title, price: pick.price, catLabel: group });
-      } else {
-        // fallback: do nothing / later show variant chooser
-        console.warn('Tidak ada varian untuk kartu ini:', item);
-      }
-    });
-    frag.appendChild(a);
-  });
-  container.appendChild(frag);
-}
-
-async function loadHomeCards() {
-  try {
-    const cont = elements.home.listContainer;
-    cont.classList.remove('list-container');
-    cont.classList.add('library-grid');
-    showSkeleton(cont, elements.skeletonCardTemplate, 6);
-    const sheetName = (config.sheets.homeCatalog && config.sheets.homeCatalog.name) || 'HomeCatalog';
-    const res = await fetch(getSheetUrl(sheetName, 'csv'));
-    if (!res.ok) throw new Error('Network error: ' + res.statusText);
-    const rows = robustCsvParser(await res.text());
-    rows.shift(); // header
-    homeCards = rows.filter(r => r && r[0] && r[1]).map(r => ({
-      category: r[0],
-      cardTitle: r[1],
-      groupKey: r[2] || '',
-      itemFilter: r[3] || '',
-      images: (r[4] || '').split(',').map(s => s.trim()).filter(Boolean),
-      subtitle: r[5] || '',
-      link: r[6] || '',
-      sort: Number(r[7] || 0),
-      badge: r[8] || '',
-      status: r[9] || '',
-    }));
-    // sort by Sort then title
-    homeCards.sort((a,b) => (a.sort||0)-(b.sort||0) || String(a.cardTitle).localeCompare(String(b.cardTitle)));
-    homeCardsReady = true;
-
-    // Build categories from Sheet9
-    buildHomeCategorySelectFromCards(homeCards);
-    renderHomeCards();
-  } catch (err) {
-    console.error('Failed to load HomeCatalog:', err);
-    elements.home.errorContainer.textContent = 'Gagal memuat data Home.';
-    elements.home.errorContainer.style.display = 'block';
-  }
-}
-function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
+  function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
   function renderHomeList() { const { activeCategory, searchQuery } = state.home; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada item ditemukan.'); }
   async function loadCatalog() { 
     if (catalogFetchController) catalogFetchController.abort();
@@ -488,7 +506,7 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
       if (!res.ok) throw new Error(`Network error: ${res.statusText}`); 
       const text = await res.text(); 
       allCatalogData = parseGvizPairs(text); 
-      if (allCatalogData.length === 0) throw new Error('Data is empty || format is incorrect.'); 
+      if (allCatalogData.length === 0) throw new Error('Data is empty or format is incorrect.'); 
       const params = new URLSearchParams(window.location.search);
       const categoryFromUrl = params.get('kategori');
       if (categoryFromUrl && (window.location.pathname === '/' || window.location.pathname.endsWith('/index.html'))) {
@@ -500,7 +518,6 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
           const foundKey = urlToCatKeyMap.get(categoryFromUrl);
           if (foundKey) state.home.activeCategory = foundKey;
       }
-      /* categories built from HomeCatalog */ 
       loadHomeCards(); 
     } catch (err) { 
       if (err.name === 'AbortError') return;
@@ -515,6 +532,12 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
   function updatePriceDetails() { const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value; if (!selectedOptionId) return; const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId); if (!currentSelectedItem || !selectedOption) return; const price = currentSelectedItem.price; const fee = calculateFee(price, selectedOption); const total = price + fee; elements.paymentModal.fee.textContent = formatToIdr(fee); elements.paymentModal.total.textContent = formatToIdr(total); updateWaLink(selectedOption, fee, total); }
   function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `âº Tipe: ${catLabel}`, `âº Item: ${title}`, `âº Pembayaran: ${option.name}`, `âº Harga: ${formatToIdr(price)}`, `âº Fee: ${formatToIdr(fee)}`, `âº Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
   function openPaymentModal(item) {
+    const pageContainer = document.getElementById('pageContainer');
+    const modalContentEl = document.querySelector('#paymentModal .modal-content');
+    if (modalContentEl){ modalContentEl.setAttribute('role','dialog'); modalContentEl.setAttribute('aria-modal','true'); modalContentEl.setAttribute('aria-labelledby','paymentModalTitle'); }
+    const modalTitle = document.querySelector('#paymentModal .modal-header h2');
+    if (modalTitle){ modalTitle.id = 'paymentModalTitle'; }
+    if (pageContainer){ pageContainer.setAttribute('inert',''); }
     document.documentElement.style.overflow = "hidden"; document.body.style.overflow = "hidden";
     elementToFocusOnModalClose = document.activeElement;
     currentSelectedItem = item;
@@ -524,7 +547,7 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
     optionsContainer.innerHTML = '';
     config.paymentOptions.forEach((option, index) => {
       const fee = calculateFee(item.price, option);
-      optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> </div>`);
+      optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}" tabindex="0"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> </div>`);
     });
     optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails));
     updatePriceDetails();
@@ -539,6 +562,8 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
     setTimeout(() => modalFocusTrap.firstEl?.focus(), 100);
   }
   function closePaymentModal() {
+    const pageContainer = document.getElementById('pageContainer');
+    if (pageContainer){ pageContainer.removeAttribute('inert'); }
     document.documentElement.style.overflow = ""; document.body.style.overflow = "";
     const { modal } = elements.paymentModal;
     modal.classList.remove('visible');
@@ -634,8 +659,8 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
         rebound();
       });
     });
-    prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); } });
-    nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); } });
+    nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); });
     fetchPreorderData(config.sheets.preorder.name1);
     state.preorder.initialized = true;
   }
@@ -904,6 +929,7 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
       const firstHalfWidth = track.scrollWidth / 2;
   
       function animate() {
+        if (prefersReducedMotion || document.hidden) { return; }
         if (!isDragging) {
           pos -= speed;
         }
@@ -950,6 +976,7 @@ function renderList(container, countInfoEl, items, emptyText) { container.innerH
       }
   
       marquee.addEventListener('mousedown', onDragStart);
+      document.addEventListener('visibilitychange', ()=>{ if (document.hidden) { cancelAnimationFrame(animationFrameId); } else { animate(); } });
       marquee.addEventListener('touchstart', onDragStart, { passive: true });
   
       animate();
