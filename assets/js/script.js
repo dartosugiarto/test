@@ -128,53 +128,50 @@
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
 
-async function fetchSheetCached(sheetName, format = 'json'){
-  const url = getSheetUrl(sheetName, format === 'csv' ? 'csv' : 'json');
-  const key = `pp_cache_${sheetName}_${format}`;
-  const cached = sessionStorage.getItem(key);
-  if (cached) {
-    // kick off background revalidate
-    try { fetch(url).then(r => r.text()).then(t => sessionStorage.setItem(key, t)); } catch(e) {}
-    return cached;
+  async function fetchSheetCached(sheetName, format = 'json'){
+    const url = getSheetUrl(sheetName, format === 'csv' ? 'csv' : 'json');
+    const key = `pp_cache_${sheetName}_${format}`;
+    const cached = sessionStorage.getItem(key);
+    if (cached) {
+      try { fetch(url).then(r => r.text()).then(t => sessionStorage.setItem(key, t)); } catch(e) {}
+      return cached;
+    }
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
+    const text = await res.text();
+    sessionStorage.setItem(key, text);
+    return text;
   }
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
-  const text = await res.text();
-  sessionStorage.setItem(key, text);
-  return text;
-}
 
   function showSkeleton(container, template, count = 6) { container.innerHTML = ''; const fragment = document.createDocumentFragment(); for (let i = 0; i < count; i++) { fragment.appendChild(template.content.cloneNode(true)); } container.appendChild(fragment); }
   function toggleCustomSelect(wrapper, forceOpen) { const btn = wrapper.querySelector('.custom-select-btn'); const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !wrapper.classList.contains('open'); wrapper.classList.toggle('open', isOpen); btn.setAttribute('aria-expanded', isOpen); }
 
-function enhanceCustomSelectKeyboard(wrapper){
-  if (!wrapper) return;
-  const options = wrapper.querySelector('.custom-select-options');
-  const btn = wrapper.querySelector('.custom-select-btn');
-  if (!options || !btn) return;
-  options.setAttribute('role','listbox');
-  options.addEventListener('keydown', (e)=>{
-    const items = Array.from(options.querySelectorAll('.custom-select-option'));
-    if (!items.length) return;
-    let i = items.findIndex(o => o.classList.contains('highlight'));
-
-    const move = (delta)=>{
-      i = (i === -1 ? items.findIndex(o=>o.classList.contains('selected')) : i);
-      if (i === -1) i = 0;
-      i = (i + delta + items.length) % items.length;
-      items.forEach(o=>o.classList.remove('highlight'));
-      items[i].classList.add('highlight');
-      items[i].scrollIntoView({ block: 'nearest' });
-    };
-
-    if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
-    if (e.key === 'ArrowUp'){ e.preventDefault(); move(-1); }
-    if (e.key === 'Home'){ e.preventDefault(); move(-9999); }
-    if (e.key === 'End'){ e.preventDefault(); move(9999); }
-    if (e.key === 'Enter'){ e.preventDefault(); if (i>-1) items[i].click(); }
-    if (e.key === 'Escape'){ e.preventDefault(); toggleCustomSelect(wrapper, false); btn.focus(); }
-  });
-}
+  function enhanceCustomSelectKeyboard(wrapper){
+    if (!wrapper) return;
+    const options = wrapper.querySelector('.custom-select-options');
+    const btn = wrapper.querySelector('.custom-select-btn');
+    if (!options || !btn) return;
+    options.setAttribute('role','listbox');
+    options.addEventListener('keydown', (e)=>{
+      const items = Array.from(options.querySelectorAll('.custom-select-option'));
+      if (!items.length) return;
+      let i = items.findIndex(o => o.classList.contains('highlight'));
+      const move = (delta)=>{
+        i = (i === -1 ? items.findIndex(o=>o.classList.contains('selected')) : i);
+        if (i === -1) i = 0;
+        i = (i + delta + items.length) % items.length;
+        items.forEach(o=>o.classList.remove('highlight'));
+        items[i].classList.add('highlight');
+        items[i].scrollIntoView({ block: 'nearest' });
+      };
+      if (e.key === 'ArrowDown'){ e.preventDefault(); move(1); }
+      if (e.key === 'ArrowUp'){   e.preventDefault(); move(-1); }
+      if (e.key === 'Home'){      e.preventDefault(); move(-9999); }
+      if (e.key === 'End'){       e.preventDefault(); move(9999); }
+      if (e.key === 'Enter'){     e.preventDefault(); if (i>-1) items[i].click(); }
+      if (e.key === 'Escape'){    e.preventDefault(); toggleCustomSelect(wrapper, false); btn.focus(); }
+    });
+  }
 
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
   function initializeCarousels(container) {
@@ -313,18 +310,15 @@ function enhanceCustomSelectKeyboard(wrapper){
   const isOpen = typeof forceOpen === 'boolean' ? forceOpen : !document.body.classList.contains('sidebar-open');
   document.body.classList.toggle('sidebar-open', isOpen);
   elements.sidebar.burger.classList.toggle('active', isOpen);
-
   const body = document.body;
   if (isOpen) {
-    // Lock scroll without causing layout shift
     const y = window.scrollY || window.pageYOffset || 0;
     body.dataset.ppLockY = String(y);
     body.style.position = 'fixed';
-    body.style.top = `-${y}px`;  /* keep visual position */
+    body.style.top = `-${y}px`;
     body.style.width = '100%';
     body.style.overflow = 'hidden';
   } else {
-    // Restore scroll exactly where the user was
     const y = parseInt(body.dataset.ppLockY || '0', 10);
     body.style.position = '';
     body.style.top = '';
