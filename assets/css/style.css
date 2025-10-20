@@ -266,36 +266,3 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .page-container { transform-origin: top center; }
 
 .sidebar .nav-item span{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-
-/* === Grid 3 kolom konsisten (Home & Perpustakaan) === */
-.library-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:var(--sp-fib-4);
-}
-@media (max-width:360px){
-  .library-grid{ grid-template-columns:repeat(2,1fr); }
-}
-
-/* Badge harga "Mulai dari ..." */
-.book-card{ position:relative; }
-.price-pill{
-  position:absolute; left:8px; bottom:8px;
-  padding:6px 10px; border-radius:999px;
-  background: var(--surface-secondary);
-  font-weight:700; font-size:12px; line-height:1;
-}
-
-/* Tambahan polish aman (tanpa ubah layout utama) */
-:root{ --sidebar-width: 264px; }
-@media (max-width:430px){ :root { --sidebar-width: clamp(232px,68vw,272px); } }
-.sidebar .nav-item span{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.page-container{ transform-origin: top center; }
-.status-badge.closed{ color:var(--text-secondary); background-color:var(--surface-secondary); }
-.status-badge.closed::before{ background:var(--surface-tertiary); }
-.action-btn:active,.affiliate-card-button:active,.wa-button:active{ transform:scale(.98); }
-.action-btn:disabled,.affiliate-card-button[aria-disabled="true"],.wa-button[aria-disabled="true"]{ opacity:.5; cursor:not-allowed; transform:none; }
-.payment-option label:focus-visible{ box-shadow: var(--shadow-focus); outline:none; }
-.wa-button{ padding-bottom:max(var(--sp-fib-4), env(safe-area-inset-bottom)); }
-
