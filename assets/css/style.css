@@ -24,7 +24,7 @@
   --sp-fib-6: 34px;
   --sp-fib-7: 55px;
   --sp-fib-8: 89px;
-  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, "Inter", sans-serif;
+  --font-family: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, "Inter", sans-serif;
   --font-size-h1: 28px;
   --font-size-body: 16px;
   --control-h: 48px;
@@ -154,7 +154,7 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 #viewPreorder .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-fib-5); }
 #viewPreorder .detail-label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-tertiary); }
 #viewPreorder .detail-value { font-size: 14px; font-weight: 700; }
-.account-card-grid, .affiliate-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-fib-5); margin-top: var(--sp-fib-5); }
+.account-card-grid, .affiliate-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-fib-5); margin-top: var(--sp-fib-6); }
 @media(min-width: 769px) { .account-card-grid, .affiliate-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
 .account-card, .affiliate-card { background: var(--surface-primary); border: 1px solid var(--separator); border-radius: var(--radius-fib-medium); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow var(--duration-natural); }
 .account-card:hover, .affiliate-card:hover { box-shadow: 0 13px 21px rgba(48, 57, 82, 0.1); }
@@ -223,15 +223,8 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .price-details p { margin: var(--sp-fib-2) 0; }
 .price-details strong { font-size: 18px; }
 .wa-button { display: block; width: 100%; margin-top: var(--sp-fib-5); padding: var(--sp-fib-4); padding-bottom: max(var(--sp-fib-4), env(safe-area-inset-bottom)); background-color: var(--brand-blue); color: #fff; font-size: 16px; font-weight: 700; text-align: center; text-decoration: none; border-radius: var(--radius-fib-small); }
-/* Responsive library grid override */
-.library-grid { 
-  display: grid; 
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
-  gap: var(--sp-fib-4);
-}
-@media (min-width: 768px){
-  .library-grid { grid-template-columns: repeat(4, 1fr); }
-}
+.library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-fib-4); }
+@media (min-width:768px){ .library-grid { grid-template-columns: repeat(4,1fr); } }
 .book-card { position: relative; border: none; padding: 0; cursor: pointer; border-radius: var(--radius-fib-medium); overflow: hidden; aspect-ratio: 3 / 4; transition: transform var(--duration-fast); }
 .book-card:hover { transform: scale(1.05); }
 .book-card .cover { width: 100%; height: 100%; object-fit: cover; }
@@ -259,54 +252,17 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .noscript-warning { padding: var(--sp-fib-4); background: var(--warning); color: var(--dark-base); text-align: center; font-weight: 700; }
 :focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-fib-small); }
 
-/* === Polishing: Button states & feedback === */
-.action-btn:active,
-.affiliate-card-button:active,
-.wa-button:active { transform: scale(0.98); }
+/* === UX Polish: Button states === */
+.action-btn:active, .affiliate-card-button:active, .wa-button:active { transform: scale(0.98); }
+.action-btn:disabled, .affiliate-card-button[aria-disabled="true"], .wa-button[aria-disabled="true"] { opacity:.5; cursor:not-allowed; transform:none; }
+.payment-option label:focus-visible { box-shadow: var(--shadow-focus); outline: none; }
+.custom-select-option.highlight { background: var(--surface-secondary); color: var(--text-primary); }
 
-.action-btn:disabled,
-.affiliate-card-button[aria-disabled="true"],
-.wa-button[aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Focus ring for payment-option label */
-.payment-option label:focus-visible {
-  box-shadow: var(--shadow-focus);
-  outline: none;
-}
-
-/* Custom-select keyboard highlight */
-.custom-select-option.highlight { 
-  background: var(--surface-secondary); 
-  color: var(--text-primary); 
-}
-
-/* === Polishing: Sidebar mobile ergonomics === */
-@media (max-width: 430px){
-  :root { --sidebar-width: clamp(232px, 68vw, 272px); }
-}
-.sidebar{
-  max-height: calc(100% - var(--header-height));
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-
-/* === Polishing: Neutral CLOSED status === */
+@media (max-width:430px){ :root { --sidebar-width: clamp(232px, 68vw, 272px); } }
+.sidebar{ max-height: calc(100% - var(--header-height)); overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
 .status-badge.closed { color: var(--text-secondary); background-color: var(--surface-secondary); }
 .status-badge.closed::before { background: var(--surface-tertiary); }
-
-/* === Perceived performance === */
-.card, .list-item { content-visibility: auto; contain-intrinsic-size: 200px; }
-
-/* Avoid visual drop on scale */
+.card, .list-item { content-visibility:auto; contain-intrinsic-size:200px; }
 .page-container { transform-origin: top center; }
 
-/* Menu text ellipsis for tight widths */
-.sidebar .nav-item span{
-  flex: 1; min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.sidebar .nav-item span{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
