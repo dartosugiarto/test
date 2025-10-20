@@ -3,8 +3,8 @@
   const config = {
     sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
     sheets: {
-      katalog: { name: 'Sheet3' },
-      homeCatalog: { name: 'Sheet9' },
+      katalog: { name: 'Sheet9' },
+      homeCatalog: { name: 'HomeCatalog' },
       preorder: { name1: 'Sheet1', name2: 'Sheet2' },
       accounts: { name: 'Sheet5' },
       affiliate: { name: 'Sheet8' }
@@ -223,7 +223,7 @@
             return '<br>';
         } else if (trimmedLine.endsWith(':')) {
             return `<p class="spec-title">${trimmedLine.slice(0, -1)}</p>`;
-        } else if (trimmedLine.startsWith('âº')) {
+        } else if (trimmedLine.startsWith('Ã¢ÂÂº')) {
             return `<p class="spec-item spec-item-arrow">${trimmedLine.substring(1).trim()}</p>`;
         } else if (trimmedLine.startsWith('-')) {
             return `<p class="spec-item spec-item-dash">${trimmedLine.substring(1).trim()}</p>`;
@@ -530,7 +530,7 @@ function initializeApp() {
   }
   function calculateFee(price, option) { if (option.feeType === 'fixed') return option.value; if (option.feeType === 'percentage') return Math.ceil(price * option.value); return 0; }
   function updatePriceDetails() { const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value; if (!selectedOptionId) return; const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId); if (!currentSelectedItem || !selectedOption) return; const price = currentSelectedItem.price; const fee = calculateFee(price, selectedOption); const total = price + fee; elements.paymentModal.fee.textContent = formatToIdr(fee); elements.paymentModal.total.textContent = formatToIdr(total); updateWaLink(selectedOption, fee, total); }
-  function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `âº Tipe: ${catLabel}`, `âº Item: ${title}`, `âº Pembayaran: ${option.name}`, `âº Harga: ${formatToIdr(price)}`, `âº Fee: ${formatToIdr(fee)}`, `âº Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
+  function updateWaLink(option, fee, total) { const { catLabel = "Produk", title, price } = currentSelectedItem; const text = [ config.waGreeting, `Ã¢ÂÂº Tipe: ${catLabel}`, `Ã¢ÂÂº Item: ${title}`, `Ã¢ÂÂº Pembayaran: ${option.name}`, `Ã¢ÂÂº Harga: ${formatToIdr(price)}`, `Ã¢ÂÂº Fee: ${formatToIdr(fee)}`, `Ã¢ÂÂº Total: ${formatToIdr(total)}`, ].join('\n'); elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`; }
   function openPaymentModal(item) {
     const pageContainer = document.getElementById('pageContainer');
     const modalContentEl = document.querySelector('#paymentModal .modal-content');
@@ -992,3 +992,94 @@ function initializeApp() {
     initializeTestimonialMarquee(); // Menggantikan loadTestimonials()
   });
 })();
+
+
+/* ==== HOTFIX (Sheet9 mapping + robust loadHomeCards) ==== */
+window.addEventListener('DOMContentLoaded', () => {
+  try {
+    if (window.config && config.sheets) {
+      if (config.sheets.katalog) config.sheets.katalog.name = 'Sheet3';
+      if (!config.sheets.homeCatalog) config.sheets.homeCatalog = { name: 'Sheet9' };
+      else config.sheets.homeCatalog.name = 'Sheet9';
+    }
+  } catch (e) { console.error('Hotfix mapping error:', e); }
+});
+
+(function(){
+  const has = typeof loadHomeCards === 'function';
+  if (!has) return;
+
+  window.loadHomeCards = async function () {
+    try {
+      const cont = elements.home.listContainer;
+      cont.classList.remove('list-container');
+      cont.classList.add('library-grid');
+      try { showSkeleton(cont, elements.skeletonCardTemplate, 6); } catch(_){}
+
+      const sheetName = (config.sheets.homeCatalog && config.sheets.homeCatalog.name) || 'Sheet9';
+      const url = getSheetUrl(sheetName, 'csv');
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`Fetch HomeCatalog gagal: ${res.status} ${res.statusText}`);
+      const text = await res.text();
+
+      if (/<!doctype html>/i.test(text) || /<html/i.test(text)) {
+        throw new Error('Sheet9 tidak publik / respons HTML, bukan CSV.');
+      }
+
+      const rows = robustCsvParser(text);
+      if (!rows || !rows.length) throw new Error('Sheet9 kosong / header tidak terbaca.');
+
+      const header = rows.shift();
+      const must = ['Category','CardTitle','GroupKey','ItemFilter','Images'];
+      const miss = must.filter(h => header.indexOf(h) === -1);
+      if (miss.length) throw new Error('Header Sheet9 tidak lengkap: ' + miss.join(', '));
+
+      window.homeCards = rows
+        .filter(r => r && r[0] && r[1])
+        .map(r => ({
+          category:  r[0],
+          cardTitle: r[1],
+          groupKey:  r[2] || '',
+          itemFilter:r[3] || '',
+          images:    (r[4] || '').split(',').map(s => s.trim()).filter(Boolean),
+          subtitle:  r[5] || '',
+          link:      r[6] || '',
+          sort:      Number(r[7] || 0),
+          badge:     r[8] || '',
+          status:    r[9] || '',
+        }))
+        .sort((a,b) => (a.sort||0)-(b.sort||0) || String(a.cardTitle).localeCompare(String(b.cardTitle)));
+
+      if (typeof buildHomeCategorySelectFromCards === 'function') {
+        buildHomeCategorySelectFromCards(window.homeCards);
+      } else if (typeof buildHomeCategorySelect === 'function') {
+        buildHomeCategorySelect(window.homeCards.map(c => ({ catLabel: c.category })));
+      }
+
+      if (typeof renderHomeCards === 'function') renderHomeCards();
+      else if (typeof renderHomeList === 'function') renderHomeList();
+    } catch (err) {
+      console.error('[Home] loadHomeCards error:', err);
+      try {
+        elements.home.errorContainer.textContent = (err && err.message) ? err.message : 'Gagal memuat data Home.';
+        elements.home.errorContainer.style.display = 'block';
+      } catch(_) {}
+      try { if (typeof renderHomeList === 'function') renderHomeList(); } catch(_){}
+    }
+  };
+})();
+
+window.__diag = async function(){
+  try {
+    console.group('Diag');
+    console.log('Sheets config:', JSON.parse(JSON.stringify(config && config.sheets)));
+    const name = (config.sheets.homeCatalog && config.sheets.homeCatalog.name) || 'Sheet9';
+    const url = getSheetUrl(name, 'csv');
+    const r = await fetch(url, { cache:'no-store' });
+    const t = await r.text();
+    console.log('HomeCatalog URL:', url, 'status:', r.status);
+    console.log('Preview:', t.slice(0, 200).replace(/\n/g,'\n'));
+    console.groupEnd();
+  } catch(e) { console.error(e); }
+};
+
