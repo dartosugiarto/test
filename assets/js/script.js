@@ -12,7 +12,7 @@
     waGreeting: '*Detail pesanan:*',
     paymentOptions: [
       { id: 'seabank', name: 'Seabank', feeType: 'fixed', value: 0 },
-      { id: 'shopeepay', name: 'ShopeePay', feeType: 'fixed', value: 0 }, // <-- INI TAMBAHANNYA
+      { id: 'shopeepay', name: 'ShopeePay', feeType: 'fixed', value: 0 },
       { id: 'gopay', name: 'Gopay', feeType: 'fixed', value: 0 },
       { id: 'dana', name: 'Dana', feeType: 'fixed', value: 125 },
       { id: 'bank_to_dana', name: 'Bank ke Dana', feeType: 'fixed', value: 500 },
@@ -324,15 +324,7 @@ function enhanceCustomSelectKeyboard(wrapper){
       initializeCarousell();
     }
     
-    // Tampilkan testimonial di semua halaman (kecuali jika Anda memindahkannya ke dalam #viewHome)
-    const testimonialSection = document.getElementById('testimonialSection');
-    if (elements.viewHome && testimonialSection) {
-      testimonialSection.style.display = 'block';
-    } else if (testimonialSection) {
-      // Sembunyikan di halaman lain jika Anda mau
-      // testimonialSection.style.display = 'none'; 
-    }
-
+    // HAPUS LOGIKA testimonialSection DARI SINI
 
     elements.headerStatusIndicator.style.display = 'inline-flex';
     updateHeaderStatus();
@@ -364,8 +356,7 @@ function enhanceCustomSelectKeyboard(wrapper){
     window.scrollTo(0, y);
   }
 }
-  // HAPUS FUNGSI setMode()
-  // let setMode = function(nextMode, fromPopState = false) { ... }
+  // FUNGSI setMode() SUDAH DIHAPUS
 
   function parseGvizPairs(jsonText) { const match = jsonText.match(/\{.*\}/s); if (!match) throw new Error('Invalid GViz response.'); const obj = JSON.parse(match[0]); const { rows = [], cols = [] } = obj.table || {}; const pairs = Array.from({ length: Math.floor(cols.length / 2) }, (_, i) => ({ iTitle: i * 2, iPrice: i * 2 + 1, label: cols[i * 2]?.label || '', })).filter(p => p.label && cols[p.iPrice]); const out = []; for (const r of rows) { const c = r.c || []; for (const p of pairs) { const title = String(c[p.iTitle]?.v || '').trim(); const priceRaw = c[p.iPrice]?.v; const price = priceRaw != null && priceRaw !== '' ? Number(priceRaw) : NaN; if (title && !isNaN(price)) { out.push({ catKey: p.label, catLabel: String(p.label || '').trim().replace(/\s+/g, ' '), title, price, }); } } } return out; }
   function buildHomeCategorySelect(catalogData) {
@@ -466,7 +457,7 @@ function enhanceCustomSelectKeyboard(wrapper){
     optionsContainer.innerHTML = '';
     config.paymentOptions.forEach((option, index) => {
       const fee = calculateFee(item.price, option);
-      optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}" tabindex="0"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> </div>`);
+      optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}" tabindex="0"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> D</div>`);
     });
     optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails));
     updatePriceDetails();
@@ -901,6 +892,11 @@ function enhanceCustomSelectKeyboard(wrapper){
 
   document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
-    initializeTestimonialMarquee(); // Menggantikan loadTestimonials()
+    
+    // --- PERUBAHAN DI SINI ---
+    // Hanya jalankan skrip testimoni jika elemennya ada di halaman (yaitu, hanya di index.html)
+    if (document.getElementById('testimonialSection')) {
+      initializeTestimonialMarquee();
+    }
   });
 })();
