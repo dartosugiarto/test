@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>PlayPal.ID</title>
+  <title>PlayPal.ID - Halaman Tidak Ditemukan</title>
   <meta name="description" content="Destinasi Utama Para Pecinta Game, Film & Musik">
   <link rel="icon" type="image/png" href="/assets/images/logo.png">
   <link rel="apple-touch-icon" href="/assets/images/logo.png">
@@ -35,7 +35,7 @@
   </header>
   <aside class="sidebar" id="sidebarNav">
     <nav class="sidebar-nav">
-      <a href="/" class="nav-item active">
+      <a href="/" class="nav-item">
         <div class="nav-icon" style="--icon-url: url('/assets/images/home.svg')"></div>
         <span>Home</span>
       </a>
@@ -70,35 +70,20 @@
   <div class="page-container" id="pageContainer">
     <main class="wrap">
       
-      <section id="viewHome" class="view-section active" aria-label="Home">
-        <div class="home-banner-container">
-          <img src="/assets/images/banner-hero.webp" alt="PlayPal.ID Banner" class="home-banner-img">
-        </div>
-        <div class="head-block">
-          <div class="topbar">
-            <div class="topbar-grid">
-              <div class="custom-select-wrapper" id="homeCustomSelectWrapper">
-                <button class="custom-select-btn" id="homeCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="homeCustomSelectOptions">
-                  <span id="homeCustomSelectValue">Pilih Kategori</span>
-                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
-                </button>
-                <div class="custom-select-options" id="homeCustomSelectOptions" role="listbox"></div>
-              </div>
-            </div>
-          </div>
-          <div class="search-row">
-            <div class="search-wrap">
-              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-              <input id="homeSearchInput" type="search" class="search-input" placeholder="Cari item..." />
-            </div>
-          </div>
-          <div id="homeCountInfo" aria-live="polite"></div>
-        </div>
-        <section id="homeListContainer" class="list-container" aria-live="polite"></section>
-        <section id="homeErrorContainer" class="err" style="display:none"></section>
+      <section id="view404" class="view-section active" aria-label="Halaman Tidak Ditemukan" style="padding-top: 55px; text-align: center;">
+        <header class="page-title-header">
+          <h1 style="font-size: 89px; margin-bottom: 13px;">404</h1>
+          <p class="page-subtitle" style="font-size: 21px;">Halaman Tidak Ditemukan</p>
+        </header>
+        <p style="color: var(--text-primary); max-width: 400px; margin: 21px auto 34px;">
+          Maaf, kami tidak dapat menemukan halaman yang Anda cari. Mungkin tautannya rusak atau halaman tersebut telah dihapus.
+        </p>
+        <a href="/" class="action-btn buy" style="max-width: 200px; margin: 0 auto; text-decoration: none;">Kembali ke Home</a>
       </section>
-      </main>
+
+    </main>
   </div>
+  
   <template id="itemTemplate">
     <button type="button" class="list-item">
       <span class="title"></span>
