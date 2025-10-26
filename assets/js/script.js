@@ -12,6 +12,7 @@
     waGreeting: '*Detail pesanan:*',
     paymentOptions: [
       { id: 'seabank', name: 'Seabank', feeType: 'fixed', value: 0 },
+      { id: 'shopeepay', name: 'ShopeePay', feeType: 'fixed', value: 0 }, // <-- INI TAMBAHANNYA
       { id: 'gopay', name: 'Gopay', feeType: 'fixed', value: 0 },
       { id: 'dana', name: 'Dana', feeType: 'fixed', value: 125 },
       { id: 'bank_to_dana', name: 'Bank ke Dana', feeType: 'fixed', value: 500 },
