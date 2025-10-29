@@ -601,7 +601,7 @@ function enhanceCustomSelectKeyboard(wrapper){
   }
   async function fetchPreorderData(sheetName) {
     if (preorderFetchController) preorderFetchController.abort();
-    preorderFetchController = new AbotController();
+    preorderFetchController = new AbortController(); // <-- INI ADALAH PERBAIKANNYA
     elements.preorder.total.textContent = 'Memuat data...';
     showSkeleton(elements.preorder.listContainer, elements.skeletonCardTemplate, 5);
     state.preorder.displayMode = sheetName === config.sheets.preorder.name1 ? 'detailed' : 'simple';
