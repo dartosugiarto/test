@@ -1,5 +1,35 @@
 (function () {
   'use strict';
+
+  // --- TAMBAHAN: LOGIKA DARK MODE ---
+  const THEME_KEY = 'pp_theme';
+  const docHtml = document.documentElement;
+  
+  function getPreferredTheme() {
+    const storedTheme = localStorage.getItem(THEME_KEY);
+    if (storedTheme) return storedTheme;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  
+  function setTheme(theme) {
+    if (theme === 'dark') {
+      docHtml.setAttribute('data-theme', 'dark');
+    } else {
+      docHtml.setAttribute('data-theme', 'light');
+    }
+    localStorage.setItem(THEME_KEY, theme);
+  }
+  
+  function toggleTheme() {
+    const currentTheme = docHtml.getAttribute('data-theme') || getPreferredTheme();
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+  }
+  
+  // Terapkan tema sesegera mungkin untuk mencegah FOUC
+  setTheme(getPreferredTheme());
+  // --- AKHIR TAMBAHAN DARK MODE ---
+
   const config = {
     sheetId: '1B0XPR4uSvRzy9LfzWDjNjwAyMZVtJs6_Kk_r2fh7dTw',
     sheets: {
@@ -56,6 +86,7 @@
       overlay: getElement('sidebarOverlay'),
       burger: getElement('burgerBtn'),
     },
+    themeToggle: getElement('themeToggleBtn'), // <-- TAMBAHKAN INI
     navLinks: document.querySelectorAll('[data-mode]'),
     viewHome: getElement('viewHome'),
     viewPreorder: getElement('viewPreorder'),
@@ -269,6 +300,7 @@ function enhanceCustomSelectKeyboard(wrapper){
   function initializeApp() {
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
     elements.sidebar.overlay?.addEventListener('click', () => toggleSidebar(false));
+    elements.themeToggle?.addEventListener('click', toggleTheme); // <-- TAMBAHKAN INI
 
     // Logika navigasi 'donasi' (link eksternal) masih diperlukan
     elements.navLinks.forEach(link => {
@@ -424,7 +456,25 @@ function enhanceCustomSelectKeyboard(wrapper){
     }
   }
   function calculateFee(price, option) { if (option.feeType === 'fixed') return option.value; if (option.feeType === 'percentage') return Math.ceil(price * option.value); return 0; }
-  function updatePriceDetails() { const selectedOptionId = document.querySelector('input[name="payment"]:checked')?.value; if (!selectedOptionId) return; const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId); if (!currentSelectedItem || !selectedOption) return; const price = currentSelectedItem.price; const fee = calculateFee(price, selectedOption); const total = price + fee; elements.paymentModal.fee.textContent = formatToIdr(fee); elements.paymentModal.total.textContent = formatToIdr(total); updateWaLink(selectedOption, fee, total); }
+
+  // >>> Perbaikan #1: batasi selector radio ke container payment
+  function updatePriceDetails() {
+    const selectedOptionId = elements.paymentModal.optionsContainer
+      .querySelector('input[name="payment"]:checked')?.value;
+    if (!selectedOptionId) return;
+
+    const selectedOption = config.paymentOptions.find(opt => opt.id === selectedOptionId);
+    if (!currentSelectedItem || !selectedOption) return;
+
+    const price = currentSelectedItem.price;
+    const fee = calculateFee(price, selectedOption);
+    const total = price + fee;
+
+    elements.paymentModal.fee.textContent = formatToIdr(fee);
+    elements.paymentModal.total.textContent = formatToIdr(total);
+
+    updateWaLink(selectedOption, fee, total);
+  }
 
   // Fungsi updateWaLink menggunakan Unicode Escape \u203A
   function updateWaLink(option, fee, total) {
@@ -441,6 +491,16 @@ function enhanceCustomSelectKeyboard(wrapper){
     elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`;
   }
 
+  // >>> Perbaikan #2: helper bersihkan text node "D" bila ada
+  function removeStrayDs(root) {
+    if (!root) return;
+    root.querySelectorAll('.payment-option').forEach(opt => {
+      Array.from(opt.childNodes).forEach(n => {
+        if (n.nodeType === Node.TEXT_NODE && n.textContent.trim() === 'D') n.remove();
+      });
+    });
+  }
+
   function openPaymentModal(item) {
     const pageContainer = document.getElementById('pageContainer');
     const modalContentEl = document.querySelector('#paymentModal .modal-content');
@@ -454,13 +514,32 @@ function enhanceCustomSelectKeyboard(wrapper){
     const { modal, itemName, itemPrice, optionsContainer } = elements.paymentModal;
     itemName.textContent = item.title;
     itemPrice.textContent = formatToIdr(item.price);
+
+    // Bangun opsi payment
     optionsContainer.innerHTML = '';
     config.paymentOptions.forEach((option, index) => {
       const fee = calculateFee(item.price, option);
-      optionsContainer.insertAdjacentHTML('beforeend', ` <div class="payment-option"> <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}> <label for="${option.id}" tabindex="0"> ${option.name} <span style="float: right;">+ ${formatToIdr(fee)}</span> </label> D</div>`);
+      // >>> Perbaikan #3: hapus "D" nyasar pada HTML
+      optionsContainer.insertAdjacentHTML(
+        'beforeend',
+        `
+        <div class="payment-option">
+          <input type="radio" id="${option.id}" name="payment" value="${option.id}" ${index === 0 ? 'checked' : ''}>
+          <label for="${option.id}" tabindex="0">
+            ${option.name}
+            <span style="float: right;">+ ${formatToIdr(fee)}</span>
+          </label>
+        </div>
+        `
+      );
     });
+
+    // Sapu sisa "D" kalau masih ada dari cache lama (aman, hanya di area payment)
+    removeStrayDs(optionsContainer);
+
     optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails));
     updatePriceDetails();
+
     modal.style.display = 'flex';
     setTimeout(() => modal.classList.add('visible'), 10);
     const focusableEls = modal.querySelectorAll('a[href]:not([disabled]), button:not([disabled]), input[type="radio"]:not([disabled])');
@@ -522,7 +601,7 @@ function enhanceCustomSelectKeyboard(wrapper){
   }
   async function fetchPreorderData(sheetName) {
     if (preorderFetchController) preorderFetchController.abort();
-    preorderFetchController = new AbortController();
+    preorderFetchController = new AbotController();
     elements.preorder.total.textContent = 'Memuat data...';
     showSkeleton(elements.preorder.listContainer, elements.skeletonCardTemplate, 5);
     state.preorder.displayMode = sheetName === config.sheets.preorder.name1 ? 'detailed' : 'simple';
