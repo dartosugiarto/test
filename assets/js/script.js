@@ -238,13 +238,12 @@
     return rows.map(row => {
       const item = {};
       header.forEach((colName, i) => {
-        // Ganti nama kolom yang bermasalah saat parsing
-        const cleanColName = colName.replace(/[\s\(\)-]+/g, '_'); // Ganti spasi/()/- dengan _
         const val = row[i] || null;
-        
         // Cek jika kolom ini harusnya angka
         if (['Harga', 'HargaAsli', 'HargaDiskon'].includes(colName) && val !== null) {
-          item[colName] = Number(String(val).replace(/[^0-9]/g, '')) || 0; // Bersihkan & jadikan angka
+          // Bersihkan string (hapus "Rp", ".", ",") lalu ubah ke Angka
+          const cleanVal = String(val).replace(/[^0-9]/g, '');
+          item[colName] = Number(cleanVal) || 0; 
         } else {
           item[colName] = val;
         }
@@ -522,9 +521,10 @@
     const validFlashSale = data.filter(item => {
       try {
         // ===== PERBAIKAN DI SINI (V7) =====
-        // Menggunakan nama kolom yang sudah Anda ganti (WaktuBerakhir)
-        const waktuBerakhirString = item.WaktuBerakhir;
+        const waktuBerakhirString = item.WaktuBerakhir; // Gunakan nama kolom yang sudah disederhanakan
         // ===================================
+        
+        if (!waktuBerakhirString) return false; // Lewati jika kolomnya kosong
         
         const endTime = new Date(String(waktuBerakhirString).replace(" ", "T")); 
         return endTime instanceof Date && !isNaN(endTime) && endTime > now;
@@ -558,13 +558,26 @@
       }
       img.alt = item.NamaProduk;
 
-      if (item.HargaAsli > 0) {
-        const diskon = Math.round(((item.HargaAsli - item.HargaDiskon) / item.HargaAsli) * 100);
-        card.querySelector('.original-price').textContent = formatToIdr(item.HargaAsli);
-        card.querySelector('.discount-percent').textContent = `-${diskon}%`;
+      // ===== PERBAIKAN BUG NaN% (V8) =====
+      const hargaAsli = Number(item.HargaAsli) || 0;
+      const hargaDiskon = Number(item.HargaDiskon) || 0;
+      const diskonBadge = card.querySelector('.discount-badge');
+      const originalPriceEl = diskonBadge.querySelector('.original-price');
+      const discountPercentEl = diskonBadge.querySelector('.discount-percent');
+
+      // Cek apakah ada diskon yang valid
+      if (hargaAsli > 0 && hargaDiskon > 0 && hargaAsli > hargaDiskon) {
+          const diskon = Math.round(((hargaAsli - hargaDiskon) / hargaAsli) * 100);
+          originalPriceEl.textContent = formatToIdr(hargaAsli);
+          discountPercentEl.textContent = `-${diskon}%`;
       } else {
-         card.querySelector('.discount-badge').style.display = 'none';
+          // Jika tidak ada diskon (atau harga sama), tampilkan harga normal
+          const hargaTampil = hargaDiskon > 0 ? hargaDiskon : hargaAsli;
+          originalPriceEl.textContent = formatToIdr(hargaTampil);
+          originalPriceEl.style.textDecoration = 'none'; // Hapus coretan
+          discountPercentEl.style.display = 'none'; // Sembunyikan %
       }
+      // ===== AKHIR PERBAIKAN BUG =====
 
       // ===== PERBAIKAN DI SINI (V7) =====
       const timerBadge = card.querySelector('.timer-badge');
@@ -682,6 +695,8 @@
               // ===== PERBAIKAN DI SINI (V7) =====
               const waktuBerakhirString = timerEl.dataset.timeEnd;
               // ===================================
+
+              if (!waktuBerakhirString) throw new Error("No time specified");
 
               const endTime = new Date(waktuBerakhirString.replace(" ", "T")).getTime();
               if (isNaN(endTime)) throw new Error("Invalid date");
