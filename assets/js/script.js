@@ -29,22 +29,23 @@
   setTheme(getPreferredTheme());
   // --- AKHIR LOGIKA DARK MODE ---
 
-  // --- KONFIGURASI AKHIR ---
+  // --- KONFIGURASI AKHIR (SESUAI KONFIRMASI) ---
   const config = {
     sheetId: '11hRQ9fw5RwfoWUbyMgQ3k2QPEZAAR2EJ4FsyX8oS3zU',
     sheets: {
+      // --- Home Page (BARU) ---
       kategori: 'Sheet1',
       produk: 'Sheet2',
       flashSale: 'Sheet3',
+      
+      // --- Halaman Lain (SESUAI KONFIRMASI) ---
       preorder: { name1: 'Sheet4', name2: 'Sheet5' }, 
       library: 'Sheet6',
       testimonial: 'Sheet7',
       affiliate: 'Sheet8',
-      accounts: 'Sheet9'
+      accounts: 'Sheet9' // Akun Game di Sheet9
     },
-    // ===== PERUBAHAN DI SINI: 'paths' DIHAPUS =====
-    // Objek 'paths' sudah dihapus karena kita pakai link langsung
-    // ===========================================
+    // Path config dihapus, kita pakai link langsung
     waNumber: '6285877001999',
     waGreeting: '*Detail pesanan:*',
     paymentOptions: [
@@ -477,8 +478,8 @@
   
   async function loadHomePageData() {
     try {
-      renderFlashSale([]); // Tampilkan skeleton flash sale
-      renderCategoryGrid([]); // Tampilkan skeleton grid
+      renderFlashSale([]);
+      renderCategoryGrid([]);
 
       const [textKategori, textProduk, textFlashSale] = await Promise.all([
         fetchSheetCached(config.sheets.kategori, 'csv'),
@@ -508,7 +509,7 @@
   function renderFlashSale(data) {
     if (!elements.flashSaleContainer || !elements.flashSaleCardTemplate) return;
     
-    if (data.length === 0 && allFlashSale.length === 0) { // Hanya tampilkan skeleton saat loading awal
+    if (data.length === 0 && allFlashSale.length === 0) { 
         showSkeleton(elements.flashSaleContainer, elements.flashSaleCardTemplate, 2);
         elements.flashSaleSection.style.display = 'block';
         return;
@@ -517,10 +518,14 @@
     const now = new Date();
     const validFlashSale = data.filter(item => {
       try {
-        const endTime = new Date(String(item.WaktuBerakhir).replace(" ", "T")); 
+        // ===== PERBAIKAN DI SINI =====
+        const waktuBerakhirString = item['WaktuBerakhir(YYYY-MM-DD HH:MM)'];
+        // ==============================
+        
+        const endTime = new Date(String(waktuBerakhirString).replace(" ", "T")); 
         return endTime instanceof Date && !isNaN(endTime) && endTime > now;
       } catch (e) {
-        console.warn("Format WaktuBerakhir tidak valid:", item.WaktuBerakhir);
+        console.warn("Format WaktuBerakhir tidak valid:", item['WaktuBerakhir(YYYY-MM-DD HH:MM)']);
         return false;
       }
     });
@@ -542,14 +547,12 @@
       card.querySelector('.flash-sale-subtitle').textContent = item.SubNama;
       
       const img = card.querySelector('img');
-      // ===== PERBAIKAN DI SINI: Gunakan link langsung =====
       if (item.FileGambar && item.FileGambar.startsWith('http')) {
         img.src = item.FileGambar;
       } else {
-        img.style.display = 'none'; // Sembunyikan jika tidak ada link
+        img.style.display = 'none';
       }
       img.alt = item.NamaProduk;
-      // ===============================================
 
       if (item.HargaAsli > 0) {
         const diskon = Math.round(((item.HargaAsli - item.HargaDiskon) / item.HargaAsli) * 100);
@@ -559,8 +562,10 @@
          card.querySelector('.discount-badge').style.display = 'none';
       }
 
+      // ===== PERBAIKAN DI SINI (juga) =====
       const timerBadge = card.querySelector('.timer-badge');
-      timerBadge.dataset.timeEnd = item.WaktuBerakhir;
+      timerBadge.dataset.timeEnd = item['WaktuBerakhir(YYYY-MM-DD HH:MM)'];
+      // ===================================
       
       card.addEventListener('click', () => {
         if (item.KategoriID) {
@@ -630,22 +635,18 @@
     data.forEach(item => {
       const card = elements.categoryCardTemplate.content.cloneNode(true).firstElementChild;
       
-      // ===== PERBAIKAN DI SINI: Gunakan link langsung untuk Art =====
       if (item.FileGambarArt && item.FileGambarArt.startsWith('http')) {
         card.style.backgroundImage = `url('${item.FileGambarArt}')`;
       }
-      // ========================================================
       
       const logoImg = card.querySelector('.category-card-logo');
       
-      // ===== PERBAIKAN DI SINI: Gunakan link langsung untuk Logo =====
       if (item.FileGambarLogo && item.FileGambarLogo.startsWith('http')) {
         logoImg.src = item.FileGambarLogo;
         logoImg.alt = item.Nama;
       } else {
-        logoImg.style.display = 'none'; // Sembunyikan jika tidak ada link
+        logoImg.style.display = 'none';
       }
-      // =========================================================
       
       card.addEventListener('click', () => openProductModal(item.KategoriID));
       card.addEventListener('keydown', (e) => {
@@ -674,7 +675,11 @@
       
       timerElements.forEach(timerEl => {
           try {
-              const endTime = new Date(timerEl.dataset.timeEnd.replace(" ", "T")).getTime();
+              // ===== PERBAIKAN DI SINI =====
+              const waktuBerakhirString = timerEl.dataset.timeEnd;
+              // ==============================
+              
+              const endTime = new Date(waktuBerakhirString.replace(" ", "T")).getTime();
               if (isNaN(endTime)) throw new Error("Invalid date");
               const distance = endTime - now;
 
