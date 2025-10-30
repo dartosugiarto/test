@@ -214,34 +214,7 @@
       : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`;
   }
 
-  // Helper Fetching 1: Untuk Gviz JSON (Halaman Home BARU)
-  async function fetchSheetData(sheetName) {
-    const url = getSheetUrl(sheetName, 'json');
-    const key = `pp_cache_${sheetName}_gviz`;
-    
-    try {
-      const cached = sessionStorage.getItem(key);
-      if (cached) {
-        fetch(url).then(r => r.text()).then(t => sessionStorage.setItem(key, t)).catch(e => console.warn("Revalidasi cache gagal:", e));
-        return parseGvizJson(cached);
-      }
-      
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Network error: ${res.statusText}`);
-      
-      const text = await res.text();
-      sessionStorage.setItem(key, text);
-      return parseGvizJson(text);
-      
-    } catch (err) {
-      console.error(`Gagal mengambil data Gviz dari ${sheetName}:`, err);
-      const cached = sessionStorage.getItem(key);
-      if (cached) return parseGvizJson(cached);
-      throw err;
-    }
-  }
-
-  // Helper Fetching 2: Untuk CSV (Halaman LAMA)
+  // Helper Fetching CSV (DIPAKAI SEMUA)
   async function fetchSheetCached(sheetName, format = 'csv') {
     const url = getSheetUrl(sheetName, format);
     const key = `pp_cache_${sheetName}_${format}`;
@@ -256,35 +229,32 @@
     sessionStorage.setItem(key, text);
     return text;
   }
+  
+  // Helper Parser 1: CSV (LAMA, TAPI DIPAKAI)
+  function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
 
-  // Helper Parser 1: Gviz JSON (BARU)
-  function parseGvizJson(jsonText) {
-    const match = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
-    if (!match || !match[1]) {
-      throw new Error('Format Respons GViz tidak valid');
-    }
-    const obj = JSON.parse(match[1]);
-    const table = obj.table;
-    if (!table) return [];
-
-    const cols = table.cols.map(col => col.label || col.id);
-    const rows = table.rows.map(row => {
+  // Helper Parser 2: CSV ke JSON (BARU, UNTUK HOME)
+  function parseCsvToJson(rows) {
+    if (rows.length < 1) return [];
+    const header = rows.shift(); // Ambil header
+    
+    return rows.map(row => {
       const item = {};
-      row.c.forEach((cell, i) => {
-        const colName = cols[i];
-        if (cell && cell.v !== null) { // Tambahkan pengecekan null
-          item[colName] = cell.v;
+      header.forEach((colName, i) => {
+        const val = row[i] || null;
+        // Cek jika kolom ini harusnya angka
+        if (['Harga', 'HargaAsli', 'HargaDiskon'].includes(colName) && val !== null) {
+          item[colName] = Number(String(val).replace(/[^0-9]/g, '')) || 0; // Bersihkan & jadikan angka
         } else {
-          item[colName] = null; // Pastikan semua properti ada
+          item[colName] = val;
         }
       });
       return item;
+    }).filter(item => {
+      // Pastikan baris tidak kosong, cek berdasarkan kolom pertama (header[0])
+      return item[header[0]] && item[header[0]].trim() !== '';
     });
-    return rows;
   }
-  
-  // Helper Parser 2: CSV (LAMA)
-  function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
 
   // Helper Lain-lain
   function toggleSidebar(forceOpen) {
@@ -507,7 +477,7 @@
     elements.paymentModal.waBtn.href = `https://wa.me/${config.waNumber}?text=${encodeURIComponent(text)}`;
   }
   
-  // --- LOGIKA RENDER HALAMAN HOME (BARU) ---
+  // --- LOGIKA RENDER HALAMAN HOME (PERBAIKAN CSV) ---
   
   async function loadHomePageData() {
     try {
@@ -515,34 +485,47 @@
       renderFlashSale([]); // Tampilkan skeleton flash sale
       renderCategoryGrid([]); // Tampilkan skeleton grid
 
-      const [kategoriData, produkData, flashSaleData] = await Promise.all([
-        fetchSheetData(config.sheets.kategori),
-        fetchSheetData(config.sheets.produk),
-        fetchSheetData(config.sheets.flashSale)
+      // GANTI METODE FETCH: dari fetchSheetData (Gviz) ke fetchSheetCached (CSV)
+      const [textKategori, textProduk, textFlashSale] = await Promise.all([
+        fetchSheetCached(config.sheets.kategori, 'csv'),
+        fetchSheetCached(config.sheets.produk, 'csv'),
+        fetchSheetCached(config.sheets.flashSale, 'csv')
       ]);
 
-      allKategori = kategoriData.filter(k => k.KategoriID); 
-      allProduk = produkData.filter(p => p.KategoriID);
-      allFlashSale = flashSaleData.filter(f => f.NamaProduk);
+      // GANTI METODE PARSE: Gunakan helper CSV ke JSON
+      allKategori = parseCsvToJson(robustCsvParser(textKategori));
+      allProduk = parseCsvToJson(robustCsvParser(textProduk));
+      allFlashSale = parseCsvToJson(robustCsvParser(textFlashSale));
 
+      // Sisa fungsinya sama
       renderFlashSale(allFlashSale);
       renderCategoryFilter(allKategori);
       renderCategoryGrid(allKategori); // Render semua kategori awal
 
     } catch (err) {
       console.error("Gagal memuat data halaman utama:", err);
-      elements.categoryGridContainer.innerHTML = `<div class="err" style="grid-column: 1 / -1;">Gagal memuat data. Silakan coba lagi nanti.</div>`;
-      elements.flashSaleSection.style.display = 'none'; // Sembunyikan jika error
+      if (elements.categoryGridContainer) {
+          elements.categoryGridContainer.innerHTML = `<div class="err" style="grid-column: 1 / -1;">Gagal memuat data. Silakan coba lagi nanti.</div>`;
+      }
+      if (elements.flashSaleSection) {
+          elements.flashSaleSection.style.display = 'none'; // Sembunyikan jika error
+      }
     }
   }
 
   function renderFlashSale(data) {
-    if (!elements.flashSaleContainer) return;
+    if (!elements.flashSaleContainer || !elements.flashSaleCardTemplate) return;
     
+    // Jika data kosong (tapi masih loading), tampilkan skeleton
+    if (data.length === 0 && elements.flashSaleSection.style.display !== 'none') {
+        showSkeleton(elements.flashSaleContainer, elements.flashSaleCardTemplate, 2);
+        elements.flashSaleSection.style.display = 'block';
+        return;
+    }
+
     const now = new Date();
     const validFlashSale = data.filter(item => {
       try {
-        // Coba parse tanggal, ganti spasi dengan T agar valid ISO 8601
         const endTime = new Date(String(item.WaktuBerakhir).replace(" ", "T")); 
         return endTime instanceof Date && !isNaN(endTime) && endTime > now;
       } catch (e) {
@@ -552,14 +535,13 @@
     });
 
     if (validFlashSale.length === 0) {
-      // Jika tidak ada data valid, sembunyikan sectionnya saja
       elements.flashSaleSection.style.display = 'none';
       return;
     }
 
     elements.flashSaleSection.style.display = 'block';
     const container = elements.flashSaleContainer;
-    container.innerHTML = ''; // Hapus skeleton
+    container.innerHTML = '';
     
     const fragment = document.createDocumentFragment();
     validFlashSale.forEach(item => {
@@ -578,7 +560,6 @@
         card.querySelector('.original-price').textContent = formatToIdr(item.HargaAsli);
         card.querySelector('.discount-percent').textContent = `-${diskon}%`;
       } else {
-         // Sembunyikan badge diskon jika tidak ada harga asli
          card.querySelector('.discount-badge').style.display = 'none';
       }
 
@@ -605,7 +586,7 @@
     const filters = ['Semua Kategori', ...new Set(data.map(item => item.Filter).filter(Boolean))];
     
     options.innerHTML = '';
-    value.textContent = state.home.activeFilter; // Set nilai awal
+    value.textContent = state.home.activeFilter;
     
     filters.forEach(filter => {
       const el = document.createElement('div');
@@ -615,7 +596,7 @@
       if (filter === state.home.activeFilter) el.classList.add('selected');
       
       el.addEventListener('click', () => {
-        state.home.activeFilter = filter; // Update state
+        state.home.activeFilter = filter;
         value.textContent = filter;
         options.querySelector('.selected')?.classList.remove('selected');
         el.classList.add('selected');
@@ -633,16 +614,16 @@
 
   function renderCategoryGrid(data) {
     const container = elements.categoryGridContainer;
-    if (!container) return;
+    if (!container || !elements.categoryCardTemplate) return;
     
     // Tampilkan skeleton jika data kosong (initial load)
-    if (container.innerHTML.trim() === '' && data.length === 0 && elements.categoryCardTemplate) {
+    if (data.length === 0 && allKategori.length === 0) { 
         showSkeleton(container, elements.categoryCardTemplate, 6);
         elements.categoryEmpty.style.display = 'none';
-        return; // Jangan tampilkan pesan "empty" saat skeleton
+        return;
     }
     
-    container.innerHTML = ''; // Hapus skeleton atau grid lama
+    container.innerHTML = '';
     
     if (data.length === 0) {
       elements.categoryEmpty.style.display = 'flex';
@@ -684,7 +665,7 @@
 
     function updateTimers() {
       const now = new Date().getTime();
-      let activeTimers = false; // Flag untuk cek apakah masih ada timer aktif
+      let activeTimers = false;
       
       timerElements.forEach(timerEl => {
           try {
@@ -698,11 +679,11 @@
                   if (card && !card.classList.contains('ended')) {
                       card.style.opacity = '0.6';
                       card.style.cursor = 'default';
-                      card.onclick = null; // Hapus event click
-                      card.classList.add('ended'); // Tandai sudah berakhir
+                      card.onclick = null;
+                      card.classList.add('ended');
                   }
               } else {
-                  activeTimers = true; // Masih ada timer yang berjalan
+                  activeTimers = true;
                   const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                   const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                   const seconds = Math.floor((distance % (1000 * 60)) / 1000);
@@ -716,14 +697,13 @@
           }
       });
 
-      // Hentikan interval jika semua timer sudah berakhir
       if (!activeTimers) {
           clearInterval(timerInterval);
           timerInterval = null;
       }
     }
     updateTimers();
-    if (!timerInterval) { // Hanya mulai interval jika belum berjalan
+    if (!timerInterval) {
         timerInterval = setInterval(updateTimers, 1000);
     }
   }
@@ -807,7 +787,7 @@
     return state.preorder.allData.filter(item => {
       const status = normalizeStatus(item[mode === 'detailed' ? 6 : 2]);
       if (statusFilter !== 'all' && status !== statusFilter) return false;
-      if (query === '') return true; // Jangan filter jika query kosong
+      if (query === '') return true;
       if (mode === 'detailed') return [item[3], item[5], item[7]].some(val => String(val || '').toLowerCase().includes(query));
       return [item[0], item[1]].some(val => String(val || '').toLowerCase().includes(query));
     });
@@ -820,7 +800,7 @@
   }
   
   function renderPreorderCards() {
-    if (!elements.preorder || !elements.preorder.listContainer) return; // Guard clause
+    if (!elements.preorder || !elements.preorder.listContainer) return;
     
     const filtered = filterPreorderData();
     const { perPage } = state.preorder;
@@ -887,12 +867,14 @@
   }
   
   function initializePreorder() {
-    if (!elements.preorder) return; // Guard clause
+    if (!elements.preorder) return;
     if (state.preorder.initialized) return;
     const { searchInput, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
+    if (!searchInput || !customSelect || !prevBtn || !nextBtn || !customStatusSelect) return; // Pastikan semua elemen ada
+    
     const rebound = () => { state.preorder.currentPage = 1; renderPreorderCards(); };
-    searchInput?.addEventListener('input', rebound);
-    customSelect?.options?.querySelectorAll('.custom-select-option').forEach(option => {
+    searchInput.addEventListener('input', rebound);
+    customSelect.options?.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
         customSelect.value.textContent = e.target.textContent;
         customSelect.options.querySelector('.selected')?.classList.remove('selected');
@@ -901,7 +883,7 @@
         toggleCustomSelect(customSelect.wrapper, false);
       });
     });
-    customStatusSelect?.options?.querySelectorAll('.custom-select-option').forEach(option => {
+    customStatusSelect.options?.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
         customStatusSelect.value.textContent = e.target.textContent;
         customStatusSelect.options.querySelector('.selected')?.classList.remove('selected');
@@ -911,8 +893,8 @@
         rebound();
       });
     });
-    prevBtn?.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); } });
-    nextBtn?.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); });
+    prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); } });
+    nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); });
     fetchPreorderData(config.sheets.preorder.name1);
     state.preorder.initialized = true;
   }
@@ -920,7 +902,7 @@
   // --- Akun (LAMA) ---
   function populateAccountCategorySelect() {
     const { customSelect } = elements.accounts;
-    if (!customSelect || !customSelect.options || !customSelect.value) return; // Guard clause
+    if (!customSelect || !customSelect.options || !customSelect.value) return;
     
     const { options, value } = customSelect;
     const categories = ['Semua Kategori', 'Mobile Legends', 'Free Fire', 'Roblox', 'PUBG Mobile', 'Clash Of Clans', 'Lainnya'];
@@ -960,7 +942,7 @@
   
   function renderAccountCards() {
     const { cardGrid, cardTemplate, empty } = elements.accounts;
-    if (!cardGrid || !cardTemplate || !empty) return; // Guard clause
+    if (!cardGrid || !cardTemplate || !empty) return;
 
     const filteredAccounts = state.accounts.allData.filter(acc => state.accounts.activeCategory === 'Semua Kategori' || acc.category === state.accounts.activeCategory);
     cardGrid.innerHTML = '';
@@ -984,7 +966,7 @@
       statusBadge.textContent = account.status;
       statusBadge.className = `account-status-badge ${account.status.toLowerCase() === 'tersedia' ? 'available' : 'sold'}`;
       const specsContainer = cardElement.querySelector('.account-card-specs');
-      specsContainer.innerHTML = formatDescriptionToHTML(account.description.replace(/\n/g, '||')); // Ganti \n jadi ||
+      specsContainer.innerHTML = formatDescriptionToHTML(account.description.replace(/\n/g, '||'));
       
       cardElement.querySelector('.action-btn.buy').addEventListener('click', () => openPaymentModal({ title: account.title, price: account.price, catLabel: 'Akun Game' }));
       cardElement.querySelector('.action-btn.offer').addEventListener('click', () => window.open(`https://wa.me/${config.waNumber}?text=${encodeURIComponent(`Halo, saya tertarik untuk menawar Akun Game: ${account.category} (${formatToIdr(account.price)})`)}`, '_blank', 'noopener'));
@@ -996,12 +978,14 @@
   }
   
   async function initializeAccounts() {
-    if (!elements.accounts) return; // Guard clause
+    if (!elements.accounts) return;
     if (state.accounts.initialized) return;
     state.accounts.initialized = true;
     const { cardGrid, error, empty } = elements.accounts;
+    if (!cardGrid || !error || !empty || !elements.skeletonCardTemplate) return;
+    
     error.style.display = 'none'; empty.style.display = 'none';
-    showSkeleton(cardGrid, elements.skeletonCardTemplate, 4); // Use skeleton card for accounts
+    showSkeleton(cardGrid, elements.skeletonCardTemplate, 4);
     try {
       const accText = await fetchSheetCached(config.sheets.accounts, 'csv');
       state.accounts.allData = await parseAccountsSheet(accText);
@@ -1022,7 +1006,6 @@
     const errorEl = getElement('libraryError');
     if (!container || !errorEl) return;
     container.innerHTML = ''; errorEl.style.display = 'none';
-    // Tambahkan skeleton jika perlu
     try {
       const libText = await fetchSheetCached(config.sheets.library, 'csv');
       const rows = robustCsvParser(libText);
@@ -1049,7 +1032,7 @@
 
   // --- Carousell (LAMA) ---
   async function initializeCarousell() {
-    if (!elements.carousell) return; // Guard clause
+    if (!elements.carousell) return;
     if (state.carousell.initialized) return;
     const { gridContainer, error, searchInput, total } = elements.carousell;
     if (!gridContainer || !error || !searchInput || !total) return;
@@ -1066,7 +1049,6 @@
         }, 200);
     });
     
-    // Tambahkan skeleton jika perlu
     try {
         const carText = await fetchSheetCached(config.sheets.affiliate, 'csv');
         const rows = robustCsvParser(carText);
@@ -1094,11 +1076,11 @@
   function renderCarousellGrid(products) {
       const container = elements.carousell.gridContainer;
       const totalEl = elements.carousell.total;
-      if (!container || !totalEl) return; // Guard clause
+      if (!container || !totalEl) return;
 
       const query = state.carousell.searchQuery || '';
       const filteredProducts = query
-          ? products.filter(p => p.productNumber.includes(query))
+          ? products.filter(p => String(p.productNumber).includes(query))
           : products;
       
       if (products.length > 0) {
@@ -1124,7 +1106,7 @@
             const indicators = product.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
             imagesHTML = `<div class="carousel-container"><div class="carousel-track">${slides}</div>${product.images.length > 1 ? `<button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button><button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button><div class="carousel-indicators">${indicators}</div>` : ''}</div>`;
           } else {
-            imagesHTML = `<div class="affiliate-card-img-container"></div>`; // Placeholder jika tidak ada gambar
+            imagesHTML = `<div class="affiliate-card-img-container"></div>`;
           }
           const platformHTML = product.platform ? `<p class="affiliate-card-platform">${product.platform}</p>` : ''
           const formattedProductNumber = product.productNumber ? String(product.productNumber).padStart(3, '0') : '';
@@ -1166,7 +1148,7 @@
   
   async function initializeTestimonialMarquee() {
     const section = document.getElementById('testimonialSection');
-    if (!section) return; // Guard clause
+    if (!section) return;
     const marquee = section.querySelector('.testi-marquee');
     const track = section.querySelector('#testiTrack');
     if (!marquee || !track) return;
@@ -1185,7 +1167,7 @@
       }
       track.innerHTML = '';
       track.appendChild(pp_makeNodes(items));
-      track.appendChild(pp_makeNodes(items));
+      track.appendChild(pp_makeNodes(items)); // Duplikat untuk animasi
 
       let pos = 0;
       let isDragging = false;
@@ -1225,7 +1207,7 @@
         isDragging = false;
         marquee.classList.remove('is-grabbing');
         const trackWidth = track.scrollWidth / 2;
-        pos = pos % trackWidth; // Wrap position
+        pos = pos % trackWidth;
         animate();
         window.removeEventListener('mousemove', onDragMove);
         window.removeEventListener('touchmove', onDragMove);
@@ -1242,7 +1224,7 @@
     }
   }
 
-  // --- Inisialisasi Aplikasi ---
+  // --- Inisialisasi Aplikasi (UTAMA) ---
   function initializeApp() {
     // Listener utama
     elements.sidebar.burger?.addEventListener('click', () => toggleSidebar());
@@ -1265,12 +1247,12 @@
       });
     });
 
-    // Listener untuk semua custom select (termasuk yang di halaman lain)
+    // Listener untuk semua custom select
     [elements.categoryFilter, elements.accounts?.customSelect, elements.preorder?.customSelect, elements.preorder?.customStatusSelect]
       .filter(select => select && select.btn)
       .forEach(select => {
         select.btn.addEventListener('click', (e) => { e.stopPropagation(); toggleCustomSelect(select.wrapper); });
-        // enhanceCustomSelectKeyboard(select.wrapper); // Anda bisa tambahkan ini kembali jika perlu
+        // enhanceCustomSelectKeyboard(select.wrapper); // (Fungsi ini bisa ditambahkan kembali)
       });
 
     // Tutup select jika klik di luar
