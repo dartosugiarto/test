@@ -355,28 +355,30 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 }
 
 /* ================================== */
-/* ===== STYLE BARU (FLASH SALE) ===== */
+/* ===== PERBAIKAN JARAK & UKURAN ===== */
 /* ================================== */
+
+/* 1. Perbaiki Jarak Antar Section */
 .section-header {
-  margin: var(--sp-fib-6) 0 var(--sp-fib-5) 0;
+  /* Kurangi margin atas agar lebih pas di bawah banner/item lain */
+  margin: var(--sp-fib-5) 0 var(--sp-fib-5) 0;
 }
-.section-title {
-  margin: 0;
-  font-size: var(--font-size-h1);
-  font-weight: 800;
-  line-height: 1.2;
+.head-block {
+  /* Tambahkan margin atas di sini (menggantikan style inline) */
+  margin-top: var(--sp-fib-6);
+  margin-bottom: var(--sp-fib-5);
 }
-.section-subtitle {
-  margin: var(--sp-fib-3) 0 0 0;
-  font-size: 16px;
-  color: var(--text-secondary);
-  font-weight: 500;
+.home-banner-container {
+  margin-top: var(--sp-fib-5);
+  margin-bottom: 0; /* Hapus margin bawah agar Flash Sale lebih dekat */
 }
 
+/* ================================== */
+/* ===== STYLE BARU (FLASH SALE) ===== */
+/* ================================== */
 .flash-sale-grid-wrapper {
   overflow-x: auto;
   padding-bottom: var(--sp-fib-4);
-  /* Sembunyikan scrollbar */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none;  /* IE/Edge */
 }
@@ -387,14 +389,15 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .flash-sale-grid {
   display: flex;
   gap: var(--sp-fib-4);
-  width: max-content; /* Agar bisa scroll horizontal */
+  width: max-content;
 }
 
+/* 1. Kontainer Kartu Utama */
 .flash-sale-card {
-  width: 300px;
+  width: 280px; /* Lebar baru agar lebih ramping */
   flex-shrink: 0;
   display: flex;
-  gap: var(--sp-fib-4);
+  flex-direction: column; /* Susun atas-bawah: [Main] + [Footer] */
   background-color: var(--brand-blue);
   color: #fff;
   border-radius: var(--radius-fib-medium);
@@ -408,15 +411,22 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .flash-sale-card:hover {
   transform: scale(1.03);
 }
-
 html[data-theme="dark"] .flash-sale-card {
   background-color: var(--surface-secondary);
   color: var(--text-primary);
 }
 
+/* 2. Bagian Atas (Gambar + Teks) */
+.flash-sale-card-main {
+  display: flex;
+  flex-direction: row; /* Susun kiri-kanan: [Image] + [Info] */
+  gap: var(--sp-fib-4);
+  align-items: center; /* Pusatkan secara vertikal */
+}
+
 .flash-sale-card-img {
-  width: 64px;
-  height: 64px;
+  width: 55px; /* Ukuran gambar sesuai referensi */
+  height: 55px;
   flex-shrink: 0;
   border-radius: var(--radius-fib-small);
   overflow: hidden;
@@ -428,7 +438,7 @@ html[data-theme="dark"] .flash-sale-card {
   object-fit: cover;
 }
 
-.flash-sale-card-body {
+.flash-sale-card-info {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -451,11 +461,12 @@ html[data-theme="dark"] .flash-sale-card {
   text-overflow: ellipsis;
 }
 
+/* 3. Bagian Bawah (Timer + Diskon) */
 .flash-sale-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: var(--sp-fib-3);
+  margin-top: var(--sp-fib-4); /* Beri jarak dari bagian atas */
 }
 
 .timer-badge {
@@ -463,7 +474,7 @@ html[data-theme="dark"] .flash-sale-card {
   align-items: center;
   gap: var(--sp-fib-2);
   padding: var(--sp-fib-2) var(--sp-fib-3);
-  background: var(--warning);
+  background: var(--warning); /* Warna oranye/kuning */
   color: var(--dark-base);
   border-radius: var(--radius-fib-small);
   font-size: 13px;
@@ -480,7 +491,7 @@ html[data-theme="dark"] .timer-badge {
 
 .discount-badge {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Diubah agar bisa menampung harga coret */
   align-items: flex-end;
 }
 .discount-badge .original-price {
@@ -491,29 +502,31 @@ html[data-theme="dark"] .timer-badge {
 .discount-badge .discount-percent {
   font-size: 15px;
   font-weight: 800;
-  color: var(--success);
+  color: var(--success); /* Warna hijau diskon */
 }
 html[data-theme="dark"] .discount-badge .discount-percent {
   color: #4cd8e9;
 }
-.discount-badge.skeleton {
-  width: 50px;
-  height: 28px;
-  background-color: var(--surface-tertiary);
-  border-radius: 4px;
-}
 
-/* Skeleton Flash Card */
+/* 4. Skeleton Loader (disesuaikan dengan struktur baru) */
 .flash-sale-card.skeleton .flash-sale-card-img {
   background-color: var(--surface-tertiary);
 }
 html[data-theme="dark"] .flash-sale-card.skeleton {
   background-color: var(--surface-secondary);
 }
+.flash-sale-card.skeleton .timer-badge {
+  background-color: var(--surface-tertiary);
+  color: transparent;
+}
+.flash-sale-card.skeleton .discount-badge {
+  background-color: var(--surface-tertiary);
+  border-radius: 4px;
+}
 
 
 /* ================================== */
-/* ===== STYLE GRID KATEGORI (PERBAIKAN 3 KOLOM) ===== */
+/* ===== STYLE GRID KATEGORI (3 KOLOM) ===== */
 /* ================================== */
 .category-grid {
   display: grid;
@@ -522,10 +535,9 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   margin-top: var(--sp-fib-5);
 }
 
-/* Di layar kecil, kita hanya perkecil jarak antar kartu */
 @media (max-width: 600px) {
   .category-grid {
-    gap: var(--sp-fib-3);
+    gap: var(--sp-fib-3); /* Perkecil jarak di HP */
   }
 }
 
@@ -545,7 +557,6 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   transform: scale(1.05);
 }
 
-/* Gradient overlay di bawah */
 .category-card::after {
   content: '';
   position: absolute;
@@ -579,7 +590,6 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   display: block;
 }
 
-/* Skeleton untuk Category Card */
 .category-card.skeleton {
   animation: shimmer 1.8s infinite;
   background-image: none;
@@ -591,13 +601,12 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
 
 
 /* ================================== */
-/* ===== STYLE BARU (MODAL PRODUK) ===== */
+/* ===== STYLE MODAL PRODUK ===== */
 /* ================================== */
 .product-modal-content {
-  max-width: 600px; /* Lebih lebar dari modal payment */
+  max-width: 600px;
 }
 
-/* Pastikan modal bisa di-scroll di HP */
 #productModalListContainer {
   max-height: 70vh;
   overflow-y: auto;
@@ -646,7 +655,7 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-right: var(--sp-fib-4); /* Beri jarak dari harga */
+  margin-right: var(--sp-fib-4);
 }
 .product-list-item .description {
   font-size: 13px;
@@ -658,11 +667,10 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   font-weight: 800;
   color: var(--brand-blue);
   flex-shrink: 0;
-  margin-left: auto; /* Dorong harga ke kanan */
-  white-space: nowrap; /* Pastikan harga tidak terpotong */
+  margin-left: auto;
+  white-space: nowrap;
 }
 
-/* Skeleton untuk list di modal */
 .product-list-item.skeleton {
   display: flex;
   justify-content: space-between;
