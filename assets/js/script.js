@@ -29,27 +29,22 @@
   setTheme(getPreferredTheme());
   // --- AKHIR LOGIKA DARK MODE ---
 
-  // --- KONFIGURASI GABUNGAN ---
+  // --- KONFIGURASI AKHIR (SESUAI KONFIRMASI) ---
   const config = {
-    // ID Google Sheet BARU Anda
     sheetId: '11hRQ9fw5RwfoWUbyMgQ3k2QPEZAAR2EJ4FsyX8oS3zU',
     sheets: {
-      // --- Halaman Home (BARU) ---
+      // --- Home Page (BARU) ---
       kategori: 'Sheet1',
       produk: 'Sheet2',
       flashSale: 'Sheet3',
       
-      // --- Halaman Lain (ASUMSI NAMA SHEET) ---
-      // Saya asumsikan Anda memindahkan sheet lama ke sheet BARU ini
-      // untuk menghindari konflik 'Sheet1' dan 'Sheet2'.
-      // **Jika Preorder Anda BUKAN di Sheet4/Sheet9, silakan ganti di sini**
-      preorder: { name1: 'Sheet4', name2: 'Sheet9' }, 
-      accounts: 'Sheet5',
+      // --- Halaman Lain (SESUAI KONFIRMASI) ---
+      preorder: { name1: 'Sheet4', name2: 'Sheet5' }, 
       library: 'Sheet6',
       testimonial: 'Sheet7',
-      affiliate: 'Sheet8'
+      affiliate: 'Sheet8',
+      accounts: 'Sheet9' // Akun Game di Sheet9
     },
-    // Path folder gambar lokal
     paths: {
       art: '/assets/images/art/',
       logos: '/assets/images/logos/'
@@ -66,7 +61,7 @@
     ],
   };
 
-  // --- STATE APLIKASI GABUNGAN ---
+  // --- STATE APLIKASI ---
   const state = {
     home: { activeFilter: 'Semua Kategori' },
     preorder: {
@@ -100,7 +95,7 @@
   let elementToFocusOnModalClose = null;
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // --- PEREBUTAN ELEMEN (DOM) LENGKAP ---
+  // --- PEREBUTAN ELEMEN (DOM) ---
   function getElement(id) {
     return document.getElementById(id);
   }
@@ -203,9 +198,8 @@
     carousell: {
       gridContainer: getElement('carousellGridContainer'),
       error: getElement('carousellError'),
-      // Elemen ini akan dicari oleh initializeCarousell
-      // searchInput: getElement('carousellSearchInput'), 
-      // total: getElement('carousellTotal'),
+      searchInput: getElement('carousellSearchInput'), 
+      total: getElement('carousellTotal'),
     }
   };
   
@@ -222,13 +216,12 @@
 
   // Helper Fetching 1: Untuk Gviz JSON (Halaman Home BARU)
   async function fetchSheetData(sheetName) {
-    const url = getSheetUrl(sheetName, 'json'); // Selalu JSON
+    const url = getSheetUrl(sheetName, 'json');
     const key = `pp_cache_${sheetName}_gviz`;
     
     try {
       const cached = sessionStorage.getItem(key);
       if (cached) {
-        // Jalankan revalidasi di background
         fetch(url).then(r => r.text()).then(t => sessionStorage.setItem(key, t)).catch(e => console.warn("Revalidasi cache gagal:", e));
         return parseGvizJson(cached);
       }
@@ -279,7 +272,7 @@
       const item = {};
       row.c.forEach((cell, i) => {
         const colName = cols[i];
-        if (cell) {
+        if (cell && cell.v !== null) { // Tambahkan pengecekan null
           item[colName] = cell.v;
         } else {
           item[colName] = null; // Pastikan semua properti ada
@@ -381,7 +374,6 @@
         `;
         item.addEventListener('click', () => {
           closeProductModal();
-          // Buka modal payment (LAMA) dengan data produk ini
           openPaymentModal({
             title: produk.NamaProduk,
             price: produk.Harga,
@@ -392,7 +384,6 @@
       });
       container.appendChild(fragment);
     }
-
     showModal(elements.productModal.modal, productModalFocusTrap);
   }
 
@@ -424,7 +415,6 @@
 
     optionsContainer.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePriceDetails));
     updatePriceDetails();
-    
     showModal(elements.paymentModal.modal, modalFocusTrap);
   }
 
@@ -521,25 +511,28 @@
   
   async function loadHomePageData() {
     try {
-      // Ambil semua data secara paralel
+      // Tampilkan skeleton dulu
+      renderFlashSale([]); // Tampilkan skeleton flash sale
+      renderCategoryGrid([]); // Tampilkan skeleton grid
+
       const [kategoriData, produkData, flashSaleData] = await Promise.all([
         fetchSheetData(config.sheets.kategori),
         fetchSheetData(config.sheets.produk),
         fetchSheetData(config.sheets.flashSale)
       ]);
 
-      allKategori = kategoriData.filter(k => k.KategoriID); // Filter baris kosong
+      allKategori = kategoriData.filter(k => k.KategoriID); 
       allProduk = produkData.filter(p => p.KategoriID);
       allFlashSale = flashSaleData.filter(f => f.NamaProduk);
 
-      // Render semua bagian
       renderFlashSale(allFlashSale);
       renderCategoryFilter(allKategori);
-      renderCategoryGrid(allKategori);
+      renderCategoryGrid(allKategori); // Render semua kategori awal
 
     } catch (err) {
       console.error("Gagal memuat data halaman utama:", err);
       elements.categoryGridContainer.innerHTML = `<div class="err" style="grid-column: 1 / -1;">Gagal memuat data. Silakan coba lagi nanti.</div>`;
+      elements.flashSaleSection.style.display = 'none'; // Sembunyikan jika error
     }
   }
 
@@ -549,21 +542,24 @@
     const now = new Date();
     const validFlashSale = data.filter(item => {
       try {
-        const endTime = new Date(item.WaktuBerakhir.replace(" ", "T")); // Format YYYY-MM-DD HH:MM
-        return endTime > now;
+        // Coba parse tanggal, ganti spasi dengan T agar valid ISO 8601
+        const endTime = new Date(String(item.WaktuBerakhir).replace(" ", "T")); 
+        return endTime instanceof Date && !isNaN(endTime) && endTime > now;
       } catch (e) {
+        console.warn("Format WaktuBerakhir tidak valid:", item.WaktuBerakhir);
         return false;
       }
     });
 
     if (validFlashSale.length === 0) {
+      // Jika tidak ada data valid, sembunyikan sectionnya saja
       elements.flashSaleSection.style.display = 'none';
       return;
     }
 
     elements.flashSaleSection.style.display = 'block';
     const container = elements.flashSaleContainer;
-    container.innerHTML = '';
+    container.innerHTML = ''; // Hapus skeleton
     
     const fragment = document.createDocumentFragment();
     validFlashSale.forEach(item => {
@@ -577,9 +573,14 @@
       img.alt = item.NamaProduk;
 
       // Harga
-      const diskon = Math.round(((item.HargaAsli - item.HargaDiskon) / item.HargaAsli) * 100);
-      card.querySelector('.original-price').textContent = formatToIdr(item.HargaAsli);
-      card.querySelector('.discount-percent').textContent = `-${diskon}%`;
+      if (item.HargaAsli > 0) {
+        const diskon = Math.round(((item.HargaAsli - item.HargaDiskon) / item.HargaAsli) * 100);
+        card.querySelector('.original-price').textContent = formatToIdr(item.HargaAsli);
+        card.querySelector('.discount-percent').textContent = `-${diskon}%`;
+      } else {
+         // Sembunyikan badge diskon jika tidak ada harga asli
+         card.querySelector('.discount-badge').style.display = 'none';
+      }
 
       // Timer
       const timerBadge = card.querySelector('.timer-badge');
@@ -599,19 +600,22 @@
 
   function renderCategoryFilter(data) {
     const { btn, value, options } = elements.categoryFilter;
-    if (!btn) return;
+    if (!btn || !options || !value) return;
     
     const filters = ['Semua Kategori', ...new Set(data.map(item => item.Filter).filter(Boolean))];
     
     options.innerHTML = '';
+    value.textContent = state.home.activeFilter; // Set nilai awal
+    
     filters.forEach(filter => {
       const el = document.createElement('div');
       el.className = 'custom-select-option';
       el.textContent = filter;
       el.dataset.value = filter;
-      if (filter === 'Semua Kategori') el.classList.add('selected');
+      if (filter === state.home.activeFilter) el.classList.add('selected');
       
       el.addEventListener('click', () => {
+        state.home.activeFilter = filter; // Update state
         value.textContent = filter;
         options.querySelector('.selected')?.classList.remove('selected');
         el.classList.add('selected');
@@ -631,7 +635,14 @@
     const container = elements.categoryGridContainer;
     if (!container) return;
     
-    container.innerHTML = '';
+    // Tampilkan skeleton jika data kosong (initial load)
+    if (container.innerHTML.trim() === '' && data.length === 0 && elements.categoryCardTemplate) {
+        showSkeleton(container, elements.categoryCardTemplate, 6);
+        elements.categoryEmpty.style.display = 'none';
+        return; // Jangan tampilkan pesan "empty" saat skeleton
+    }
+    
+    container.innerHTML = ''; // Hapus skeleton atau grid lama
     
     if (data.length === 0) {
       elements.categoryEmpty.style.display = 'flex';
@@ -673,26 +684,48 @@
 
     function updateTimers() {
       const now = new Date().getTime();
+      let activeTimers = false; // Flag untuk cek apakah masih ada timer aktif
+      
       timerElements.forEach(timerEl => {
-        const endTime = new Date(timerEl.dataset.timeEnd.replace(" ", "T")).getTime();
-        const distance = endTime - now;
+          try {
+              const endTime = new Date(timerEl.dataset.timeEnd.replace(" ", "T")).getTime();
+              if (isNaN(endTime)) throw new Error("Invalid date");
+              const distance = endTime - now;
 
-        if (distance < 0) {
-          timerEl.querySelector('span').textContent = "Berakhir";
-          const card = timerEl.closest('.flash-sale-card');
-          if (card) card.style.opacity = '0.6'; // Redupkan, jangan hapus
-        } else {
-          const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-          
-          timerEl.querySelector('span').textContent = 
-            `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
+              if (distance < 0) {
+                  timerEl.querySelector('span').textContent = "Berakhir";
+                  const card = timerEl.closest('.flash-sale-card');
+                  if (card && !card.classList.contains('ended')) {
+                      card.style.opacity = '0.6';
+                      card.style.cursor = 'default';
+                      card.onclick = null; // Hapus event click
+                      card.classList.add('ended'); // Tandai sudah berakhir
+                  }
+              } else {
+                  activeTimers = true; // Masih ada timer yang berjalan
+                  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                  const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                  
+                  timerEl.querySelector('span').textContent = 
+                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+              }
+          } catch (e) {
+              timerEl.querySelector('span').textContent = "Error";
+              console.error("Error parsing date for timer:", timerEl.dataset.timeEnd, e);
+          }
       });
+
+      // Hentikan interval jika semua timer sudah berakhir
+      if (!activeTimers) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+      }
     }
     updateTimers();
-    timerInterval = setInterval(updateTimers, 1000);
+    if (!timerInterval) { // Hanya mulai interval jika belum berjalan
+        timerInterval = setInterval(updateTimers, 1000);
+    }
   }
   
   // --- FUNGSI HALAMAN LAIN (DARI KODE LAMA) ---
@@ -768,24 +801,27 @@
   function normalizeStatus(rawStatus) { const s = String(rawStatus || '').trim().toLowerCase(); if (['success', 'selesai', 'berhasil', 'done'].includes(s)) return 'success'; if (['progress', 'proses', 'diproses', 'processing'].includes(s)) return 'progress'; if (['failed', 'gagal', 'dibatalkan', 'cancel', 'error'].includes(s)) return 'failed'; return 'pending'; }
   
   function filterPreorderData() {
-    const query = elements.preorder.searchInput.value.trim().toLowerCase();
-    const statusFilter = elements.preorder.statusSelect.value;
+    const query = elements.preorder.searchInput?.value.trim().toLowerCase() ?? '';
+    const statusFilter = elements.preorder.statusSelect?.value ?? 'all';
     const mode = state.preorder.displayMode;
     return state.preorder.allData.filter(item => {
       const status = normalizeStatus(item[mode === 'detailed' ? 6 : 2]);
       if (statusFilter !== 'all' && status !== statusFilter) return false;
-      if (mode === 'detailed') return [item[3], item[5], item[7]].some(val => (val || '').toLowerCase().includes(query));
-      return [item[0], item[1]].some(val => (val || '').toLowerCase().includes(query));
+      if (query === '') return true; // Jangan filter jika query kosong
+      if (mode === 'detailed') return [item[3], item[5], item[7]].some(val => String(val || '').toLowerCase().includes(query));
+      return [item[0], item[1]].some(val => String(val || '').toLowerCase().includes(query));
     });
   }
   
   function updatePreorderPagination(currentPage, totalPages) {
-    elements.preorder.prevBtn.disabled = currentPage <= 1;
-    elements.preorder.nextBtn.disabled = currentPage >= totalPages;
-    elements.preorder.pageInfo.textContent = totalPages > 0 ? `Hal ${currentPage} dari ${totalPages}` : '';
+    if (elements.preorder.prevBtn) elements.preorder.prevBtn.disabled = currentPage <= 1;
+    if (elements.preorder.nextBtn) elements.preorder.nextBtn.disabled = currentPage >= totalPages;
+    if (elements.preorder.pageInfo) elements.preorder.pageInfo.textContent = totalPages > 0 ? `Hal ${currentPage} dari ${totalPages}` : '';
   }
   
   function renderPreorderCards() {
+    if (!elements.preorder || !elements.preorder.listContainer) return; // Guard clause
+    
     const filtered = filterPreorderData();
     const { perPage } = state.preorder;
     const { listContainer, total } = elements.preorder;
@@ -826,6 +862,7 @@
   }
   
   async function fetchPreorderData(sheetName) {
+    if (!elements.preorder || !elements.preorder.total || !elements.preorder.listContainer || !elements.skeletonCardTemplate) return;
     if (preorderFetchController) preorderFetchController.abort();
     preorderFetchController = new AbortController();
     elements.preorder.total.textContent = 'Memuat data...';
@@ -850,11 +887,12 @@
   }
   
   function initializePreorder() {
+    if (!elements.preorder) return; // Guard clause
     if (state.preorder.initialized) return;
     const { searchInput, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
     const rebound = () => { state.preorder.currentPage = 1; renderPreorderCards(); };
-    searchInput.addEventListener('input', rebound);
-    customSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
+    searchInput?.addEventListener('input', rebound);
+    customSelect?.options?.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
         customSelect.value.textContent = e.target.textContent;
         customSelect.options.querySelector('.selected')?.classList.remove('selected');
@@ -863,18 +901,18 @@
         toggleCustomSelect(customSelect.wrapper, false);
       });
     });
-    customStatusSelect.options.querySelectorAll('.custom-select-option').forEach(option => {
+    customStatusSelect?.options?.querySelectorAll('.custom-select-option').forEach(option => {
       option.addEventListener('click', e => {
         customStatusSelect.value.textContent = e.target.textContent;
         customStatusSelect.options.querySelector('.selected')?.classList.remove('selected');
         e.target.classList.add('selected');
-        elements.preorder.statusSelect.value = e.target.dataset.value;
+        if (elements.preorder.statusSelect) elements.preorder.statusSelect.value = e.target.dataset.value;
         toggleCustomSelect(customStatusSelect.wrapper, false);
         rebound();
       });
     });
-    prevBtn.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); } });
-    nextBtn.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); });
+    prevBtn?.addEventListener('click', () => { if (state.preorder.currentPage > 1) { state.preorder.currentPage--; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); } });
+    nextBtn?.addEventListener('click', () => { state.preorder.currentPage++; renderPreorderCards(); window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' }); });
     fetchPreorderData(config.sheets.preorder.name1);
     state.preorder.initialized = true;
   }
@@ -882,6 +920,8 @@
   // --- Akun (LAMA) ---
   function populateAccountCategorySelect() {
     const { customSelect } = elements.accounts;
+    if (!customSelect || !customSelect.options || !customSelect.value) return; // Guard clause
+    
     const { options, value } = customSelect;
     const categories = ['Semua Kategori', 'Mobile Legends', 'Free Fire', 'Roblox', 'PUBG Mobile', 'Clash Of Clans', 'Lainnya'];
     options.innerHTML = '';
@@ -894,7 +934,7 @@
       if (cat === state.accounts.activeCategory) el.classList.add('selected');
       el.addEventListener('click', () => {
         value.textContent = cat;
-        document.querySelector('#accountCustomSelectOptions .custom-select-option.selected')?.classList.remove('selected');
+        options.querySelector('.selected')?.classList.remove('selected');
         el.classList.add('selected');
         toggleCustomSelect(customSelect.wrapper, false);
         state.accounts.activeCategory = cat;
@@ -920,6 +960,8 @@
   
   function renderAccountCards() {
     const { cardGrid, cardTemplate, empty } = elements.accounts;
+    if (!cardGrid || !cardTemplate || !empty) return; // Guard clause
+
     const filteredAccounts = state.accounts.allData.filter(acc => state.accounts.activeCategory === 'Semua Kategori' || acc.category === state.accounts.activeCategory);
     cardGrid.innerHTML = '';
     empty.style.display = filteredAccounts.length === 0 ? 'flex' : 'none';
@@ -954,11 +996,12 @@
   }
   
   async function initializeAccounts() {
+    if (!elements.accounts) return; // Guard clause
     if (state.accounts.initialized) return;
     state.accounts.initialized = true;
     const { cardGrid, error, empty } = elements.accounts;
     error.style.display = 'none'; empty.style.display = 'none';
-    showSkeleton(cardGrid, elements.skeletonCardTemplate, 4);
+    showSkeleton(cardGrid, elements.skeletonCardTemplate, 4); // Use skeleton card for accounts
     try {
       const accText = await fetchSheetCached(config.sheets.accounts, 'csv');
       state.accounts.allData = await parseAccountsSheet(accText);
@@ -979,6 +1022,7 @@
     const errorEl = getElement('libraryError');
     if (!container || !errorEl) return;
     container.innerHTML = ''; errorEl.style.display = 'none';
+    // Tambahkan skeleton jika perlu
     try {
       const libText = await fetchSheetCached(config.sheets.library, 'csv');
       const rows = robustCsvParser(libText);
@@ -1005,17 +1049,16 @@
 
   // --- Carousell (LAMA) ---
   async function initializeCarousell() {
+    if (!elements.carousell) return; // Guard clause
     if (state.carousell.initialized) return;
-    const { gridContainer, error } = elements.carousell;
-    if (!gridContainer || !error) return;
+    const { gridContainer, error, searchInput, total } = elements.carousell;
+    if (!gridContainer || !error || !searchInput || !total) return;
     
     gridContainer.innerHTML = '';
     error.style.display = 'none';
-    elements.carousell.searchInput = getElement('carousellSearchInput');
-    elements.carousell.total = getElement('carousellTotal');
     
     let searchDebounce;
-    elements.carousell.searchInput.addEventListener('input', (e) => {
+    searchInput.addEventListener('input', (e) => {
         clearTimeout(searchDebounce);
         searchDebounce = setTimeout(() => {
             state.carousell.searchQuery = e.target.value.trim();
@@ -1023,6 +1066,7 @@
         }, 200);
     });
     
+    // Tambahkan skeleton jika perlu
     try {
         const carText = await fetchSheetCached(config.sheets.affiliate, 'csv');
         const rows = robustCsvParser(carText);
@@ -1050,6 +1094,8 @@
   function renderCarousellGrid(products) {
       const container = elements.carousell.gridContainer;
       const totalEl = elements.carousell.total;
+      if (!container || !totalEl) return; // Guard clause
+
       const query = state.carousell.searchQuery || '';
       const filteredProducts = query
           ? products.filter(p => p.productNumber.includes(query))
@@ -1078,7 +1124,7 @@
             const indicators = product.images.map((_, i) => `<button class="indicator-dot" data-index="${i}"></button>`).join('');
             imagesHTML = `<div class="carousel-container"><div class="carousel-track">${slides}</div>${product.images.length > 1 ? `<button class="carousel-btn prev" type="button" aria-label="Gambar sebelumnya" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg></button><button class="carousel-btn next" type="button" aria-label="Gambar selanjutnya"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg></button><div class="carousel-indicators">${indicators}</div>` : ''}</div>`;
           } else {
-            imagesHTML = `<div class="affiliate-card-img-container"></div>`;
+            imagesHTML = `<div class="affiliate-card-img-container"></div>`; // Placeholder jika tidak ada gambar
           }
           const platformHTML = product.platform ? `<p class="affiliate-card-platform">${product.platform}</p>` : ''
           const formattedProductNumber = product.productNumber ? String(product.productNumber).padStart(3, '0') : '';
@@ -1120,6 +1166,7 @@
   
   async function initializeTestimonialMarquee() {
     const section = document.getElementById('testimonialSection');
+    if (!section) return; // Guard clause
     const marquee = section.querySelector('.testi-marquee');
     const track = section.querySelector('#testiTrack');
     if (!marquee || !track) return;
@@ -1178,7 +1225,7 @@
         isDragging = false;
         marquee.classList.remove('is-grabbing');
         const trackWidth = track.scrollWidth / 2;
-        pos = pos % trackWidth;
+        pos = pos % trackWidth; // Wrap position
         animate();
         window.removeEventListener('mousemove', onDragMove);
         window.removeEventListener('touchmove', onDragMove);
@@ -1218,12 +1265,12 @@
       });
     });
 
-    // Listener untuk semua custom select
+    // Listener untuk semua custom select (termasuk yang di halaman lain)
     [elements.categoryFilter, elements.accounts?.customSelect, elements.preorder?.customSelect, elements.preorder?.customStatusSelect]
       .filter(select => select && select.btn)
       .forEach(select => {
         select.btn.addEventListener('click', (e) => { e.stopPropagation(); toggleCustomSelect(select.wrapper); });
-        // enhanceCustomSelectKeyboard(select.wrapper); // (Fungsi ini bisa ditambahkan kembali)
+        // enhanceCustomSelectKeyboard(select.wrapper); // Anda bisa tambahkan ini kembali jika perlu
       });
 
     // Tutup select jika klik di luar
