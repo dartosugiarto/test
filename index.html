@@ -82,6 +82,7 @@
       <div class="home-banner-container"> 
         <img src="/assets/images/banner-hero.webp" alt="PlayPal.ID Banner" class="home-banner-img">
       </div>
+
       <section id="flashSaleSection" class="view-section active" aria-label="Flash Sale" style="display: none;">
         <header class="section-header">
           <h2 class="section-title">FLASH SALE</h2>
@@ -90,25 +91,29 @@
         <div class="flash-sale-grid-wrapper">
             <div id="flashSaleContainer" class="flash-sale-grid">
               <div class="flash-sale-card skeleton">
-                <div class="flash-sale-card-img skeleton-img"></div>
-                <div class="flash-sale-card-body">
-                  <span class="skeleton-text" style="width: 80%;"></span>
-                  <span class="skeleton-text" style="width: 50%; height: 12px; margin-top: 4px;"></span>
-                  <div class="flash-sale-card-footer">
-                    <span class="timer-badge skeleton"></span>
-                    <span class="discount-badge skeleton"></span>
+                <div class="flash-sale-card-main">
+                  <div class="flash-sale-card-img skeleton-img"></div>
+                  <div class="flash-sale-card-info">
+                    <span class="skeleton-text" style="width: 80%;"></span>
+                    <span class="skeleton-text" style="width: 50%; height: 12px; margin-top: 4px;"></span>
                   </div>
+                </div>
+                <div class="flash-sale-card-footer">
+                  <span class="timer-badge skeleton"></span>
+                  <span class="discount-badge skeleton" style="width: 50px; height: 24px;"></span>
                 </div>
               </div>
               <div class="flash-sale-card skeleton">
-                <div class="flash-sale-card-img skeleton-img"></div>
-                <div class="flash-sale-card-body">
-                  <span class="skeleton-text" style="width: 80%;"></span>
-                  <span class="skeleton-text" style="width: 50%; height: 12px; margin-top: 4px;"></span>
-                  <div class="flash-sale-card-footer">
-                    <span class="timer-badge skeleton"></span>
-                    <span class="discount-badge skeleton"></span>
+                <div class="flash-sale-card-main">
+                  <div class="flash-sale-card-img skeleton-img"></div>
+                  <div class="flash-sale-card-info">
+                    <span class="skeleton-text" style="width: 80%;"></span>
+                    <span class="skeleton-text" style="width: 50%; height: 12px; margin-top: 4px;"></span>
                   </div>
+                </div>
+                <div class="flash-sale-card-footer">
+                  <span class="timer-badge skeleton"></span>
+                  <span class="discount-badge skeleton" style="width: 50px; height: 24px;"></span>
                 </div>
               </div>
             </div>
@@ -116,7 +121,7 @@
       </section>
 
       <section id="viewHome" class="view-section active" aria-label="Kategori Produk">
-        <div class="head-block" style="margin-top: var(--sp-fib-6);">
+        <div class="head-block">
           <div class="custom-select-wrapper" id="categoryFilterWrapper">
             <button class="custom-select-btn" id="categoryFilterBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
               <span id="categoryFilterValue">Semua Kategori</span>
@@ -153,23 +158,24 @@
     </main>
   </div>
   <template id="flashSaleCardTemplate">
-    <article class="flash-sale-card">
-      <div class="flash-sale-card-img">
-        <img src="" alt="" loading="lazy">
-      </div>
-      <div class="flash-sale-card-body">
-        <span class="flash-sale-title"></span>
-        <span class="flash-sale-subtitle"></span>
-        <div class="flash-sale-card-footer">
-          <span class="timer-badge" data-time-end="">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="icon" style="width: 16px; height: 16px;"><path fill-rule="evenodd" d="M8 1.75a.75.75 0 0 1 .75.75v3.69l2.47 1.482a.75.75 0 1 1-.74 1.238L8.5 7.58V2.5A.75.75 0 0 1 8 1.75Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16Z" clip-rule="evenodd" /></svg>
-            <span>00:00:00</span>
-          </span>
-          <span class="discount-badge">
-            <span class="original-price"></span>
-            <span class="discount-percent"></span>
-          </span>
+    <article class="flash-sale-card" tabindex="0">
+      <div class="flash-sale-card-main">
+        <div class="flash-sale-card-img">
+          <img src="" alt="" loading="lazy">
         </div>
+        <div class="flash-sale-card-info">
+          <span class="flash-sale-title"></span>
+          <span class="flash-sale-subtitle"></span>
+        </div>
+      </div>
+      <div class="flash-sale-card-footer">
+        <span class="timer-badge" data-time-end="">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="icon" style="width: 16px; height: 16px;"><path fill-rule="evenodd" d="M8 1.75a.75.75 0 0 1 .75.75v3.69l2.47 1.482a.75.75 0 1 1-.74 1.238L8.5 7.58V2.5A.75.75 0 0 1 8 1.75Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16Z" clip-rule="evenodd" /></svg>
+          <span>00:00:00</span>
+        </span>
+        <span class="discount-badge">
+          <span class="discount-percent"></span>
+        </span>
       </div>
     </article>
   </template>
