@@ -104,6 +104,10 @@
         value: getElement('homeCustomSelectValue'),
         options: getElement('homeCustomSelectOptions'),
       },
+      // ===== PERUBAHAN DI SINI =====
+      homeCardTemplate: getElement('homeCardTemplate'),
+      skeletonHomeCardTemplate: getElement('skeletonHomeCardTemplate'),
+      // ===== AKHIR PERUBAHAN =====
     },
     headerStatusIndicator: getElement('headerStatusIndicator'),
     itemTemplate: getElement('itemTemplate'),
@@ -158,6 +162,58 @@
     }
   };
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
+
+  // ==================================
+  // ===== FUNGSI BARU YANG DIPERBARUI =====
+  // ==================================
+  /**
+   * Memetakan judul item ke path gambar lokal.
+   * @param {string} title Judul item dari Google Sheet.
+   * @returns {string} Path ke gambar di folder /assets/images/games/
+   */
+  function getIconForItem(title) {
+    const normalizedTitle = String(title || '').toLowerCase();
+
+    // --- DISESUAIKAN DENGAN NAMA FILE ANDA ---
+
+    if (normalizedTitle.includes('starlight') || normalizedTitle.includes('mobile legends') || normalizedTitle.includes('mlbb') || normalizedTitle.includes('ml')) {
+      return '/assets/images/games/ml.png';
+    }
+    if (normalizedTitle.includes('free fire') || normalizedTitle.includes('ff')) {
+      return '/assets/images/games/freefire.png';
+    }
+    if (normalizedTitle.includes('pubg')) {
+      return '/assets/images/games/pubg.png';
+    }
+    if (normalizedTitle.includes('aov') || normalizedTitle.includes('arena of valor')) {
+      return '/assets/images/games/aov.png';
+    }
+    if (normalizedTitle.includes('cod') || normalizedTitle.includes('call of duty')) {
+      return '/assets/images/games/cod.png';
+    }
+    if (normalizedTitle.includes('genshin')) {
+      return '/assets/images/games/genshin.png';
+    }
+    if (normalizedTitle.includes('hok') || normalizedTitle.includes('honor of kings')) {
+      return '/assets/images/games/hok.png';
+    }
+    if (normalizedTitle.includes('wdp')) {
+      return '/assets/images/games/wdp.png';
+    }
+    
+    // --- Anda bisa tambahkan produk lain di sini ---
+    // if (normalizedTitle.includes('nama_produk_lain')) {
+    //   return '/assets/images/games/nama_file_gambar.png';
+    // }
+
+    // Gambar default jika tidak ada yang cocok
+    return '/assets/images/logo.png'; 
+  }
+  // ==================================
+  // ===== AKHIR FUNGSI BARU =====
+  // ==================================
+
+
   function getSheetUrl(sheetName, format = 'json') { const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`; const encodedSheetName = encodeURIComponent(sheetName); return format === 'csv' ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}` : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`; }
 
 async function fetchSheetCached(sheetName, format = 'json'){
@@ -422,17 +478,26 @@ function enhanceCustomSelectKeyboard(wrapper){
       options.appendChild(el);
     });
   }
-  function renderList(container, countInfoEl, items, emptyText) { container.innerHTML = ''; if (items.length === 0) { container.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>${emptyText}</p></div></div>`; countInfoEl.textContent = ''; return; } const fragment = document.createDocumentFragment(); for (const item of items) { const clone = elements.itemTemplate.content.cloneNode(true); const buttonEl = clone.querySelector('.list-item'); buttonEl.querySelector('.title').textContent = item.title; buttonEl.querySelector('.price').textContent = formatToIdr(item.price); buttonEl.addEventListener('click', () => openPaymentModal(item)); fragment.appendChild(clone); } container.appendChild(fragment); countInfoEl.textContent = `${items.length} item ditemukan`; }
-  function renderHomeList() { const { activeCategory, searchQuery } = state.home; const query = searchQuery.toLowerCase(); const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query))); renderList(elements.home.listContainer, elements.home.countInfo, items, 'Tidak ada item ditemukan.'); }
+  
+  // Hapus fungsi renderList() yang lama (atau biarkan jika halaman lain masih menggunakannya)
+  // function renderList(container, countInfoEl, items, emptyText) { ... }
+  
+  // ==================================
+  // ===== FUNGSI loadCatalog BARU =====
+  // ==================================
   async function loadCatalog() {
     if (catalogFetchController) catalogFetchController.abort();
     catalogFetchController = new AbortController();
     try {
       elements.home.errorContainer.style.display = 'none';
-      showSkeleton(elements.home.listContainer, elements.skeletonItemTemplate, 6);
+      
+      // --- PERUBAHAN DI SINI: Gunakan skeletonHomeCardTemplate ---
+      showSkeleton(elements.home.listContainer, elements.home.skeletonHomeCardTemplate, 6);
+      
       const text = await fetchSheetCached(config.sheets.katalog.name, 'json');
       allCatalogData = parseGvizPairs(text);
       if (allCatalogData.length === 0) throw new Error('Data is empty or format is incorrect.');
+      
       const params = new URLSearchParams(window.location.search);
       const categoryFromUrl = params.get('kategori');
       if (categoryFromUrl && (window.location.pathname === '/' || window.location.pathname.endsWith('/index.html'))) {
@@ -445,7 +510,7 @@ function enhanceCustomSelectKeyboard(wrapper){
           if (foundKey) state.home.activeCategory = foundKey;
       }
       buildHomeCategorySelect(allCatalogData);
-      renderHomeList();
+      renderHomeList(); // Fungsi ini akan kita ganti selanjutnya
     } catch (err) {
       if (err.name === 'AbortError') return;
       console.error('Failed to load catalog:', err);
@@ -455,6 +520,63 @@ function enhanceCustomSelectKeyboard(wrapper){
       view.errorContainer.textContent = 'Oops, terjadi kesalahan. Silakan coba lagi nanti.';
     }
   }
+
+  // ==================================
+  // ===== FUNGSI renderHomeList BARU =====
+  // ==================================
+  function renderHomeList() {
+    // Ambil elemen dari elements.home
+    const { listContainer, countInfo, homeCardTemplate } = elements.home;
+    const { activeCategory, searchQuery } = state.home;
+    
+    const query = searchQuery.toLowerCase();
+    const items = allCatalogData.filter(x => x.catKey === activeCategory && (query === '' || x.title.toLowerCase().includes(query) || String(x.price).includes(query)));
+
+    // Kosongkan kontainer (menghapus skeleton atau list lama)
+    listContainer.innerHTML = '';
+
+    // Tampilkan pesan "empty" jika tidak ada item
+    if (items.length === 0) {
+      listContainer.innerHTML = `<div class="empty"><div class="empty-content"><svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg><p>Tidak ada item ditemukan.</p></div></div>`;
+      countInfo.textContent = '';
+      return;
+    }
+
+    // Buat kartu untuk setiap item
+    const fragment = document.createDocumentFragment();
+    for (const item of items) {
+      // Clone template kartu baru
+      const clone = homeCardTemplate.content.cloneNode(true);
+      
+      // Ambil elemen di dalam kartu
+      const cardEl = clone.querySelector('.home-card');
+      const imgEl = cardEl.querySelector('.home-card-img');
+      
+      // --- INI LOGIKA BARUNYA ---
+      // 1. Dapatkan path gambar dari fungsi helper baru kita
+      const iconPath = getIconForItem(item.title);
+      
+      // 2. Setel gambar dan alt text
+      imgEl.src = iconPath;
+      imgEl.alt = item.title;
+      
+      // 3. Setel judul dan harga
+      cardEl.querySelector('.home-card-title').textContent = item.title;
+      cardEl.querySelector('.home-card-price').textContent = formatToIdr(item.price);
+      
+      // 4. Tambahkan event listener untuk modal
+      cardEl.addEventListener('click', () => openPaymentModal(item));
+      
+      fragment.appendChild(clone);
+    }
+    
+    // Tambahkan semua kartu ke DOM sekaligus
+    listContainer.appendChild(fragment);
+    
+    // Perbarui info jumlah item
+    countInfo.textContent = `${items.length} item ditemukan`;
+  }
+
   function calculateFee(price, option) { if (option.feeType === 'fixed') return option.value; if (option.feeType === 'percentage') return Math.ceil(price * option.value); return 0; }
 
   // >>> Perbaikan #1: batasi selector radio ke container payment
