@@ -29,26 +29,22 @@
   setTheme(getPreferredTheme());
   // --- AKHIR LOGIKA DARK MODE ---
 
-  // --- KONFIGURASI AKHIR (SESUAI KONFIRMASI) ---
+  // --- KONFIGURASI AKHIR ---
   const config = {
     sheetId: '11hRQ9fw5RwfoWUbyMgQ3k2QPEZAAR2EJ4FsyX8oS3zU',
     sheets: {
-      // --- Home Page (BARU) ---
       kategori: 'Sheet1',
       produk: 'Sheet2',
       flashSale: 'Sheet3',
-      
-      // --- Halaman Lain (SESUAI KONFIRMASI) ---
       preorder: { name1: 'Sheet4', name2: 'Sheet5' }, 
       library: 'Sheet6',
       testimonial: 'Sheet7',
       affiliate: 'Sheet8',
-      accounts: 'Sheet9' // Akun Game di Sheet9
+      accounts: 'Sheet9'
     },
-    paths: {
-      art: '/assets/images/art/',
-      logos: '/assets/images/logos/'
-    },
+    // ===== PERUBAHAN DI SINI: 'paths' DIHAPUS =====
+    // Objek 'paths' sudah dihapus karena kita pakai link langsung
+    // ===========================================
     waNumber: '6285877001999',
     waGreeting: '*Detail pesanan:*',
     paymentOptions: [
@@ -481,26 +477,22 @@
   
   async function loadHomePageData() {
     try {
-      // Tampilkan skeleton dulu
       renderFlashSale([]); // Tampilkan skeleton flash sale
       renderCategoryGrid([]); // Tampilkan skeleton grid
 
-      // GANTI METODE FETCH: dari fetchSheetData (Gviz) ke fetchSheetCached (CSV)
       const [textKategori, textProduk, textFlashSale] = await Promise.all([
         fetchSheetCached(config.sheets.kategori, 'csv'),
         fetchSheetCached(config.sheets.produk, 'csv'),
         fetchSheetCached(config.sheets.flashSale, 'csv')
       ]);
 
-      // GANTI METODE PARSE: Gunakan helper CSV ke JSON
       allKategori = parseCsvToJson(robustCsvParser(textKategori));
       allProduk = parseCsvToJson(robustCsvParser(textProduk));
       allFlashSale = parseCsvToJson(robustCsvParser(textFlashSale));
 
-      // Sisa fungsinya sama
       renderFlashSale(allFlashSale);
       renderCategoryFilter(allKategori);
-      renderCategoryGrid(allKategori); // Render semua kategori awal
+      renderCategoryGrid(allKategori);
 
     } catch (err) {
       console.error("Gagal memuat data halaman utama:", err);
@@ -508,7 +500,7 @@
           elements.categoryGridContainer.innerHTML = `<div class="err" style="grid-column: 1 / -1;">Gagal memuat data. Silakan coba lagi nanti.</div>`;
       }
       if (elements.flashSaleSection) {
-          elements.flashSaleSection.style.display = 'none'; // Sembunyikan jika error
+          elements.flashSaleSection.style.display = 'none';
       }
     }
   }
@@ -516,8 +508,7 @@
   function renderFlashSale(data) {
     if (!elements.flashSaleContainer || !elements.flashSaleCardTemplate) return;
     
-    // Jika data kosong (tapi masih loading), tampilkan skeleton
-    if (data.length === 0 && elements.flashSaleSection.style.display !== 'none') {
+    if (data.length === 0 && allFlashSale.length === 0) { // Hanya tampilkan skeleton saat loading awal
         showSkeleton(elements.flashSaleContainer, elements.flashSaleCardTemplate, 2);
         elements.flashSaleSection.style.display = 'block';
         return;
@@ -551,10 +542,15 @@
       card.querySelector('.flash-sale-subtitle').textContent = item.SubNama;
       
       const img = card.querySelector('img');
-      img.src = config.paths.logos + item.FileGambar; // Asumsi gambar ada di folder logos
+      // ===== PERBAIKAN DI SINI: Gunakan link langsung =====
+      if (item.FileGambar && item.FileGambar.startsWith('http')) {
+        img.src = item.FileGambar;
+      } else {
+        img.style.display = 'none'; // Sembunyikan jika tidak ada link
+      }
       img.alt = item.NamaProduk;
+      // ===============================================
 
-      // Harga
       if (item.HargaAsli > 0) {
         const diskon = Math.round(((item.HargaAsli - item.HargaDiskon) / item.HargaAsli) * 100);
         card.querySelector('.original-price').textContent = formatToIdr(item.HargaAsli);
@@ -563,7 +559,6 @@
          card.querySelector('.discount-badge').style.display = 'none';
       }
 
-      // Timer
       const timerBadge = card.querySelector('.timer-badge');
       timerBadge.dataset.timeEnd = item.WaktuBerakhir;
       
@@ -616,7 +611,6 @@
     const container = elements.categoryGridContainer;
     if (!container || !elements.categoryCardTemplate) return;
     
-    // Tampilkan skeleton jika data kosong (initial load)
     if (data.length === 0 && allKategori.length === 0) { 
         showSkeleton(container, elements.categoryCardTemplate, 6);
         elements.categoryEmpty.style.display = 'none';
@@ -636,11 +630,22 @@
     data.forEach(item => {
       const card = elements.categoryCardTemplate.content.cloneNode(true).firstElementChild;
       
-      card.style.backgroundImage = `url('${config.paths.art}${item.FileGambarArt}')`;
+      // ===== PERBAIKAN DI SINI: Gunakan link langsung untuk Art =====
+      if (item.FileGambarArt && item.FileGambarArt.startsWith('http')) {
+        card.style.backgroundImage = `url('${item.FileGambarArt}')`;
+      }
+      // ========================================================
       
       const logoImg = card.querySelector('.category-card-logo');
-      logoImg.src = `${config.paths.logos}${item.FileGambarLogo}`;
-      logoImg.alt = item.Nama;
+      
+      // ===== PERBAIKAN DI SINI: Gunakan link langsung untuk Logo =====
+      if (item.FileGambarLogo && item.FileGambarLogo.startsWith('http')) {
+        logoImg.src = item.FileGambarLogo;
+        logoImg.alt = item.Nama;
+      } else {
+        logoImg.style.display = 'none'; // Sembunyikan jika tidak ada link
+      }
+      // =========================================================
       
       card.addEventListener('click', () => openProductModal(item.KategoriID));
       card.addEventListener('keydown', (e) => {
@@ -870,7 +875,7 @@
     if (!elements.preorder) return;
     if (state.preorder.initialized) return;
     const { searchInput, customSelect, prevBtn, nextBtn, customStatusSelect } = elements.preorder;
-    if (!searchInput || !customSelect || !prevBtn || !nextBtn || !customStatusSelect) return; // Pastikan semua elemen ada
+    if (!searchInput || !customSelect || !prevBtn || !nextBtn || !customStatusSelect) return;
     
     const rebound = () => { state.preorder.currentPage = 1; renderPreorderCards(); };
     searchInput.addEventListener('input', rebound);
@@ -1167,7 +1172,7 @@
       }
       track.innerHTML = '';
       track.appendChild(pp_makeNodes(items));
-      track.appendChild(pp_makeNodes(items)); // Duplikat untuk animasi
+      track.appendChild(pp_makeNodes(items));
 
       let pos = 0;
       let isDragging = false;
