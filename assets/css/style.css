@@ -513,18 +513,18 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
 
 
 /* ================================== */
-/* ===== STYLE BARU (GRID KATEGORI) ===== */
+/* ===== STYLE GRID KATEGORI (PERBAIKAN 3 KOLOM) ===== */
 /* ================================== */
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr); /* 3 kolom di semua ukuran layar */
   gap: var(--sp-fib-4);
   margin-top: var(--sp-fib-5);
 }
-/* Di layar kecil, buat jadi 2 kolom */
+
+/* Di layar kecil, kita hanya perkecil jarak antar kartu */
 @media (max-width: 600px) {
   .category-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: var(--sp-fib-3);
   }
 }
@@ -602,6 +602,21 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   max-height: 70vh;
   overflow-y: auto;
   padding-right: var(--sp-fib-3);
+  /* Perbaikan untuk scrollbar di Webkit/Blink */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--surface-secondary);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--text-tertiary);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+  }
 }
 
 .product-list-item {
@@ -631,6 +646,7 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
+  margin-right: var(--sp-fib-4); /* Beri jarak dari harga */
 }
 .product-list-item .description {
   font-size: 13px;
@@ -642,7 +658,8 @@ html[data-theme="dark"] .flash-sale-card.skeleton {
   font-weight: 800;
   color: var(--brand-blue);
   flex-shrink: 0;
-  margin-left: var(--sp-fib-4);
+  margin-left: auto; /* Dorong harga ke kanan */
+  white-space: nowrap; /* Pastikan harga tidak terpotong */
 }
 
 /* Skeleton untuk list di modal */
