@@ -238,7 +238,10 @@
     return rows.map(row => {
       const item = {};
       header.forEach((colName, i) => {
+        // Ganti nama kolom yang bermasalah saat parsing
+        const cleanColName = colName.replace(/[\s\(\)-]+/g, '_'); // Ganti spasi/()/- dengan _
         const val = row[i] || null;
+        
         // Cek jika kolom ini harusnya angka
         if (['Harga', 'HargaAsli', 'HargaDiskon'].includes(colName) && val !== null) {
           item[colName] = Number(String(val).replace(/[^0-9]/g, '')) || 0; // Bersihkan & jadikan angka
@@ -518,14 +521,15 @@
     const now = new Date();
     const validFlashSale = data.filter(item => {
       try {
-        // ===== PERBAIKAN DI SINI =====
-        const waktuBerakhirString = item['WaktuBerakhir(YYYY-MM-DD HH:MM)'];
-        // ==============================
+        // ===== PERBAIKAN DI SINI (V7) =====
+        // Menggunakan nama kolom yang sudah Anda ganti (WaktuBerakhir)
+        const waktuBerakhirString = item.WaktuBerakhir;
+        // ===================================
         
         const endTime = new Date(String(waktuBerakhirString).replace(" ", "T")); 
         return endTime instanceof Date && !isNaN(endTime) && endTime > now;
       } catch (e) {
-        console.warn("Format WaktuBerakhir tidak valid:", item['WaktuBerakhir(YYYY-MM-DD HH:MM)']);
+        console.warn("Format WaktuBerakhir tidak valid:", item.WaktuBerakhir);
         return false;
       }
     });
@@ -562,9 +566,9 @@
          card.querySelector('.discount-badge').style.display = 'none';
       }
 
-      // ===== PERBAIKAN DI SINI (juga) =====
+      // ===== PERBAIKAN DI SINI (V7) =====
       const timerBadge = card.querySelector('.timer-badge');
-      timerBadge.dataset.timeEnd = item['WaktuBerakhir(YYYY-MM-DD HH:MM)'];
+      timerBadge.dataset.timeEnd = item.WaktuBerakhir;
       // ===================================
       
       card.addEventListener('click', () => {
@@ -675,10 +679,10 @@
       
       timerElements.forEach(timerEl => {
           try {
-              // ===== PERBAIKAN DI SINI =====
+              // ===== PERBAIKAN DI SINI (V7) =====
               const waktuBerakhirString = timerEl.dataset.timeEnd;
-              // ==============================
-              
+              // ===================================
+
               const endTime = new Date(waktuBerakhirString.replace(" ", "T")).getTime();
               if (isNaN(endTime)) throw new Error("Invalid date");
               const distance = endTime - now;
