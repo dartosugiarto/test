@@ -2,7 +2,7 @@
   color-scheme: light;
   --brand-blue: #5C80BC;
   --brand-blue-rgb: 92, 128, 188;
-  --brand-cta: #EE4D2D; 
+  --brand-cta: #EE4D2D;
   --success: #3dc1d3;
   --warning: #f5cd79;
   --error: #c44569;
@@ -40,17 +40,16 @@
   --header-height: 60px;
 }
 
-/* === TAMBAHAN: PALET & LOGIKA DARK MODE === */
 html[data-theme="dark"] {
   color-scheme: dark;
-  --brand-blue: #6c95d8; /* Sedikit lebih cerah agar menonjol */
+  --brand-blue: #6c95d8; /* Slightly Lighter For Contrast */
   --brand-blue-rgb: 108, 149, 216;
-  --brand-cta: #EE4D2D; 
+  --brand-cta: #EE4D2D;
   --success: #4cd8e9;
   --warning: #f8d68f;
   --error: #d86687;
-  --dark-base: #e9ecf3; /* Kebalikan dari light mode */
-  
+  --dark-base: #e9ecf3;
+
   --bg-primary: #191e2b;
   --bg-primary-rgb: 25, 30, 43;
   --text-primary: #e9ecf3;
@@ -64,15 +63,21 @@ html[data-theme="dark"] {
   --shadow-focus: 0 0 0 3px rgba(var(--brand-blue-rgb), .4);
 }
 
+/* Hide Both Icons By Default */
 #themeToggleBtn .icon-sun,
-html[data-theme="dark"] #themeToggleBtn .icon-moon {
+#themeToggleBtn .icon-moon {
   display: none;
 }
 
+/* Show Moon Icon Only In Light Mode */
+html:not([data-theme="dark"]) #themeToggleBtn .icon-moon {
+  display: block;
+}
+
+/* Show Sun Icon Only In Dark Mode */
 html[data-theme="dark"] #themeToggleBtn .icon-sun {
   display: block;
 }
-/* === AKHIR TAMBAHAN DARK MODE === */
 
 * { box-sizing: border-box; }
 html, body { height: 100%; overflow-x: hidden; touch-action: manipulation; }
@@ -108,19 +113,24 @@ body.sidebar-open .page-container { filter: blur(5px); transform: scale(0.99); }
 .header-logo-link { display: flex; align-items: center; gap: var(--sp-fib-4); text-decoration: none; color: var(--text-primary); }
 .header-logo { height: 36px; width: 36px; object-fit: contain; }
 .header-title { font-weight: 800; font-size: 20px; display: none; }
-@media (min-width: 769px) { 
-  .header-title { display: block; } 
-  .account-card-grid { 
-    grid-template-columns: repeat(2, 1fr); /* Aturan desktop: 2 kolom */
-  } 
+@media (min-width: 769px) {
+  .header-title { display: block; }
+  .account-card-grid {
+    grid-template-columns: repeat(2, 1fr); /* Desktop: 2 Columns */
+  }
   .affiliate-grid {
-    grid-template-columns: repeat(3, 1fr); /* Aturan desktop: 3 kolom */
+    grid-template-columns: repeat(3, 1fr); /* Desktop: 3 Columns */
   }
 }
 .header-actions { display: flex; align-items: center; gap: var(--sp-fib-3); }
 .icon-btn { position: relative; display: grid; place-content: center; width: 44px; height: 44px; background: transparent; border: 1px solid transparent; border-radius: var(--radius-fib-small); color: var(--text-secondary); cursor: pointer; transition: background-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast); }
 .icon-btn:hover { background: var(--surface-secondary); color: var(--brand-blue); }
 .icon-btn:active { transform: scale(0.95); }
+
+.icon-btn:focus-visible {
+  box-shadow: none; /* Remove Default Blue Focus Shadow */
+}
+
 .sidebar { position: fixed; top: var(--header-height); right: 0; z-index: 1100; width: var(--sidebar-width); height: calc(100% - var(--header-height)); background-color: var(--surface-primary); border-left: 1px solid var(--separator); padding: var(--sp-fib-5); transform: translateX(100%); transition: transform var(--duration-natural) var(--ease-natural); }
 body.sidebar-open .sidebar { transform: translateX(0); }
 .sidebar-overlay { position: fixed; top: var(--header-height); left: 0; width: 100%; height: calc(100% - var(--header-height)); background-color: rgba(0, 0, 0, 0.5); z-index: 1050; opacity: 0; pointer-events: none; transition: opacity var(--duration-natural); }
@@ -197,8 +207,8 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 #viewPreorder .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--sp-fib-5); }
 #viewPreorder .detail-label { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-tertiary); }
 #viewPreorder .detail-value { font-size: 14px; font-weight: 700; }
-.account-card-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-fib-5); margin-top: var(--sp-fib-5); } /* Aturan mobile: 1 kolom */
-.affiliate-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-fib-5); margin-top: var(--sp-fib-5); } /* Aturan mobile: 1 kolom */
+.account-card-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-fib-5); margin-top: var(--sp-fib-5); } /* Mobile: 1 Column */
+.affiliate-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-fib-5); margin-top: var(--sp-fib-5); } /* Mobile: 1 Column */
 
 .account-card, .affiliate-card { background: var(--surface-primary); border: 1px solid var(--separator); border-radius: var(--radius-fib-medium); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; transition: box-shadow var(--duration-natural); }
 .account-card:hover, .affiliate-card:hover { box-shadow: 0 13px 21px rgba(48, 57, 82, 0.1); }
@@ -264,7 +274,6 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .payment-option label { display: block; padding: var(--sp-fib-4); border: 1px solid var(--separator); border-radius: var(--radius-fib-small); font-size: 15px; cursor: pointer; }
 .payment-option input:checked + label { border-color: var(--brand-blue); background-color: rgba(var(--brand-blue-rgb), 0.1); font-weight: 700; box-shadow: 0 0 0 2px var(--brand-blue); }
 
-/* === Polishing: Button states & feedback === */
 .action-btn:active,
 .affiliate-card-button:active,
 .wa-button:active { transform: scale(0.98); }
@@ -276,22 +285,22 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
   cursor: not-allowed;
   transform: none;
 }
-/* Focus ring for payment-option label (keyboard nav) */
+/* Focus Ring For Payment Option Label (Keyboard Nav) */
 .payment-option label:focus-visible {
   box-shadow: var(--shadow-focus);
   outline: none;
 }
-/* Custom-select keyboard highlight */
+/* Custom Select Keyboard Highlight */
 .custom-select-option.highlight { background: var(--surface-secondary); color: var(--text-primary); }
 
 .price-details { margin-top: var(--sp-fib-4); padding-top: var(--sp-fib-4); border-top: 1px solid var(--separator); font-size: 14px; text-align: right; }
 .price-details p { margin: var(--sp-fib-2) 0; }
 .price-details strong { font-size: 18px; }
 .wa-button { display: block; width: 100%; margin-top: var(--sp-fib-5); padding: var(--sp-fib-4); padding-bottom: max(var(--sp-fib-4), env(safe-area-inset-bottom)); background-color: var(--brand-blue); color: #fff; font-size: 16px; font-weight: 700; text-align: center; text-decoration: none; border-radius: var(--radius-fib-small); }
-.library-grid { 
-  display: grid; 
-  grid-template-columns: repeat(3, 1fr); /* Aturan 3 kolom untuk semua ukuran layar */
-  gap: var(--sp-fib-4); 
+.library-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 Columns For All Screen Sizes */
+  gap: var(--sp-fib-4);
 }
 .book-card { position: relative; border: none; padding: 0; cursor: pointer; border-radius: var(--radius-fib-medium); overflow: hidden; aspect-ratio: 3 / 4; transition: transform var(--duration-fast); }
 .book-card:hover { transform: scale(1.05); }
@@ -318,10 +327,14 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
 .skeleton-badge { width: 90px; height: 28px; background-color: var(--surface-tertiary); border-radius: 999px; }
 @keyframes shimmer { 100% { transform: translateX(100%); } }
 .noscript-warning { padding: var(--sp-fib-4); background: var(--warning); color: var(--dark-base); text-align: center; font-weight: 700; }
-:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: var(--radius-fib-small); }
+/* Global Focus Style */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-fib-small);
+}
 
 
-/* === Polishing: Sidebar mobile ergonomics === */
 @media (max-width: 430px){ :root { --sidebar-width: clamp(232px, 68vw, 272px); } }
 .sidebar{
   max-height: calc(100% - var(--header-height));
@@ -330,18 +343,101 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
   overscroll-behavior: contain;
 }
 
-
-/* === Polishing: Neutral CLOSED status === */
 .status-badge.closed { color: var(--text-secondary); background-color: var(--surface-secondary); }
 .status-badge.closed::before { background: var(--surface-tertiary); }
 
-
-/* === Polishing: Perceived performance on long lists === */
 .card, .list-item { content-visibility: auto; contain-intrinsic-size: 200px; }
 
-
-/* Menu text ellipsis */
+/* Sidebar Menu Text Ellipsis */
 .sidebar .nav-item span{
   flex: 1; min-width: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ================================== */
+/* ===== STYLE KARTU HOME BARU ===== */
+/* ================================== */
+
+/* Container di index.html sudah menggunakan .list-container, 
+   yang otomatis responsif. Kita hanya perlu style kartunya. */
+
+.home-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: var(--surface-primary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-fib-medium);
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.home-card:hover {
+  box-shadow: 0 13px 21px rgba(48, 57, 82, 0.1);
+  transform: translateY(-5px);
+}
+
+/* Wrapper untuk gambar agar rasio 1:1 */
+.home-card-img-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: var(--surface-secondary);
+  padding: var(--sp-fib-5); /* Beri padding agar logo tidak mepet */
+}
+
+.home-card-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Paling penting untuk logo */
+}
+
+.home-card-body {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-fib-4) var(--sp-fib-5) var(--sp-fib-5);
+  flex-grow: 1;
+}
+
+.home-card-title {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: var(--sp-fib-3);
+  /* Jika judul terlalu panjang */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-card-price {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--brand-blue);
+  margin-top: auto; /* Mendorong harga ke bawah */
+}
+
+/* Styling untuk Skeleton Card Baru */
+.home-card.skeleton {
+  box-shadow: none;
+}
+
+.home-card.skeleton .home-card-img-wrapper {
+  padding: 0; /* Hapus padding di skeleton */
+}
+
+.home-card.skeleton .skeleton-img {
+  width: 100%;
+  height: 100%;
+  background-color: var(--surface-tertiary);
 }
