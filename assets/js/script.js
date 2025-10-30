@@ -203,15 +203,12 @@
   // --- FUNGSI HELPER (Utilitas) ---
   function formatToIdr(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 
-  function getSheetUrl(sheetName, format = 'json') {
+  function getSheetUrl(sheetName, format = 'csv') { // Selalu gunakan CSV
     const baseUrl = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq`;
     const encodedSheetName = encodeURIComponent(sheetName);
-    return format === 'csv'
-      ? `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}`
-      : `${baseUrl}?sheet=${encodedSheetName}&tqx=out:json`;
+    return `${baseUrl}?tqx=out:csv&sheet=${encodedSheetName}`;
   }
 
-  // Helper Fetching CSV (DIPAKAI SEMUA)
   async function fetchSheetCached(sheetName, format = 'csv') {
     const url = getSheetUrl(sheetName, format);
     const key = `pp_cache_${sheetName}_${format}`;
@@ -227,21 +224,17 @@
     return text;
   }
   
-  // Helper Parser 1: CSV (LAMA, TAPI DIPAKAI)
   function robustCsvParser(text) { const normalizedText = text.trim().replace(/\r\n/g, '\n'); const rows = []; let currentRow = []; let currentField = ''; let inQuotedField = false; for (let i = 0; i < normalizedText.length; i++) { const char = normalizedText[i]; if (inQuotedField) { if (char === '"') { if (i + 1 < normalizedText.length && normalizedText[i + 1] === '"') { currentField += '"'; i++; } else { inQuotedField = false; } } else { currentField += char; } } else { if (char === '"') { inQuotedField = true; } else if (char === ',') { currentRow.push(currentField); currentField = ''; } else if (char === '\n') { currentRow.push(currentField); rows.push(currentRow); currentRow = []; currentField = ''; } else { currentField += char; } } } currentRow.push(currentField); rows.push(currentRow); return rows; }
 
-  // Helper Parser 2: CSV ke JSON (BARU, UNTUK HOME)
   function parseCsvToJson(rows) {
     if (rows.length < 1) return [];
-    const header = rows.shift(); // Ambil header
+    const header = rows.shift();
     
     return rows.map(row => {
       const item = {};
       header.forEach((colName, i) => {
         const val = row[i] || null;
-        // Cek jika kolom ini harusnya angka
         if (['Harga', 'HargaAsli', 'HargaDiskon'].includes(colName) && val !== null) {
-          // Bersihkan string (hapus "Rp", ".", ",") lalu ubah ke Angka
           const cleanVal = String(val).replace(/[^0-9]/g, '');
           item[colName] = Number(cleanVal) || 0; 
         } else {
@@ -250,7 +243,6 @@
       });
       return item;
     }).filter(item => {
-      // Pastikan baris tidak kosong, cek berdasarkan kolom pertama (header[0])
       return item[header[0]] && item[header[0]].trim() !== '';
     });
   }
@@ -508,9 +500,11 @@
     }
   }
 
+  // ===== FUNGSI INI SUDAH DIPERBAIKI (V9) =====
   function renderFlashSale(data) {
     if (!elements.flashSaleContainer || !elements.flashSaleCardTemplate) return;
     
+    // Tampilkan skeleton jika data (allFlashSale) masih kosong
     if (data.length === 0 && allFlashSale.length === 0) { 
         showSkeleton(elements.flashSaleContainer, elements.flashSaleCardTemplate, 2);
         elements.flashSaleSection.style.display = 'block';
@@ -520,16 +514,14 @@
     const now = new Date();
     const validFlashSale = data.filter(item => {
       try {
-        // ===== PERBAIKAN DI SINI (V7) =====
-        const waktuBerakhirString = item.WaktuBerakhir; // Gunakan nama kolom yang sudah disederhanakan
-        // ===================================
-        
-        if (!waktuBerakhirString) return false; // Lewati jika kolomnya kosong
+        // Menggunakan nama kolom yang benar dari Sheet3
+        const waktuBerakhirString = item['WaktuBerakhir(YYYY-MM-DD HH:MM)'];
+        if (!waktuBerakhirString) return false;
         
         const endTime = new Date(String(waktuBerakhirString).replace(" ", "T")); 
         return endTime instanceof Date && !isNaN(endTime) && endTime > now;
       } catch (e) {
-        console.warn("Format WaktuBerakhir tidak valid:", item.WaktuBerakhir);
+        console.warn("Format WaktuBerakhir tidak valid:", item['WaktuBerakhir(YYYY-MM-DD HH:MM)']);
         return false;
       }
     });
@@ -558,31 +550,25 @@
       }
       img.alt = item.NamaProduk;
 
-      // ===== PERBAIKAN BUG NaN% (V8) =====
+      // PERBAIKAN BUG NaN%
       const hargaAsli = Number(item.HargaAsli) || 0;
       const hargaDiskon = Number(item.HargaDiskon) || 0;
-      const diskonBadge = card.querySelector('.discount-badge');
-      const originalPriceEl = diskonBadge.querySelector('.original-price');
-      const discountPercentEl = diskonBadge.querySelector('.discount-percent');
+      const discountBadge = card.querySelector('.discount-badge');
+      const discountPercentEl = discountBadge.querySelector('.discount-percent');
+      // Ambil elemen harga asli (jika ada) dari template baru
+      const originalPriceEl = discountBadge.querySelector('.original-price'); 
 
-      // Cek apakah ada diskon yang valid
       if (hargaAsli > 0 && hargaDiskon > 0 && hargaAsli > hargaDiskon) {
           const diskon = Math.round(((hargaAsli - hargaDiskon) / hargaAsli) * 100);
-          originalPriceEl.textContent = formatToIdr(hargaAsli);
-          discountPercentEl.textContent = `-${diskon}%`;
+          if (originalPriceEl) originalPriceEl.textContent = formatToIdr(hargaAsli);
+          if (discountPercentEl) discountPercentEl.textContent = `-${diskon}%`;
       } else {
-          // Jika tidak ada diskon (atau harga sama), tampilkan harga normal
-          const hargaTampil = hargaDiskon > 0 ? hargaDiskon : hargaAsli;
-          originalPriceEl.textContent = formatToIdr(hargaTampil);
-          originalPriceEl.style.textDecoration = 'none'; // Hapus coretan
-          discountPercentEl.style.display = 'none'; // Sembunyikan %
+          // Jika tidak ada diskon, sembunyikan seluruh badge
+          discountBadge.style.display = 'none';
       }
-      // ===== AKHIR PERBAIKAN BUG =====
-
-      // ===== PERBAIKAN DI SINI (V7) =====
+      
       const timerBadge = card.querySelector('.timer-badge');
-      timerBadge.dataset.timeEnd = item.WaktuBerakhir;
-      // ===================================
+      timerBadge.dataset.timeEnd = item['WaktuBerakhir(YYYY-MM-DD HH:MM)']; // Gunakan nama kolom yg benar
       
       card.addEventListener('click', () => {
         if (item.KategoriID) {
@@ -595,6 +581,7 @@
     container.appendChild(fragment);
     startFlashSaleTimers();
   }
+  // ===== AKHIR FUNGSI YANG DIPERBAIKI =====
 
   function renderCategoryFilter(data) {
     const { btn, value, options } = elements.categoryFilter;
@@ -678,7 +665,7 @@
     container.appendChild(fragment);
   }
   
-  // --- LOGIKA TIMER ---
+  // ===== FUNGSI INI SUDAH DIPERBAIKI (V9) =====
   let timerInterval = null;
   function startFlashSaleTimers() {
     if (timerInterval) clearInterval(timerInterval);
@@ -692,10 +679,8 @@
       
       timerElements.forEach(timerEl => {
           try {
-              // ===== PERBAIKAN DI SINI (V7) =====
+              // Menggunakan nama kolom yang benar dari Sheet3
               const waktuBerakhirString = timerEl.dataset.timeEnd;
-              // ===================================
-
               if (!waktuBerakhirString) throw new Error("No time specified");
 
               const endTime = new Date(waktuBerakhirString.replace(" ", "T")).getTime();
@@ -736,6 +721,7 @@
         timerInterval = setInterval(updateTimers, 1000);
     }
   }
+  // ===== AKHIR FUNGSI YANG DIPERBAIKI =====
   
   // --- FUNGSI HALAMAN LAIN (DARI KODE LAMA) ---
   
