@@ -27,7 +27,7 @@
       background-color: var(--surface-primary);
       border-top: 1px solid var(--separator);
       padding: var(--sp-fib-7) 0;
-      text-align: center;
+      text-align: left; /* DIUBAH KE KIRI */
       animation: fadeIn var(--duration-natural) var(--ease-natural);
       overflow: hidden;
     }
@@ -58,8 +58,8 @@
     }
 
     .footer-logo {
-      width: 89px;
-      height: 89px;
+      height: 89px; /* DIUBAH */
+      width: auto;   /* DIUBAH: Menjaga rasio aspek */
       margin-bottom: var(--sp-fib-5);
     }
 
@@ -68,8 +68,7 @@
       font-size: 16px;
       line-height: 1.6;
       max-width: 600px;
-      margin: 0 auto var(--sp-fib-6) auto;
-      padding: 0 var(--sp-fib-5); /* Tambahan padding untuk mobile */
+      margin: 0 0 var(--sp-fib-6) 0; /* DIUBAH: Hapus margin auto */
     }
 
     .footer-social-link {
