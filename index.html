@@ -12,7 +12,87 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/style.css">
   <script src="/assets/js/script.js" defer></script>
-</head>
+  
+  <style>
+    @keyframes service-scroll {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .site-footer {
+      background-color: var(--surface-primary);
+      border-top: 1px solid var(--separator);
+      padding: var(--sp-fib-7) 0;
+      text-align: center;
+      animation: fadeIn var(--duration-natural) var(--ease-natural);
+      overflow: hidden;
+    }
+
+    .service-slider-wrap {
+      width: 100%;
+      overflow: hidden;
+      mask-image: linear-gradient(to right, transparent 0, black 10%, black 90%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0, black 10%, black 90%, transparent 100%);
+      margin-bottom: var(--sp-fib-6);
+    }
+
+    .service-track {
+      display: flex;
+      width: fit-content;
+      animation: service-scroll 40s linear infinite;
+    }
+
+    .service-track span {
+      flex-shrink: 0;
+      padding: 0 var(--sp-fib-6);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-tertiary);
+      opacity: 0.5;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .footer-logo {
+      width: 89px;
+      height: 89px;
+      margin-bottom: var(--sp-fib-5);
+    }
+
+    .footer-description {
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto var(--sp-fib-6) auto;
+      padding: 0 var(--sp-fib-5); /* Tambahan padding untuk mobile */
+    }
+
+    .footer-social-link {
+      display: inline-block;
+      color: var(--text-tertiary);
+      transition: color var(--duration-fast), transform var(--duration-fast);
+    }
+
+    .footer-social-link svg {
+      width: 44px;
+      height: 44px;
+    }
+
+    .footer-social-link:hover {
+      transform: scale(1.1);
+      /* Gradasi Instagram */
+      background: -webkit-linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: #dc2743; /* Fallback */
+    }
+  </style>
+  </head>
 <body>
   <noscript>
     <div class="noscript-warning">
@@ -172,12 +252,33 @@
       </div>
     </div>
   </div>
-  <section id="testimonialSection" class="testi-wrap" aria-label="Testimoni pelanggan">
-    <h2 class="testi-title">2.137 Ulasan Terverifikasi. &mdash; 4,8/5</h2>
-    <div class="testi-marquee" aria-live="off">
-      <ul id="testiTrack" class="testi-track" aria-hidden="true"></ul>
+  
+  <footer class="site-footer" id="siteFooter">
+    <div class="wrap" style="padding-top: 0; padding-bottom: 0;">
+      
+      <div class="service-slider-wrap">
+        <div class="service-track" aria-hidden="true">
+          <span>Mobile Legends</span><span>Free Fire</span><span>PUBG</span><span>Netflix</span><span>Spotify</span><span>Steam</span>
+          <span>Mobile Legends</span><span>Free Fire</span><span>PUBG</span><span>Netflix</span><span>Spotify</span><span>Steam</span>
+        </div>
+      </div>
+
+      <img src="/assets/images/logo.png" alt="PlayPal.ID Logo" class="footer-logo">
+      
+      <p class="footer-description">
+        PlayPal.ID: Destinasi Utama Bagi Para Pecinta Game, Film, dan Musik. Telah Dipercaya Sejak 2020 Sebagai Platform Top-Up dan Pembelian Voucher Digital Dengan Harga Terbaik, Transaksi Cepat, serta Layanan Pelanggan yang Responsif.
+      </p>
+      
+      <div class="footer-social">
+        <a href="https://www.instagram.com/playpalmarket?igsh=M2VxdWhybHN0Z3dv" target="_blank" rel="noopener" aria-label="PlayPal.ID di Instagram" class="footer-social-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor">
+            <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9 26.3 26.2 58 34.4 93.9 36.2 37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"/>
+          </svg>
+        </a>
+      </div>
     </div>
-  </section>
+  </footer>
+  
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const header = document.querySelector('.main-header');
