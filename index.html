@@ -75,138 +75,81 @@
     </nav>
   </aside>
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
   <div class="page-container" id="pageContainer">
     <main class="wrap">
       
-      <div class="home-banner-container"> 
-        <img src="/assets/images/banner-hero.webp" alt="PlayPal.ID Banner" class="home-banner-img">
-      </div>
-
-      <section id="flashSaleSection" class="view-section active" aria-label="Flash Sale" style="display: none;">
-        <header class="section-header">
-          <h2 class="section-title">FLASH SALE</h2>
-          <p class="section-subtitle">Penawaran Eksklusif Terbatas!</p>
-        </header>
-        <div class="flash-sale-grid-wrapper">
-            <div id="flashSaleContainer" class="flash-sale-grid">
-              <div class="flash-sale-card skeleton">
-                <div class="flash-sale-card-main">
-                  <div class="flash-sale-card-img skeleton-img"></div>
-                  <div class="flash-sale-card-info">
-                    <span class="skeleton-text" style="width: 80%;"></span>
-                    <span class="skeleton-text" style="width: 50%; height: 12px; margin-top: 4px;"></span>
-                  </div>
-                </div>
-                <div class="flash-sale-card-footer">
-                  <span class="timer-badge skeleton"></span>
-                  <span class="discount-badge skeleton" style="width: 50px; height: 24px;"></span>
-                </div>
-              </div>
-              <div class="flash-sale-card skeleton">
-                <div class="flash-sale-card-main">
-                  <div class="flash-sale-card-img skeleton-img"></div>
-                  <div class="flash-sale-card-info">
-                    <span class="skeleton-text" style="width: 80%;"></span>
-                    <span class="skeleton-text" style="width: 50%; height: 12px; margin-top: 4px;"></span>
-                  </div>
-                </div>
-                <div class="flash-sale-card-footer">
-                  <span class="timer-badge skeleton"></span>
-                  <span class="discount-badge skeleton" style="width: 50px; height: 24px;"></span>
-                </div>
+      <section id="viewHome" class="view-section active" aria-label="Home">
+        <div class="home-banner-container">
+          <img src="/assets/images/banner-hero.webp" alt="PlayPal.ID Banner" class="home-banner-img">
+        </div>
+        <div class="head-block">
+          <div class="topbar">
+            <div class="topbar-grid">
+              <div class="custom-select-wrapper" id="homeCustomSelectWrapper">
+                <button class="custom-select-btn" id="homeCustomSelectBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="homeCustomSelectOptions">
+                  <span id="homeCustomSelectValue">Pilih Kategori</span>
+                  <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                </button>
+                <div class="custom-select-options" id="homeCustomSelectOptions" role="listbox"></div>
               </div>
             </div>
-        </div>
-      </section>
-
-      <section id="viewHome" class="view-section active" aria-label="Kategori Produk">
-        <div class="head-block">
-          <div class="custom-select-wrapper" id="categoryFilterWrapper">
-            <button class="custom-select-btn" id="categoryFilterBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <span id="categoryFilterValue">Semua Kategori</span>
-              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
-            </button>
-            <div class="custom-select-options" id="categoryFilterOptions" role="listbox">
-              </div>
           </div>
-        </div>
-        
-        <div id="categoryGridContainer" class="category-grid">
-          <div class="category-card skeleton"></div>
-          <div class="category-card skeleton"></div>
-          <div class="category-card skeleton"></div>
-          <div class="category-card skeleton"></div>
-          <div class="category-card skeleton"></div>
-          <div class="category-card skeleton"></div>
-        </div>
-        <div id="categoryEmpty" class="empty" style="display: none; grid-column: 1 / -1;">
-          <div class="empty-content">
-            <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
-            <p>Tidak ada produk dalam kategori ini.</p>
+          <div class="search-row">
+            <div class="search-wrap">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <input id="homeSearchInput" type="search" class="search-input" placeholder="Cari item..." />
+            </div>
           </div>
+          <div id="homeCountInfo" aria-live="polite"></div>
         </div>
+        <section id="homeListContainer" class="list-container" aria-live="polite"></section>
+        <section id="homeErrorContainer" class="err" style="display:none"></section>
       </section>
-      
-      <section id="testimonialSection" class="testi-wrap" aria-label="Testimoni pelanggan">
-        <h2 class="testi-title">2.137 Ulasan Terverifikasi. &mdash; 4,8/5</h2>
-        <div class="testi-marquee" aria-live="off">
-          <ul id="testiTrack" class="testi-track" aria-hidden="true"></ul>
-        </div>
-      </section>
-
-    </main>
+      </main>
   </div>
-  <template id="flashSaleCardTemplate">
-    <article class="flash-sale-card" tabindex="0">
-      <div class="flash-sale-card-main">
-        <div class="flash-sale-card-img">
-          <img src="" alt="" loading="lazy">
-        </div>
-        <div class="flash-sale-card-info">
-          <span class="flash-sale-title"></span>
-          <span class="flash-sale-subtitle"></span>
-        </div>
-      </div>
-      <div class="flash-sale-card-footer">
-        <span class="timer-badge" data-time-end="">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="icon" style="width: 16px; height: 16px;"><path fill-rule="evenodd" d="M8 1.75a.75.75 0 0 1 .75.75v3.69l2.47 1.482a.75.75 0 1 1-.74 1.238L8.5 7.58V2.5A.75.75 0 0 1 8 1.75Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16Z" clip-rule="evenodd" /></svg>
-          <span>00:00:00</span>
-        </span>
-        <span class="discount-badge">
-          <span class="discount-percent"></span>
-        </span>
-      </div>
-    </article>
+  <template id="itemTemplate">
+    <button type="button" class="list-item">
+      <span class="title"></span>
+      <span class="price"></span>
+    </button>
   </template>
-
-  <template id="categoryCardTemplate">
-    <article class="category-card" tabindex="0">
-      <div class="category-card-logo-wrapper">
-        <img src="" alt="" class="category-card-logo" loading="lazy">
-      </div>
-    </article>
-  </template>
-  
-  <div id="productModal" class="modal-overlay">
-    <div class="modal-content product-modal-content">
-      <div class="modal-header">
-        <h2 id="productModalTitle">Pilih Produk</h2>
-        <button id="productModalCloseBtn" class="close-btn" type="button" aria-label="Tutup">&times;</button>
-      </div>
-      <div class="modal-body" id="productModalListContainer">
-        <div class="product-list-item skeleton">
-          <span class="skeleton-text" style="width: 60%;"></span>
-          <span class="skeleton-text" style="width: 30%;"></span>
-        </div>
-        <div class="product-list-item skeleton">
-          <span class="skeleton-text" style="width: 70%;"></span>
-          <span class="skeleton-text" style="width: 25%;"></span>
-        </div>
-      </div>
+  <template id="skeletonItemTemplate">
+    <div class="list-item skeleton">
+      <span class="skeleton-text" style="width: 60%;"></span>
+      <span class="skeleton-text" style="width: 25%;"></span>
     </div>
-  </div>
-
+  </template>
+  <template id="skeletonCardTemplate">
+    <div class="card skeleton">
+      <div class="card-header">
+        <div>
+          <div class="skeleton-text" style="width: 50%; height: 18px; margin-bottom: 8px;"></div>
+          <div class="skeleton-text" style="width: 75%; height: 14px;"></div>
+        </div>
+        <div class="skeleton-badge"></div>
+      </div>
+      <div class="skeleton-text" style="width: 65%; height: 12px; margin-top: 10px;"></div>
+    </div>
+  </template>
+  <template id="accountCardTemplate">
+    <article class="account-card">
+      <div class="account-card-carousel-wrapper"></div>
+      <div class="account-card-main-info" role="button" tabindex="0">
+        <h3>Harga Akun</h3>
+        <div class="status-wrapper">
+          <span class="account-status-badge"></span>
+          <svg class="expand-indicator" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+        </div>
+      </div>
+      <div class="account-card-details-wrapper">
+        <div class="account-card-specs"></div>
+        <div class="account-card-actions">
+          <button type="button" class="action-btn buy">Beli Sekarang</button>
+          <button type="button" class="action-btn offer">Tawar Harga</button>
+        </div>
+      </div>
+    </article>
+  </template>
   <div id="paymentModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
@@ -229,12 +172,12 @@
       </div>
     </div>
   </div>
-  
-  <template id="itemTemplate"></template>
-  <template id="skeletonItemTemplate"></template>
-  <template id="skeletonCardTemplate"></template>
-  <template id="accountCardTemplate"></template>
-  
+  <section id="testimonialSection" class="testi-wrap" aria-label="Testimoni pelanggan">
+    <h2 class="testi-title">2.137 Ulasan Terverifikasi. &mdash; 4,8/5</h2>
+    <div class="testi-marquee" aria-live="off">
+      <ul id="testiTrack" class="testi-track" aria-hidden="true"></ul>
+    </div>
+  </section>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const header = document.querySelector('.main-header');
