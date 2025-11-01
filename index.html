@@ -27,7 +27,7 @@
       background-color: var(--surface-primary);
       border-top: 1px solid var(--separator);
       padding: var(--sp-fib-7) 0;
-      text-align: left; /* DIUBAH KE KIRI */
+      text-align: left; /* Rata Kiri */
       animation: fadeIn var(--duration-natural) var(--ease-natural);
       overflow: hidden;
     }
@@ -42,24 +42,25 @@
 
     .service-track {
       display: flex;
+      align-items: center; /* Pastikan logo sejajar vertikal */
       width: fit-content;
       animation: service-scroll 40s linear infinite;
     }
 
-    .service-track span {
+    /* DIUBAH DARI SPAN KE IMG */
+    .service-track img {
       flex-shrink: 0;
-      padding: 0 var(--sp-fib-6);
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text-tertiary);
-      opacity: 0.5;
-      white-space: nowrap;
+      margin: 0 var(--sp-fib-6); /* Spasi antar logo */
+      height: 36px; /* Tinggi seragam untuk logo */
+      width: auto;   /* Jaga rasio aspek */
+      opacity: 0.5;  /* Efek visual seperti sebelumnya */
       user-select: none;
+      vertical-align: middle;
     }
 
     .footer-logo {
-      height: 89px; /* DIUBAH */
-      width: auto;   /* DIUBAH: Menjaga rasio aspek */
+      height: 60px; /* Ukuran logo utama */
+      width: auto;   /* Menjaga rasio aspek */
       margin-bottom: var(--sp-fib-5);
     }
 
@@ -68,7 +69,7 @@
       font-size: 16px;
       line-height: 1.6;
       max-width: 600px;
-      margin: 0 0 var(--sp-fib-6) 0; /* DIUBAH: Hapus margin auto */
+      margin: 0 0 var(--sp-fib-6) 0; /* Hapus margin auto */
     }
 
     .footer-social-link {
@@ -257,8 +258,15 @@
       
       <div class="service-slider-wrap">
         <div class="service-track" aria-hidden="true">
-          <span>Mobile Legends</span><span>Free Fire</span><span>PUBG</span><span>Netflix</span><span>Spotify</span><span>Steam</span>
-          <span>Mobile Legends</span><span>Free Fire</span><span>PUBG</span><span>Netflix</span><span>Spotify</span><span>Steam</span>
+          <img src="/assets/images/layanan/capcut.svg" alt="Capcut">
+          <img src="/assets/images/layanan/netflix.svg" alt="Netflix">
+          <img src="/assets/images/layanan/spotify.svg" alt="Spotify">
+          <img src="/assets/images/layanan/vidio.svg" alt="Vidio">
+          
+          <img src="/assets/images/layanan/capcut.svg" alt="Capcut">
+          <img src="/assets/images/layanan/netflix.svg" alt="Netflix">
+          <img src="/assets/images/layanan/spotify.svg" alt="Spotify">
+          <img src="/assets/images/layanan/vidio.svg" alt="Vidio">
         </div>
       </div>
 
