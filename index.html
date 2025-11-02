@@ -44,7 +44,7 @@
       display: flex;
       align-items: center; /* Pastikan logo sejajar vertikal */
       width: fit-content;
-      animation: service-scroll 60s linear infinite; /* Animasi sedikit diperlambat */
+      animation: service-scroll 60s linear infinite;
     }
 
     .service-track img {
@@ -57,11 +57,7 @@
       vertical-align: middle;
     }
 
-    .footer-logo {
-      height: 60px; /* Ukuran logo utama */
-      width: auto;   /* Menjaga rasio aspek */
-      margin-bottom: var(--sp-fib-5);
-    }
+    /* .footer-logo DIHAPUS */
 
     .footer-description {
       color: var(--text-secondary);
@@ -69,6 +65,12 @@
       line-height: 1.6;
       max-width: 600px;
       margin: 0 0 var(--sp-fib-6) 0;
+    }
+    
+    /* CSS BARU UNTUK TEKS BRAND */
+    .footer-brand-name {
+      color: var(--brand-blue);
+      font-weight: 800; /* Menjamin tebal */
     }
 
     .footer-social-link {
@@ -78,8 +80,8 @@
     }
 
     .footer-social-link svg {
-      width: 36px;  /* DIKECILKAN */
-      height: 36px; /* DIKECILKAN */
+      width: 36px;  /* Ukuran ikon Instagram */
+      height: 36px; /* Ukuran ikon Instagram */
     }
 
     .footer-social-link:hover {
@@ -153,7 +155,7 @@
       </a>
     </nav>
   </aside>
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div classs="sidebar-overlay" id="sidebarOverlay"></div>
   <div class="page-container" id="pageContainer">
     <main class="wrap">
       
@@ -299,10 +301,8 @@
         </div>
       </div>
 
-      <img src="/assets/images/logo.png" alt="PlayPal.ID Logo" class="footer-logo">
-      
       <p class="footer-description">
-        PlayPal.ID: Destinasi Utama Bagi Para Pecinta Game, Film, dan Musik. Telah Dipercaya Sejak 2020 Sebagai Platform Top-Up dan Pembelian Voucher Digital Dengan Harga Terbaik, Transaksi Cepat, serta Layanan Pelanggan yang Responsif.
+        <strong class="footer-brand-name">PlayPal.ID</strong>: Destinasi Utama Bagi Para Pecinta Game, Film, dan Musik. Telah Dipercaya Sejak 2020 Sebagai Platform Top-Up dan Pembelian Voucher Digital Dengan Harga Terbaik, Transaksi Cepat, serta Layanan Pelanggan yang Responsif.
       </p>
       
       <div class="footer-social">
