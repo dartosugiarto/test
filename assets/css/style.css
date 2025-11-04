@@ -353,3 +353,31 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
   flex: 1; min-width: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+
+/* --- STYLES UNTUK TESTIMONI PAGE --- */
+.testimoni-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--sp-fib-4);
+}
+
+.testi-fig {
+  margin: 0;
+  background: var(--surface-secondary);
+  border: 1px solid var(--separator);
+  border-radius: var(--radius-fib-medium);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.testi-fig:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 13px rgba(48, 57, 82, 0.12);
+}
+
+.testi-fig img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
