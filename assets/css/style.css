@@ -373,6 +373,7 @@ body.sidebar-open .sidebar-overlay { opacity: 1; pointer-events: auto; }
   /* Mobile: 2 kolom */
   grid-template-columns: repeat(2, 1fr);
   gap: var(--sp-fib-4); /* 13px gap */
+  margin-top: var(--sp-fib-5); /* Jarak 21px dari header di atasnya */
 }
 
 /* Tablet: 3 kolom */
